@@ -6,7 +6,7 @@ from app.schemas.user import UserCreate, UserResponse
 from app.services.auth_service import register_user, authenticate_user
 from app.utils.jwt import create_access_token
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+router = APIRouter(tags=["Auth"])
 
 @router.post("/register", response_model=UserResponse)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
