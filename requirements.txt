@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+pydantic-settings
+python-dotenv
+asyncpg
+psycopg2-binary
+python-jose[cryptography]
+passlib[argon2]
+phonenumbers
