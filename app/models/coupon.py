@@ -14,6 +14,7 @@ class Coupon(Base):
     description = Column(Text, nullable=True)
     discount_type = Column(String(20), default="percentage")  # "percentage" or "fixed"
     discount_amount = Column(Float, nullable=False)
+    price = Column(Float, default=0.0)  # Price to purchase this coupon (0 = free)
     min_purchase = Column(Float, default=0.0)
     max_uses = Column(Integer, nullable=True)  # None = unlimited
     current_uses = Column(Integer, default=0)

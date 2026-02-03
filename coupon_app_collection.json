@@ -76,6 +76,99 @@
             ]
         },
         {
+            "name": "User Profile",
+            "item": [
+                {
+                    "name": "Get My Profile",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/user/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "user",
+                                "me"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update My Profile",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"current_password\": \"afsal@123\",\n    \"full_name\": \"Afsal Basheer\",\n    \"email\": \"afsal@example.com\",\n    \"date_of_birth\": \"1990-01-15\",\n    \"gender\": \"Male\",\n    \"country_of_residence\": \"India\",\n    \"home_address\": \"123 Main Street\",\n    \"town\": \"Mumbai\",\n    \"state_province\": \"Maharashtra\",\n    \"postal_code\": \"400001\",\n    \"address_country\": \"India\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/user/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "user",
+                                "me"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get My Claimed Coupons",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/user/coupons",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "user",
+                                "coupons"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
             "name": "Coupons",
             "item": [
                 {
@@ -218,6 +311,33 @@
                             "path": [
                                 "coupons",
                                 "{{coupon_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Claim Coupon",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/{{coupon_id}}/claim",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "{{coupon_id}}",
+                                "claim"
                             ]
                         }
                     }
