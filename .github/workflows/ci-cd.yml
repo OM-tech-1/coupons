@@ -51,3 +51,20 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/om-tech-1/coupons:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            docker pull ghcr.io/om-tech-1/coupons:latest
+            docker stop coupons-app || true
+            docker rm coupons-app || true
+            docker run -d --name coupons-app -p 80:8000 --env-file /root/.env --restart always ghcr.io/om-tech-1/coupons:latest
+
