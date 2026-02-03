@@ -9,6 +9,7 @@ Base.metadata.create_all(bind=engine)
 # Add new columns if they don't exist (for existing tables)
 def run_migrations():
     columns_to_add = [
+        ('email', 'VARCHAR(255)'),
         ('date_of_birth', 'DATE'),
         ('gender', 'VARCHAR(20)'),
         ('country_of_residence', 'VARCHAR(100)'),
