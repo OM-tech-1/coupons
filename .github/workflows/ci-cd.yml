@@ -50,4 +50,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/coupons:latest
+          tags: ghcr.io/om-tech-1/coupons:latest
