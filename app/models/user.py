@@ -1,8 +1,9 @@
-from sqlalchemy import Column, String, DateTime, Boolean
+from sqlalchemy import Column, String, DateTime, Boolean, Date
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 import uuid
 from app.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -15,3 +16,16 @@ class User(Base):
     role = Column(String, default="USER")
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Extended profile fields
+    email = Column(String, unique=True, nullable=True, index=True)
+    date_of_birth = Column(Date, nullable=True)
+    gender = Column(String(20), nullable=True)  # Male, Female, Other
+    country_of_residence = Column(String(100), nullable=True)
+    
+    # Address fields
+    home_address = Column(String(255), nullable=True)
+    town = Column(String(100), nullable=True)
+    state_province = Column(String(100), nullable=True)
+    postal_code = Column(String(20), nullable=True)
+    address_country = Column(String(100), nullable=True)
