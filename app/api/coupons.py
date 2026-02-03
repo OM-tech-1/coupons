@@ -111,3 +111,22 @@ def delete_coupon(
             detail="Coupon not found"
         )
     return None
+
+
+@router.post("/{coupon_id}/claim", status_code=status.HTTP_201_CREATED)
+def claim_coupon(
+    coupon_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Claim a coupon for the current user"""
+    from app.services.user_coupon_service import UserCouponService
+    
+    user_coupon, message = UserCouponService.claim_coupon(db, current_user.id, coupon_id)
+    if not user_coupon:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message
+        )
+    return {"message": message, "coupon_id": str(coupon_id)}
+

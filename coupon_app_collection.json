@@ -2,6 +2,7 @@
     "info": {
         "_postman_id": "coupon-app-collection",
         "name": "Coupon App API",
+        "description": "Complete API collection for the Coupon E-commerce application",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
@@ -9,7 +10,7 @@
             "name": "Auth",
             "item": [
                 {
-                    "name": "Register",
+                    "name": "Register User",
                     "request": {
                         "method": "POST",
                         "header": [
@@ -20,7 +21,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"country_code\": \"+1\",\n    \"number\": \"2025550100\",\n    \"password\": \"securepassword\",\n    \"full_name\": \"John Doe\",\n    \"second_name\": \"Smith\"\n}"
+                            "raw": "{\n    \"country_code\": \"+91\",\n    \"number\": \"9876543210\",\n    \"password\": \"mypassword123\",\n    \"full_name\": \"Test User\",\n    \"second_name\": \"Account\"\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/auth/register",
@@ -32,11 +33,22 @@
                                 "register"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "pm.environment.set('access_token', jsonData.access_token);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "POST",
                         "header": [
@@ -47,7 +59,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"country_code\": \"+1\",\n    \"number\": \"2025550100\",\n    \"password\": \"securepassword\"\n}"
+                            "raw": "{\n    \"country_code\": \"+91\",\n    \"number\": \"7907975711\",\n    \"password\": \"afsal@123\"\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/auth/login",
@@ -59,8 +71,7 @@
                                 "login"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 }
             ]
         },
@@ -71,7 +82,6 @@
                     "name": "List All Coupons",
                     "request": {
                         "method": "GET",
-                        "header": [],
                         "url": {
                             "raw": "{{base_url}}/coupons/?skip=0&limit=100&active_only=false",
                             "host": [
@@ -96,14 +106,12 @@
                                 }
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Get Coupon by ID",
                     "request": {
                         "method": "GET",
-                        "header": [],
                         "url": {
                             "raw": "{{base_url}}/coupons/{{coupon_id}}",
                             "host": [
@@ -114,8 +122,7 @@
                                 "{{coupon_id}}"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Create Coupon (Admin)",
@@ -139,7 +146,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"code\": \"SAVE20\",\n    \"title\": \"20% Off First Order\",\n    \"description\": \"Get 20% off your first order\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 20.0,\n    \"min_purchase\": 50.0,\n    \"max_uses\": 100,\n    \"expiration_date\": \"2026-12-31T23:59:59\"\n}"
+                            "raw": "{\n    \"code\": \"NEWCODE\",\n    \"title\": \"New Coupon Title\",\n    \"description\": \"Coupon description here\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 15.0,\n    \"min_purchase\": 30.0,\n    \"max_uses\": 200,\n    \"expiration_date\": \"2026-12-31T23:59:59\"\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/coupons/",
@@ -151,8 +158,7 @@
                                 ""
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Update Coupon (Admin)",
@@ -176,7 +182,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"title\": \"Updated Coupon Title\",\n    \"discount_amount\": 25.0,\n    \"is_active\": true\n}"
+                            "raw": "{\n    \"title\": \"Updated Coupon Title\",\n    \"discount_amount\": 30.0,\n    \"is_active\": true\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/coupons/{{coupon_id}}",
@@ -188,8 +194,7 @@
                                 "{{coupon_id}}"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Delete Coupon (Admin)",
@@ -205,7 +210,6 @@
                             ]
                         },
                         "method": "DELETE",
-                        "header": [],
                         "url": {
                             "raw": "{{base_url}}/coupons/{{coupon_id}}",
                             "host": [
@@ -216,8 +220,27 @@
                                 "{{coupon_id}}"
                             ]
                         }
-                    },
-                    "response": []
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Health",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                ""
+                            ]
+                        }
+                    }
                 }
             ]
         }
