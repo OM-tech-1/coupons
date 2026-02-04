@@ -162,6 +162,22 @@ curl http://156.67.216.229/orders/{order_id} -H "Authorization: Bearer TOKEN"
 
 ---
 
+## Health
+
+### Health Check (Simple)
+```bash
+curl http://156.67.216.229/
+```
+**Response:** `{"status":"OK"}`
+
+### Health Check (Detailed)
+```bash
+curl http://156.67.216.229/health
+```
+**Response:** `{"status":"OK","database":"connected"}`
+
+---
+
 ## Error Codes
 | Code | Description |
 |------|-------------|

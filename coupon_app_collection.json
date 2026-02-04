@@ -239,7 +239,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"code\": \"NEWCODE\",\n    \"title\": \"New Coupon\",\n    \"description\": \"Description here\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 15.0,\n    \"price\": 9.99,\n    \"min_purchase\": 30.0,\n    \"max_uses\": 200\n}"
+                            "raw": "{\n    \"code\": \"NEWCODE\",\n    \"redeem_code\": \"SECRET123\",\n    \"brand\": \"Brand Name\",\n    \"title\": \"New Coupon\",\n    \"description\": \"Description here\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 15.0,\n    \"price\": 9.99,\n    \"min_purchase\": 30.0,\n    \"max_uses\": 200\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/coupons/",
@@ -275,7 +275,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"title\": \"Updated Title\",\n    \"price\": 14.99\n}"
+                            "raw": "{\n    \"title\": \"Updated Title\",\n    \"redeem_code\": \"UPDATEDSECRET\",\n    \"price\": 14.99\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/coupons/{{coupon_id}}",
@@ -560,7 +560,7 @@
             "name": "Health",
             "item": [
                 {
-                    "name": "Health Check",
+                    "name": "Health Check (Simple)",
                     "request": {
                         "method": "GET",
                         "url": {
@@ -570,6 +570,21 @@
                             ],
                             "path": [
                                 ""
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Health Check (Detailed)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/health",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "health"
                             ]
                         }
                     }
