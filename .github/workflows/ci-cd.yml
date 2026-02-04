@@ -63,8 +63,26 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
+            echo "Login to GHCR..."
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            echo "Pulling latest image..."
             docker pull ghcr.io/om-tech-1/coupons:latest
+            
+            echo "Stopping old container..."
+            docker stop coupon-api-container || true
+            docker rm coupon-api-container || true
+            
+            # Also cleanup old naming if exists
             docker stop coupons-app || true
             docker rm coupons-app || true
-            docker run -d --name coupons-app -p 80:8000 --env-file /root/.env --restart always ghcr.io/om-tech-1/coupons:latest
+
+            echo "Starting new container..."
+            # Using .env from /root/.env where we added Redis
+            docker run -d \
+              --name coupon-api-container \
+              -p 80:8000 \
+              --env-file /root/.env \
+              --restart unless-stopped \
+              ghcr.io/om-tech-1/coupons:latest
 
