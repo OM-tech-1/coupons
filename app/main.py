@@ -65,7 +65,7 @@ app.include_router(orders.router, prefix="/orders", tags=["Orders"])
 @app.get("/")
 def health_check():
     """Basic health check endpoint."""
-    return {"status": "OK"}
+    return {"status": "OK", "version": "1.1.0"}
 
 
 @app.get("/health")
