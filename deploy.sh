@@ -27,10 +27,14 @@ docker build -t coupon-api .
 echo "🔄 Restarting container..."
 docker stop coupon-api-container 2>/dev/null || true
 docker rm coupon-api-container 2>/dev/null || true
+# Stop old container name if exists
+docker stop coupons-app 2>/dev/null || true
+docker rm coupons-app 2>/dev/null || true
+
 docker run -d \
   --name coupon-api-container \
   --restart unless-stopped \
-  -p 8000:8000 \
+  -p 80:8000 \
   --env-file .env \
   coupon-api
 
