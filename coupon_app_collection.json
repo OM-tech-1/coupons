@@ -21,7 +21,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"country_code\": \"+91\",\n    \"number\": \"9876543210\",\n    \"password\": \"mypassword123\",\n    \"full_name\": \"Test User\",\n    \"second_name\": \"Account\"\n}"
+                            "raw": "{\n    \"country_code\": \"+91\",\n    \"number\": \"9876543210\",\n    \"password\": \"mypassword123\",\n    \"full_name\": \"Test User\"\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/auth/register",
@@ -126,7 +126,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"current_password\": \"afsal@123\",\n    \"full_name\": \"Afsal Basheer\",\n    \"email\": \"afsal@example.com\",\n    \"date_of_birth\": \"1990-01-15\",\n    \"gender\": \"Male\",\n    \"country_of_residence\": \"India\",\n    \"home_address\": \"123 Main Street\",\n    \"town\": \"Mumbai\",\n    \"state_province\": \"Maharashtra\",\n    \"postal_code\": \"400001\",\n    \"address_country\": \"India\"\n}"
+                            "raw": "{\n    \"current_password\": \"afsal@123\",\n    \"full_name\": \"Afsal Basheer\",\n    \"email\": \"afsal@example.com\",\n    \"gender\": \"Male\",\n    \"country_of_residence\": \"India\"\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/user/me",
@@ -239,7 +239,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"code\": \"NEWCODE\",\n    \"title\": \"New Coupon Title\",\n    \"description\": \"Coupon description here\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 15.0,\n    \"min_purchase\": 30.0,\n    \"max_uses\": 200,\n    \"expiration_date\": \"2026-12-31T23:59:59\"\n}"
+                            "raw": "{\n    \"code\": \"NEWCODE\",\n    \"title\": \"New Coupon\",\n    \"description\": \"Description here\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 15.0,\n    \"price\": 9.99,\n    \"min_purchase\": 30.0,\n    \"max_uses\": 200\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/coupons/",
@@ -275,7 +275,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"title\": \"Updated Coupon Title\",\n    \"discount_amount\": 30.0,\n    \"is_active\": true\n}"
+                            "raw": "{\n    \"title\": \"Updated Title\",\n    \"price\": 14.99\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/coupons/{{coupon_id}}",
@@ -316,7 +316,7 @@
                     }
                 },
                 {
-                    "name": "Claim Coupon",
+                    "name": "Claim Coupon (Free)",
                     "request": {
                         "auth": {
                             "type": "bearer",
@@ -338,6 +338,218 @@
                                 "coupons",
                                 "{{coupon_id}}",
                                 "claim"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Cart",
+            "item": [
+                {
+                    "name": "Add to Cart",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"coupon_id\": \"{{coupon_id}}\",\n    \"quantity\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/cart/add",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "cart",
+                                "add"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "View Cart",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/cart/",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "cart",
+                                ""
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Remove from Cart",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{base_url}}/cart/{{coupon_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "cart",
+                                "{{coupon_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Clear Cart",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{base_url}}/cart/",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "cart",
+                                ""
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Orders",
+            "item": [
+                {
+                    "name": "Checkout",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"payment_method\": \"mock\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/orders/checkout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "orders",
+                                "checkout"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get My Orders",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/orders/",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "orders",
+                                ""
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Order by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/orders/{{order_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "orders",
+                                "{{order_id}}"
                             ]
                         }
                     }
@@ -378,6 +590,11 @@
         },
         {
             "key": "coupon_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "order_id",
             "value": "",
             "type": "string"
         }

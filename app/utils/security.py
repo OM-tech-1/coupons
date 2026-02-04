@@ -7,7 +7,14 @@ from app.config import JWT_SECRET, JWT_ALGORITHM
 from app.database import get_db
 from app.models.user import User
 
-pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["argon2"],
+    deprecated="auto",
+    # Optimized for high-load: faster hashing while maintaining security
+    argon2__memory_cost=32768,   # 32 MB (default is 65536)
+    argon2__time_cost=2,         # 2 iterations (default is 3)
+    argon2__parallelism=2        # 2 parallel threads
+)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 

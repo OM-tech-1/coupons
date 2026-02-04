@@ -1,6 +1,8 @@
 from fastapi import FastAPI
+from fastapi.middleware.gzip import GZipMiddleware
 from app.api import auth, coupons, users, cart, orders
-from app.database import Base, engine
+from app.database import Base, engine, SessionLocal
+from app.middleware.rate_limit import setup_rate_limiting
 from sqlalchemy import text
 
 # Create tables
@@ -21,9 +23,11 @@ def run_migrations():
         ('address_country', 'VARCHAR(100)')
     ]
     
-    # Coupon price column
+    # Coupon columns
     coupon_columns = [
-        ('price', 'FLOAT DEFAULT 0.0')
+        ('price', 'FLOAT DEFAULT 0.0'),
+        ('redeem_code', 'VARCHAR(100)'),
+        ('brand', 'VARCHAR(100)')
     ]
     
     with engine.connect() as conn:
@@ -45,6 +49,12 @@ run_migrations()
 
 app = FastAPI(title="Coupon E-commerce API")
 
+# Add GZip compression for responses > 1KB
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Setup rate limiting
+setup_rate_limiting(app)
+
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(coupons.router, prefix="/coupons", tags=["Coupons"])
 app.include_router(users.router, prefix="/user", tags=["User"])
@@ -54,4 +64,22 @@ app.include_router(orders.router, prefix="/orders", tags=["Orders"])
 
 @app.get("/")
 def health_check():
+    """Basic health check endpoint."""
     return {"status": "OK"}
+
+
+@app.get("/health")
+def detailed_health_check():
+    """Detailed health check with database connection status."""
+    status = {"status": "OK", "database": "unknown"}
+    
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+        status["database"] = "connected"
+    except Exception as e:
+        status["status"] = "degraded"
+        status["database"] = f"error: {str(e)}"
+    
+    return status

@@ -5,8 +5,18 @@ from app.config import DATABASE_URL
 connect_args = {}
 if DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
-
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+    # SQLite doesn't support connection pooling options
+    engine = create_engine(DATABASE_URL, connect_args=connect_args)
+else:
+    # PostgreSQL with connection pooling for high load
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args=connect_args,
+        pool_size=10,           # Persistent connections
+        max_overflow=20,        # Additional connections under load
+        pool_pre_ping=True,     # Check connection health
+        pool_recycle=1800       # Recycle connections every 30 min
+    )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

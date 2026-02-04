@@ -13,9 +13,11 @@ class UserCouponCreate(UserCouponBase):
 
 
 class CouponInfo(BaseModel):
-    """Embedded coupon info in user coupon response"""
+    """Embedded coupon info in user coupon response - includes redeem_code after purchase"""
     id: UUID
     code: str
+    redeem_code: Optional[str] = None  # Revealed after purchase!
+    brand: Optional[str] = None
     title: str
     description: Optional[str] = None
     discount_type: str

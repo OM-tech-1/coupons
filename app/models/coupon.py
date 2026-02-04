@@ -9,7 +9,9 @@ class Coupon(Base):
     __tablename__ = "coupons"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    code = Column(String(50), unique=True, nullable=False, index=True)
+    code = Column(String(50), unique=True, nullable=False, index=True)  # Display code/SKU
+    redeem_code = Column(String(100), nullable=True)  # Actual code revealed after purchase
+    brand = Column(String(100), nullable=True)  # Brand/company name (McDonald's, Amazon, etc.)
     title = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
     discount_type = Column(String(20), default="percentage")  # "percentage" or "fixed"

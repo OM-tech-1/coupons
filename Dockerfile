@@ -11,8 +11,10 @@ COPY ./requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
 COPY ./app /app/app
+COPY ./gunicorn.conf.py /app/gunicorn.conf.py
 
 # Expose port 8000
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use Gunicorn with multiple workers for production
+CMD ["gunicorn", "app.main:app", "-c", "gunicorn.conf.py"]
