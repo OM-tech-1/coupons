@@ -18,4 +18,5 @@ class Region(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationship
-    countries = relationship("Country", back_populates="region", lazy="dynamic")
+    countries = relationship("Country", back_populates="region", lazy="select")
+
