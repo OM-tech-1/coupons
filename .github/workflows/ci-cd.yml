@@ -81,7 +81,7 @@ jobs:
             # Using .env from /root/.env where we added Redis
             docker run -d \
               --name coupon-api-container \
-              -p 80:8000 \
+              -p 127.0.0.1:8000:8000 \
               --env-file /root/.env \
               --restart unless-stopped \
               ghcr.io/om-tech-1/coupons:latest
