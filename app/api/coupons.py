@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from app.database import get_db
@@ -41,10 +41,23 @@ def list_coupons(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     active_only: bool = Query(False),
+    category_id: Optional[UUID] = Query(None, description="Filter by category ID"),
+    region_id: Optional[UUID] = Query(None, description="Filter by region ID"),
+    country_id: Optional[UUID] = Query(None, description="Filter by country ID"),
+    availability_type: Optional[str] = Query(None, pattern="^(online|local|both)$", description="Filter by availability type"),
     db: Session = Depends(get_db)
 ):
-    """List all coupons"""
-    return CouponService.get_all(db, skip=skip, limit=limit, active_only=active_only)
+    """List all coupons with optional filters (public endpoint with enhanced filtering)"""
+    return CouponService.get_all(
+        db,
+        skip=skip,
+        limit=limit,
+        active_only=active_only,
+        category_id=category_id,
+        region_id=region_id,
+        country_id=country_id,
+        availability_type=availability_type
+    )
 
 
 @router.get("/{coupon_id}", response_model=CouponResponse)

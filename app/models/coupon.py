@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text
+from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 from app.database import Base
@@ -23,3 +24,11 @@ class Coupon(Base):
     is_active = Column(Boolean, default=True)
     expiration_date = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # New fields for categories and geography
+    category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=True, index=True)
+    availability_type = Column(String(20), default="online", index=True)  # 'online', 'local', or 'both'
+    
+    # Relationships
+    category = relationship("Category", back_populates="coupons")
+    country_associations = relationship("CouponCountry", back_populates="coupon", cascade="all, delete-orphan")

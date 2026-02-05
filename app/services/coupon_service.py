@@ -14,6 +14,11 @@ class CouponService:
     @staticmethod
     def create(db: Session, coupon_data: CouponCreate) -> Coupon:
         """Create a new coupon"""
+        from app.models.coupon_country import CouponCountry
+        
+        # Extract country_ids before creating coupon
+        country_ids = coupon_data.country_ids
+        
         db_coupon = Coupon(
             code=coupon_data.code.upper(),
             redeem_code=coupon_data.redeem_code,
@@ -25,8 +30,17 @@ class CouponService:
             min_purchase=coupon_data.min_purchase,
             max_uses=coupon_data.max_uses,
             expiration_date=coupon_data.expiration_date,
+            category_id=coupon_data.category_id,
+            availability_type=coupon_data.availability_type,
         )
         db.add(db_coupon)
+        db.flush()  # Flush to get the coupon ID
+        
+        # Create country associations
+        for country_id in country_ids:
+            association = CouponCountry(coupon_id=db_coupon.id, country_id=country_id)
+            db.add(association)
+        
         db.commit()
         db.refresh(db_coupon)
         
@@ -36,19 +50,56 @@ class CouponService:
         return db_coupon
 
     @staticmethod
-    def get_all(db: Session, skip: int = 0, limit: int = 100, active_only: bool = False) -> List[Coupon]:
+    def get_all(
+        db: Session,
+        skip: int = 0,
+        limit: int = 100,
+        active_only: bool = False,
+        category_id: Optional[UUID] = None,
+        region_id: Optional[UUID] = None,
+        country_id: Optional[UUID] = None,
+        availability_type: Optional[str] = None
+    ) -> List[Coupon]:
         """Get all coupons with optional filtering (cached)"""
-        # Try cache first
-        cache_k = cache_key("coupons", "list", skip, limit, active_only)
+        from sqlalchemy.orm import joinedload
+        from app.models.coupon_country import CouponCountry
+        from app.models.country import Country
+        
+        # Try cache first (with new filter parameters in cache key)
+        cache_k = cache_key("coupons", "list", skip, limit, active_only, 
+                           str(category_id) if category_id else "none",
+                           str(region_id) if region_id else "none",
+                           str(country_id) if country_id else "none",
+                           availability_type or "all")
         cached = get_cache(cache_k)
         if cached is not None:
             # Return cached data (already serialized)
             return cached
         
-        # Query database
-        query = db.query(Coupon)
+        # Query database with eager loading for relationships
+        query = db.query(Coupon).options(
+            joinedload(Coupon.category),
+            joinedload(Coupon.country_associations).joinedload(CouponCountry.country)
+        )
+        
+        # Apply filters
         if active_only:
             query = query.filter(Coupon.is_active == True)
+        
+        if category_id:
+            query = query.filter(Coupon.category_id == category_id)
+        
+        if availability_type:
+            query = query.filter(Coupon.availability_type == availability_type)
+        
+        # Filter by country (requires join)
+        if country_id:
+            query = query.join(CouponCountry).filter(CouponCountry.country_id == country_id)
+        
+        # Filter by region (requires joins through country)
+        if region_id:
+            query = query.join(CouponCountry).join(Country).filter(Country.region_id == region_id)
+        
         coupons = query.offset(skip).limit(limit).all()
         
         # Cache the result (serialize for caching)
@@ -67,6 +118,8 @@ class CouponService:
                 "is_active": c.is_active,
                 "price": c.price,
                 "created_at": str(c.created_at) if c.created_at else None,
+                "category_id": str(c.category_id) if c.category_id else None,
+                "availability_type": c.availability_type,
             }
             for c in coupons
         ]
@@ -87,16 +140,31 @@ class CouponService:
     @staticmethod
     def update(db: Session, coupon_id: UUID, coupon_data: CouponUpdate) -> Optional[Coupon]:
         """Update a coupon"""
+        from app.models.coupon_country import CouponCountry
+        
         db_coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
         if not db_coupon:
             return None
         
         update_data = coupon_data.model_dump(exclude_unset=True)
+        
+        # Handle country_ids separately
+        country_ids = update_data.pop('country_ids', None)
+        
         if "code" in update_data:
             update_data["code"] = update_data["code"].upper()
         
         for field, value in update_data.items():
             setattr(db_coupon, field, value)
+        
+        # Update country associations if country_ids provided
+        if country_ids is not None:
+            # Remove existing associations
+            db.query(CouponCountry).filter(CouponCountry.coupon_id == coupon_id).delete()
+            # Add new associations
+            for country_id in country_ids:
+                association = CouponCountry(coupon_id=coupon_id, country_id=country_id)
+                db.add(association)
         
         db.commit()
         db.refresh(db_coupon)

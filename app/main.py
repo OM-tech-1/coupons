@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
-from app.api import auth, coupons, users, cart, orders
+from app.api import auth, coupons, users, cart, orders, categories, regions, countries
 from app.database import Base, engine, SessionLocal
 from app.middleware.rate_limit import setup_rate_limiting
 from sqlalchemy import text
@@ -27,7 +27,9 @@ def run_migrations():
     coupon_columns = [
         ('price', 'FLOAT DEFAULT 0.0'),
         ('redeem_code', 'VARCHAR(100)'),
-        ('brand', 'VARCHAR(100)')
+        ('brand', 'VARCHAR(100)'),
+        ('category_id', 'UUID'),
+        ('availability_type', "VARCHAR(20) DEFAULT 'online'")
     ]
     
     with engine.connect() as conn:
@@ -60,12 +62,15 @@ app.include_router(coupons.router, prefix="/coupons", tags=["Coupons"])
 app.include_router(users.router, prefix="/user", tags=["User"])
 app.include_router(cart.router, prefix="/cart", tags=["Cart"])
 app.include_router(orders.router, prefix="/orders", tags=["Orders"])
+app.include_router(categories.router, prefix="/categories", tags=["Categories"])
+app.include_router(regions.router, prefix="/regions", tags=["Regions"])
+app.include_router(countries.router, prefix="/countries", tags=["Countries"])
 
 
 @app.get("/")
 def health_check():
     """Basic health check endpoint."""
-    return {"status": "OK", "version": "1.1.0"}
+    return {"status": "OK", "version": "2.0.0"}
 
 
 @app.get("/health")

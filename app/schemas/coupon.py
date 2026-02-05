@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 
@@ -15,6 +15,10 @@ class CouponBase(BaseModel):
     min_purchase: float = Field(default=0.0, ge=0)
     max_uses: Optional[int] = Field(default=None, ge=1)
     expiration_date: Optional[datetime] = None
+    # New fields for categories and geography
+    category_id: Optional[UUID] = None
+    availability_type: str = Field(default="online", pattern="^(online|local|both)$")
+    country_ids: List[UUID] = Field(default_factory=list)
 
 
 class CouponCreate(CouponBase):
@@ -29,10 +33,15 @@ class CouponUpdate(BaseModel):
     description: Optional[str] = None
     discount_type: Optional[str] = Field(default=None, pattern="^(percentage|fixed)$")
     discount_amount: Optional[float] = Field(default=None, gt=0)
+    price: Optional[float] = Field(default=None, ge=0)  # Allow price updates
     min_purchase: Optional[float] = Field(default=None, ge=0)
     max_uses: Optional[int] = Field(default=None, ge=1)
     is_active: Optional[bool] = None
     expiration_date: Optional[datetime] = None
+    # New optional fields
+    category_id: Optional[UUID] = None
+    availability_type: Optional[str] = Field(default=None, pattern="^(online|local|both)$")
+    country_ids: Optional[List[UUID]] = None
 
 
 class CouponResponse(CouponBase):
@@ -41,9 +50,38 @@ class CouponResponse(CouponBase):
     current_uses: int = 0
     is_active: bool = True
     created_at: datetime
+    # Nested relationships (populated from joins)
+    category: Optional['CategoryInCoupon'] = None
+    countries: List['CountryInCoupon'] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
+
+
+# Nested schemas for relationships (to avoid circular imports)
+class CategoryInCoupon(BaseModel):
+    """Simplified category info for nested in coupon responses"""
+    id: UUID
+    name: str
+    slug: str
+    
+    class Config:
+        from_attributes = True
+
+
+class CountryInCoupon(BaseModel):
+    """Simplified country info for nested in coupon responses"""
+    id: UUID
+    name: str
+    slug: str
+    country_code: str
+    
+    class Config:
+        from_attributes = True
+
+
+# Update forward references
+CouponResponse.model_rebuild()
 
 
 class CouponValidateRequest(BaseModel):
