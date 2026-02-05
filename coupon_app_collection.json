@@ -1,8 +1,8 @@
 {
     "info": {
         "_postman_id": "coupon-app-collection",
-        "name": "Coupon App API",
-        "description": "Complete API collection for the Coupon E-commerce application",
+        "name": "Coupon App API v2.0",
+        "description": "Complete API collection for the Coupon E-commerce application with Categories & Geography",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
@@ -69,6 +69,575 @@
                             "path": [
                                 "auth",
                                 "login"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Categories",
+            "item": [
+                {
+                    "name": "List All Categories",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/categories/?active_only=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Categories with Coupon Counts",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/categories/with-counts?active_only=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "with-counts"
+                            ],
+                            "query": [
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Category by Slug",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/categories/electronics-gadgets",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "electronics-gadgets"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Browse Coupons in Category",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/categories/electronics-gadgets/coupons?limit=20&active_only=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "electronics-gadgets",
+                                "coupons"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                },
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Category (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Sports & Fitness\",\n    \"slug\": \"sports-fitness\",\n    \"description\": \"Sports equipment and fitness products\",\n    \"icon\": \"⚽\",\n    \"display_order\": 11\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/categories/",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                ""
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Regions",
+            "item": [
+                {
+                    "name": "List All Regions with Countries",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/regions/?active_only=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "regions",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Region by Slug",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/regions/asia",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "regions",
+                                "asia"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Browse Coupons in Region",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/regions/middle-east/coupons?limit=20&active_only=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "regions",
+                                "middle-east",
+                                "coupons"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                },
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Countries",
+            "item": [
+                {
+                    "name": "List All Countries",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/countries/?active_only=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "countries",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Country by Slug",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/countries/india",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "countries",
+                                "india"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Browse Coupons in Country",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/countries/united-arab-emirates/coupons?limit=20&active_only=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "countries",
+                                "united-arab-emirates",
+                                "coupons"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                },
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Coupons",
+            "item": [
+                {
+                    "name": "List All Coupons",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/?skip=0&limit=100&active_only=false",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                },
+                                {
+                                    "key": "active_only",
+                                    "value": "false"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Filter Coupons by Category",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/?category_id={{category_id}}&active_only=true&limit=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "category_id",
+                                    "value": "{{category_id}}"
+                                },
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Filter Coupons by Country",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/?country_id={{country_id}}&active_only=true&limit=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "country_id",
+                                    "value": "{{country_id}}"
+                                },
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Filter Coupons by Availability Type",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/?availability_type=local&active_only=true&limit=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "availability_type",
+                                    "value": "local",
+                                    "description": "online, local, or both"
+                                },
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Filter Coupons (Multi-Filter)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/?category_id={{category_id}}&country_id={{country_id}}&availability_type=local&active_only=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "category_id",
+                                    "value": "{{category_id}}"
+                                },
+                                {
+                                    "key": "country_id",
+                                    "value": "{{country_id}}"
+                                },
+                                {
+                                    "key": "availability_type",
+                                    "value": "local"
+                                },
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Coupon by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/{{coupon_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "{{coupon_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Coupon with Category & Geography (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"code\": \"PETLOVE50\",\n    \"redeem_code\": \"SECRET123\",\n    \"brand\": \"PetStore\",\n    \"title\": \"50% off pet food\",\n    \"description\": \"Amazing deal on all pet food\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 50.0,\n    \"price\": 2.99,\n    \"min_purchase\": 10.0,\n    \"max_uses\": 100,\n    \"category_id\": \"{{category_id}}\",\n    \"availability_type\": \"local\",\n    \"country_ids\": [\"{{country_id}}\"]\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/coupons/",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                ""
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Coupon (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Updated Title\",\n    \"price\": 14.99,\n    \"category_id\": \"{{category_id}}\",\n    \"availability_type\": \"both\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/coupons/{{coupon_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "{{coupon_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Coupon (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/{{coupon_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "{{coupon_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Claim Coupon (Free)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/{{coupon_id}}/claim",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "{{coupon_id}}",
+                                "claim"
                             ]
                         }
                     }
@@ -162,182 +731,6 @@
                             "path": [
                                 "user",
                                 "coupons"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Coupons",
-            "item": [
-                {
-                    "name": "List All Coupons",
-                    "request": {
-                        "method": "GET",
-                        "url": {
-                            "raw": "{{base_url}}/coupons/?skip=0&limit=100&active_only=false",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "coupons",
-                                ""
-                            ],
-                            "query": [
-                                {
-                                    "key": "skip",
-                                    "value": "0"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "100"
-                                },
-                                {
-                                    "key": "active_only",
-                                    "value": "false"
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Get Coupon by ID",
-                    "request": {
-                        "method": "GET",
-                        "url": {
-                            "raw": "{{base_url}}/coupons/{{coupon_id}}",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "coupons",
-                                "{{coupon_id}}"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Create Coupon (Admin)",
-                    "request": {
-                        "auth": {
-                            "type": "bearer",
-                            "bearer": [
-                                {
-                                    "key": "token",
-                                    "value": "{{access_token}}",
-                                    "type": "string"
-                                }
-                            ]
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"code\": \"NEWCODE\",\n    \"redeem_code\": \"SECRET123\",\n    \"brand\": \"Brand Name\",\n    \"title\": \"New Coupon\",\n    \"description\": \"Description here\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 15.0,\n    \"price\": 9.99,\n    \"min_purchase\": 30.0,\n    \"max_uses\": 200\n}"
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/coupons/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "coupons",
-                                ""
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Update Coupon (Admin)",
-                    "request": {
-                        "auth": {
-                            "type": "bearer",
-                            "bearer": [
-                                {
-                                    "key": "token",
-                                    "value": "{{access_token}}",
-                                    "type": "string"
-                                }
-                            ]
-                        },
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"title\": \"Updated Title\",\n    \"redeem_code\": \"UPDATEDSECRET\",\n    \"price\": 14.99\n}"
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/coupons/{{coupon_id}}",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "coupons",
-                                "{{coupon_id}}"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Delete Coupon (Admin)",
-                    "request": {
-                        "auth": {
-                            "type": "bearer",
-                            "bearer": [
-                                {
-                                    "key": "token",
-                                    "value": "{{access_token}}",
-                                    "type": "string"
-                                }
-                            ]
-                        },
-                        "method": "DELETE",
-                        "url": {
-                            "raw": "{{base_url}}/coupons/{{coupon_id}}",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "coupons",
-                                "{{coupon_id}}"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Claim Coupon (Free)",
-                    "request": {
-                        "auth": {
-                            "type": "bearer",
-                            "bearer": [
-                                {
-                                    "key": "token",
-                                    "value": "{{access_token}}",
-                                    "type": "string"
-                                }
-                            ]
-                        },
-                        "method": "POST",
-                        "url": {
-                            "raw": "{{base_url}}/coupons/{{coupon_id}}/claim",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "coupons",
-                                "{{coupon_id}}",
-                                "claim"
                             ]
                         }
                     }
@@ -605,6 +998,21 @@
         },
         {
             "key": "coupon_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "category_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "region_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "country_id",
             "value": "",
             "type": "string"
         },

@@ -5,6 +5,13 @@ from app.database import Base, engine, SessionLocal
 from app.middleware.rate_limit import setup_rate_limiting
 from sqlalchemy import text
 
+# Import all models to ensure they're registered BEFORE Base.metadata.create_all()
+# This is critical for SQLAlchemy to properly resolve relationships
+from app.models import (
+    User, Coupon, UserCoupon, Cart, Order, Payment,
+    Category, Region, Country, CouponCountry
+)
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 
