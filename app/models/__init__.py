@@ -4,7 +4,8 @@ from app.models.coupon import Coupon
 from app.models.user_coupon import UserCoupon
 from app.models.cart import CartItem
 from app.models.order import Order
-from app.models.payment import Payment
+from app.models.payment import Payment, PaymentStatus, PaymentGateway
+from app.models.payment_token import PaymentToken
 from app.models.category import Category
 from app.models.region import Region
 from app.models.country import Country
@@ -17,8 +18,12 @@ __all__ = [
     "CartItem",
     "Order",
     "Payment",
+    "PaymentStatus",
+    "PaymentGateway",
+    "PaymentToken",
     "Category",
     "Region",
     "Country",
     "CouponCountry",
 ]
+

@@ -1,0 +1,197 @@
+"""
+Stripe Payments API Endpoints
+
+Handles payment initialization, token validation, and status checks.
+"""
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from uuid import UUID
+import os
+import logging
+
+from app.database import get_db
+from app.schemas.stripe.payment import (
+    PaymentInitRequest,
+    PaymentInitResponse,
+    TokenValidateRequest,
+    TokenValidateResponse,
+    PaymentStatusResponse,
+)
+from app.services.stripe.payment_service import StripePaymentService
+from app.services.stripe.token_service import PaymentTokenService
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/payments", tags=["stripe-payments"])
+
+# Payment UI domain from environment
+PAYMENT_UI_DOMAIN = os.getenv("PAYMENT_UI_DOMAIN", "https://payment.vouchergalaxy.com")
+
+
+@router.post("/init", response_model=PaymentInitResponse)
+async def initialize_payment(
+    request: PaymentInitRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Initialize a payment for an order.
+    
+    Creates a Stripe PaymentIntent and returns a redirect URL
+    with a short-lived token for the payment UI.
+    """
+    try:
+        payment_service = StripePaymentService(db)
+        token_service = PaymentTokenService(db)
+        
+        # Create PaymentIntent
+        payment = payment_service.create_payment_intent(
+            order_id=request.order_id,
+            amount=request.amount,
+            currency=request.currency,
+            metadata=request.metadata,
+        )
+        
+        # Generate short-lived token
+        token = token_service.generate_payment_token(
+            order_id=request.order_id,
+            payment_intent_id=payment.stripe_payment_intent_id,
+            site_origin=request.return_url,
+        )
+        
+        # Build redirect URL
+        redirect_url = f"{PAYMENT_UI_DOMAIN}/pay?token={token.token}"
+        
+        logger.info(f"Payment initialized for order {request.order_id}")
+        
+        return PaymentInitResponse(
+            redirect_url=redirect_url,
+            token=token.token,
+            expires_at=token.expires_at,
+            order_id=request.order_id,
+            payment_intent_id=payment.stripe_payment_intent_id,
+        )
+        
+    except ValueError as e:
+        logger.error(f"Payment initialization failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error during payment init: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Payment initialization failed"
+        )
+
+
+@router.post("/validate-token", response_model=TokenValidateResponse)
+async def validate_token(
+    request: TokenValidateRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Validate a payment token and return Stripe client secret.
+    
+    Called by the payment UI to get the information needed
+    to render Stripe Elements.
+    """
+    try:
+        token_service = PaymentTokenService(db)
+        payment_service = StripePaymentService(db)
+        
+        # Validate token
+        token_data = token_service.validate_payment_token(request.token)
+        
+        return TokenValidateResponse(
+            client_secret=token_data["client_secret"],
+            amount=int(token_data["amount"]),
+            currency=token_data["currency"],
+            order_id=token_data["order_id"],
+            publishable_key=payment_service.get_publishable_key(),
+        )
+        
+    except ValueError as e:
+        logger.warning(f"Token validation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error during token validation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Token validation failed"
+        )
+
+
+@router.get("/status/{order_id}", response_model=PaymentStatusResponse)
+async def get_payment_status(
+    order_id: UUID,
+    db: Session = Depends(get_db)
+):
+    """
+    Get the payment status for an order.
+    
+    Used by the main site to check payment completion.
+    """
+    try:
+        payment_service = StripePaymentService(db)
+        
+        payment = payment_service.get_payment_by_order(order_id)
+        
+        if not payment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No payment found for order {order_id}"
+            )
+        
+        return PaymentStatusResponse(
+            order_id=order_id,
+            status=payment.status,
+            amount=int(payment.amount),
+            currency=payment.currency,
+            paid_at=payment.completed_at,
+            gateway=payment.gateway,
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching payment status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch payment status"
+        )
+
+
+@router.post("/mark-token-used")
+async def mark_token_used(
+    request: TokenValidateRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Mark a payment token as used.
+    
+    Called after successful payment confirmation to prevent token reuse.
+    """
+    try:
+        token_service = PaymentTokenService(db)
+        success = token_service.mark_token_used(request.token)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Token not found"
+            )
+        
+        return {"status": "success", "message": "Token marked as used"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error marking token as used: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to mark token as used"
+        )

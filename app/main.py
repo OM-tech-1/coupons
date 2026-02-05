@@ -1,14 +1,17 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from app.api import auth, coupons, users, cart, orders, categories, regions, countries
+from app.api.stripe import payments_router, webhooks_router
 from app.database import Base, engine, SessionLocal
 from app.middleware.rate_limit import setup_rate_limiting
 from sqlalchemy import text
+import os
 
 # Import all models to ensure they're registered BEFORE Base.metadata.create_all()
 # This is critical for SQLAlchemy to properly resolve relationships
 from app.models import (
-    User, Coupon, UserCoupon, CartItem, Order, Payment,
+    User, Coupon, UserCoupon, CartItem, Order, Payment, PaymentToken,
     Category, Region, Country, CouponCountry
 )
 
@@ -58,6 +61,27 @@ run_migrations()
 
 app = FastAPI(title="Coupon E-commerce API")
 
+# CORS configuration for payment domain
+PAYMENT_UI_DOMAIN = os.getenv("PAYMENT_UI_DOMAIN", "https://payment.vouchergalaxy.com")
+MAIN_SITE_DOMAIN = os.getenv("MAIN_SITE_DOMAIN", "https://vouchergalaxy.com")
+
+allowed_origins = [
+    PAYMENT_UI_DOMAIN,
+    MAIN_SITE_DOMAIN,
+    "https://api.vouchergalaxy.com",  # API domain
+    "http://localhost:3000",  # Local development
+    "http://localhost:5173",  # Vite dev server
+    "http://localhost:8000",  # Local API
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Add GZip compression for responses > 1KB
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
@@ -72,6 +96,10 @@ app.include_router(orders.router, prefix="/orders", tags=["Orders"])
 app.include_router(categories.router, prefix="/categories", tags=["Categories"])
 app.include_router(regions.router, prefix="/regions", tags=["Regions"])
 app.include_router(countries.router, prefix="/countries", tags=["Countries"])
+
+# Stripe payment routes
+app.include_router(payments_router)
+app.include_router(webhooks_router)
 
 
 @app.get("/")

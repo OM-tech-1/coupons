@@ -12,3 +12,5 @@ phonenumbers
 redis
 slowapi
 gunicorn
+stripe
+PyJWT

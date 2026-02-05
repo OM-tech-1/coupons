@@ -15,11 +15,17 @@ class Order(Base):
     status = Column(String(20), default="pending")  # pending, paid, failed, cancelled
     payment_id = Column(String(255), nullable=True)  # External payment gateway ID
     payment_method = Column(String(50), nullable=True)  # razorpay, stripe, etc.
+    
+    # Stripe payment tracking
+    payment_state = Column(String(20), default="awaiting_payment")
+    stripe_payment_intent_id = Column(String(255), nullable=True, index=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
     items = relationship("OrderItem", back_populates="order")
+    payment = relationship("Payment", back_populates="order", uselist=False)
 
 
 class OrderItem(Base):
