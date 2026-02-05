@@ -2,7 +2,7 @@
 from app.models.user import User
 from app.models.coupon import Coupon
 from app.models.user_coupon import UserCoupon
-from app.models.cart import Cart
+from app.models.cart import CartItem
 from app.models.order import Order
 from app.models.payment import Payment
 from app.models.category import Category
@@ -14,7 +14,7 @@ __all__ = [
     "User",
     "Coupon",
     "UserCoupon",
-    "Cart",
+    "CartItem",
     "Order",
     "Payment",
     "Category",

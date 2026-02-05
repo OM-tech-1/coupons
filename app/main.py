@@ -8,7 +8,7 @@ from sqlalchemy import text
 # Import all models to ensure they're registered BEFORE Base.metadata.create_all()
 # This is critical for SQLAlchemy to properly resolve relationships
 from app.models import (
-    User, Coupon, UserCoupon, Cart, Order, Payment,
+    User, Coupon, UserCoupon, CartItem, Order, Payment,
     Category, Region, Country, CouponCountry
 )
 
