@@ -1,0 +1,35 @@
+
+import paramiko
+import sys
+
+HOSTNAME = "156.67.216.229"
+USERNAME = "root"
+PASSWORD = "Uf7PJFeoC9j05es@"
+
+def connect():
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    print(f"Connecting to {HOSTNAME}...")
+    client.connect(HOSTNAME, username=USERNAME, password=PASSWORD)
+    return client
+
+def run_command(client, command):
+    print(f"Running: {command}")
+    stdin, stdout, stderr = client.exec_command(command)
+    out = stdout.read().decode().strip()
+    if out: print(f"STDOUT:\n{out}")
+    err = stderr.read().decode().strip()
+    if err: print(f"STDERR:\n{err}")
+
+def main():
+    try:
+        client = connect()
+        # Check file content
+        run_command(client, "cat /root/coupons/deploy.sh")
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        client.close()
+
+if __name__ == "__main__":
+    main()

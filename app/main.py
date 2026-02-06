@@ -42,6 +42,11 @@ def run_migrations():
         ('category_id', 'UUID'),
         ('availability_type', "VARCHAR(20) DEFAULT 'online'")
     ]
+
+    # Order columns
+    order_columns = [
+        ('webhook_url', 'VARCHAR(500)')
+    ]
     
     with engine.connect() as conn:
         for col_name, col_type in user_columns:
@@ -53,6 +58,12 @@ def run_migrations():
         for col_name, col_type in coupon_columns:
             try:
                 conn.execute(text(f'ALTER TABLE coupons ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
+            except Exception:
+                pass
+
+        for col_name, col_type in order_columns:
+            try:
+                conn.execute(text(f'ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
             except Exception:
                 pass
         

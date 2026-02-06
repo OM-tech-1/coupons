@@ -12,6 +12,7 @@ class ExternalPaymentRequest(BaseModel):
     second_name: Optional[str] = Field(None, description="User's second/last name")
     reference_id: Optional[str] = Field(None, description="External reference ID for reconciliation")
     return_url: Optional[HttpUrl] = Field(None, description="URL to redirect user after payment completion")
+    webhook_url: Optional[HttpUrl] = Field(None, description="URL to receive server-to-server payment notifications")
 
 class ExternalPaymentResponse(BaseModel):
     payment_url: str

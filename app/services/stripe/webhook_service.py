@@ -112,6 +112,9 @@ class StripeWebhookService:
         
         logger.info(f"Payment {payment.id} marked as succeeded")
         
+        # Dispatch Outbound Webhook
+        self._send_outbound_webhook(order, "success")
+        
         return {
             "status": "success",
             "payment_id": str(payment.id),
@@ -152,6 +155,9 @@ class StripeWebhookService:
         self.db.commit()
         
         logger.info(f"Payment {payment.id} marked as failed: {failure_reason}")
+        
+        # Dispatch Outbound Webhook
+        self._send_outbound_webhook(order, "failed", failure_reason=failure_reason)
         
         return {
             "status": "success",
@@ -203,6 +209,56 @@ class StripeWebhookService:
         self.db.commit()
         
         return {"status": "success", "payment_id": str(payment.id)}
+
+    def _send_outbound_webhook(self, order: Order, status: str, failure_reason: str = None):
+        """
+        Send a notification to the external system's webhook_url if configured.
+        Uses HMAC signature for security.
+        """
+        if not order.webhook_url:
+            return
+
+        try:
+            import requests # Lazy import
+            import hmac
+            import hashlib
+            import json
+            import os
+            
+            secret = os.getenv("EXTERNAL_API_KEY")
+            if not secret:
+                logger.warning("Cannot send outbound webhook: EXTERNAL_API_KEY not configured")
+                return
+
+            payload = {
+                "order_id": str(order.id),
+                "status": status,
+                "amount": order.total_amount,
+                "currency": "USD", # Default or from order
+                "payment_id": order.stripe_payment_intent_id,
+                "failure_reason": failure_reason
+                # Add reference_id if available (stored in payment metadata)
+            }
+            
+            # Serialize
+            body_json = json.dumps(payload, separators=(',', ':'))
+            
+            # Sign
+            signature = hmac.new(secret.encode(), body_json.encode(), hashlib.sha256).hexdigest()
+            
+            headers = {
+                "x-signature": signature,
+                "Content-Type": "application/json"
+            }
+            
+            logger.info(f"Dispatching outbound webhook to {order.webhook_url}")
+            
+            # Send with timeout (fire and forget pattern ideally, but here synchronous with short timeout)
+            # In production, use BackgroundTasks
+            requests.post(order.webhook_url, data=body_json, headers=headers, timeout=5)
+            
+        except Exception as e:
+            logger.error(f"Failed to send outbound webhook: {e}")
 
     def _get_payment_by_intent(self, payment_intent_id: str):
         """Get payment by Stripe PaymentIntent ID"""

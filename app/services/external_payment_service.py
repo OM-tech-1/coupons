@@ -63,7 +63,8 @@ class ExternalPaymentService:
             total_amount=float(request.amount),
             status="pending",
             payment_state="awaiting_payment",
-            payment_method="stripe"
+            payment_method="stripe",
+            webhook_url=str(request.webhook_url) if request.webhook_url else None
         )
         self.db.add(new_order)
         self.db.commit()

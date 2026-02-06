@@ -15,6 +15,7 @@ class Order(Base):
     status = Column(String(20), default="pending")  # pending, paid, failed, cancelled
     payment_id = Column(String(255), nullable=True)  # External payment gateway ID
     payment_method = Column(String(50), nullable=True)  # razorpay, stripe, etc.
+    webhook_url = Column(String(500), nullable=True)  # External webhook for notifications
     
     # Stripe payment tracking
     payment_state = Column(String(20), default="awaiting_payment")
