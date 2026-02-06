@@ -32,6 +32,7 @@ class CouponService:
             expiration_date=coupon_data.expiration_date,
             category_id=coupon_data.category_id,
             availability_type=coupon_data.availability_type,
+            price=coupon_data.price,
         )
         db.add(db_coupon)
         db.flush()  # Flush to get the coupon ID
