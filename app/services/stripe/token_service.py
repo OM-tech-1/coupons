@@ -77,7 +77,7 @@ class PaymentTokenService:
         
         self.db.add(token)
         self.db.commit()
-        self.db.refresh(token)
+        # No need to refresh - we have all the data we need
         
         logger.info(f"Generated payment token for order {order_id}, expires at {expires_at}")
         

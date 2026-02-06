@@ -59,16 +59,8 @@ class StripePaymentService:
         if existing_payment and existing_payment.is_completed():
             raise ValueError(f"Order {order_id} already has a completed payment")
         
-        # If there's an incomplete payment, we can reuse or cancel it
-        if existing_payment and existing_payment.stripe_payment_intent_id:
-            # Cancel old PaymentIntent if not completed
-            try:
-                self.stripe.PaymentIntent.cancel(
-                    existing_payment.stripe_payment_intent_id
-                )
-                logger.info(f"Cancelled old PaymentIntent: {existing_payment.stripe_payment_intent_id}")
-            except Exception as e:
-                logger.warning(f"Could not cancel old PaymentIntent: {e}")
+        # Note: We don't cancel old PaymentIntents to avoid 500-1000ms API call
+        # Stripe automatically expires abandoned PaymentIntents after 24 hours
 
         # Prepare metadata
         pi_metadata = {
