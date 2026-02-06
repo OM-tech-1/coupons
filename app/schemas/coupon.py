@@ -12,6 +12,7 @@ class CouponBase(BaseModel):
     description: Optional[str] = None
     discount_type: str = Field(default="percentage", pattern="^(percentage|fixed)$")
     discount_amount: float = Field(..., gt=0)
+    price: float = Field(default=0.0, ge=0, description="Price to purchase this coupon")
     min_purchase: float = Field(default=0.0, ge=0)
     max_uses: Optional[int] = Field(default=None, ge=1)
     expiration_date: Optional[datetime] = None
