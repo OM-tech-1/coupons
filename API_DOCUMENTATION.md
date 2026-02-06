@@ -303,3 +303,50 @@ curl http://156.67.216.229/health
 ---
 
 ## Admin: +917907975711 / afsal@123
+
+---
+
+## Stripe Payments
+
+### Initialize Payment
+Creates a Stripe PaymentIntent and returns a temporary token for the payment UI.
+```bash
+curl -X POST http://156.67.216.229/payments/init \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"order_id":"ORDER_UUID", "amount": 1000, "currency": "USD"}'
+```
+**Response:**
+```json
+{
+  "redirect_url": "https://payment.vouchergalaxy.com/pay?token=...",
+  "token": "eyJ...",
+  "expires_at": "2026-02-06T12:00:00",
+  "order_id": "uuid",
+  "payment_intent_id": "pi_..."
+}
+```
+
+### Validate Token
+Used by the Frontend UI to validate the token and get the Client Secret.
+```bash
+curl -X POST http://156.67.216.229/payments/validate-token \
+  -H "Content-Type: application/json" \
+  -d '{"token":"JWT_TOKEN"}'
+```
+
+### Get Payment Status
+Check the status of a payment by Order ID.
+```bash
+curl http://156.67.216.229/payments/status/{order_id} -H "Authorization: Bearer TOKEN"
+```
+**Response:** `{"status": "succeeded", "amount": 1000, "gateway": "stripe", ...}`
+
+### Mark Token Used
+Invalidates the token after successful payment to prevent reuse.
+```bash
+curl -X POST http://156.67.216.229/payments/mark-token-used \
+  -H "Content-Type: application/json" \
+  -d '{"token":"JWT_TOKEN"}'
+```
+

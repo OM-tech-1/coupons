@@ -983,6 +983,126 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "Payments",
+            "item": [
+                {
+                    "name": "Initialize Payment",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"order_id\": \"{{order_id}}\",\n    \"amount\": 1000,\n    \"currency\": \"USD\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/payments/init",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "payments",
+                                "init"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Validate Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"token\": \"PUT_TOKEN_HERE\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/payments/validate-token",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "payments",
+                                "validate-token"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Payment Status",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/payments/status/{{order_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "payments",
+                                "status",
+                                "{{order_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Mark Token Used",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"token\": \"PUT_TOKEN_HERE\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/payments/mark-token-used",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "payments",
+                                "mark-token-used"
+                            ]
+                        }
+                    }
+                }
+            ]
         }
     ],
     "variable": [

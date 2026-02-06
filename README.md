@@ -150,6 +150,8 @@ gunicorn app.main:app -c gunicorn.conf.py
 | | `GET /cart/` | View cart |
 | **Orders** | `POST /orders/checkout` | Purchase cart items |
 | | `GET /orders/` | View order history |
+| **Payments** | `POST /payments/init` | Initialize Stripe payment |
+| | `GET /payments/status/{id}` | Check payment status |
 
 See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for complete details.
 
