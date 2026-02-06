@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from app.api import auth, coupons, users, cart, orders, categories, regions, countries
 from app.api.stripe import payments_router, webhooks_router
+from app.api.external.payment import router as external_payment_router
 from app.database import Base, engine, SessionLocal
 from app.middleware.rate_limit import setup_rate_limiting
 from sqlalchemy import text
@@ -100,6 +101,9 @@ app.include_router(countries.router, prefix="/countries", tags=["Countries"])
 # Stripe payment routes
 app.include_router(payments_router)
 app.include_router(webhooks_router)
+
+# External Integration Routes
+app.include_router(external_payment_router, prefix="/api/v1/external", tags=["External Integrations"])
 
 
 @app.get("/")
