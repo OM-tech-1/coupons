@@ -59,6 +59,14 @@ def run_migrations():
 
 run_migrations()
 
+run_migrations()
+
+print("--- DEBUG ENV VARS ---")
+print(f"STRIPE_SECRET_KEY present: {bool(os.getenv('STRIPE_SECRET_KEY'))}")
+print(f"STRIPE_SECRET_KEY length: {len(os.getenv('STRIPE_SECRET_KEY', ''))}")
+print(f"REDIS_URL: {os.getenv('REDIS_URL')}")
+print("--- END DEBUG ---")
+
 app = FastAPI(title="Coupon E-commerce API")
 
 # CORS configuration for payment domain
