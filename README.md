@@ -13,9 +13,10 @@ A comprehensive **FastAPI-based** coupon and voucher marketplace with **category
 ### 💳 Full E-commerce Capabilities
 - User registration and JWT authentication
 - Shopping cart management
-- Secure checkout with mock payment integration
+- **Stripe Payment Integration** with secure checkout
 - Order history and purchased coupon tracking
 - Revealed redeem codes after purchase
+- Webhook-based payment status updates
 
 ### 🔍 Advanced Filtering
 - Filter coupons by category, region, country, and availability type
@@ -51,18 +52,21 @@ coupons/
 │   │   ├── countries.py  # Country management
 │   │   ├── users.py      # User profile
 │   │   ├── cart.py       # Shopping cart
-│   │   └── orders.py     # Order management
+│   │   ├── orders.py     # Order management
+│   │   └── stripe/       # Stripe payment endpoints
 │   ├── models/           # SQLAlchemy ORM models
 │   ├── schemas/          # Pydantic validation schemas
 │   ├── services/         # Business logic layer
+│   │   └── stripe/       # Stripe payment services
 │   ├── middleware/       # Rate limiting, logging, auth
 │   ├── utils/            # Helpers, JWT, permissions
 │   ├── config.py         # Environment configuration
 │   ├── database.py       # Database connection
 │   └── main.py           # FastAPI application
+├── tests/                # Test files
 ├── migrations/           # SQL migration scripts
 ├── API_DOCUMENTATION.md  # Complete API reference
-└── requirements.txt      # Python dependencies
+└── requirements.txt      # Python dependencies (pinned)
 ```
 
 ---
@@ -95,10 +99,28 @@ pip install -r requirements.txt
 ### 3. Configure Environment Variables
 Create a `.env` file:
 ```env
+# Database
 DATABASE_URL=postgresql://user:password@localhost/coupons_db
-JWT_SECRET=your-secret-key-here
+
+# JWT Authentication (secret must be 32+ characters)
+JWT_SECRET=your-super-secret-key-at-least-32-chars-long
 JWT_ALGORITHM=HS256
 JWT_EXPIRE_MINUTES=10080
+
+# Redis (optional, for caching)
+REDIS_URL=redis://localhost:6379/0
+
+# Stripe Payment Integration
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+
+# Payment Token
+PAYMENT_TOKEN_SECRET=your-payment-token-secret
+PAYMENT_TOKEN_TTL_MINUTES=5
+
+# Domain Configuration
+PAYMENT_UI_DOMAIN=https://payment.yourdomain.com
 ```
 
 ### 4. Run Database Migrations
@@ -151,7 +173,9 @@ gunicorn app.main:app -c gunicorn.conf.py
 | **Orders** | `POST /orders/checkout` | Purchase cart items |
 | | `GET /orders/` | View order history |
 | **Payments** | `POST /payments/init` | Initialize Stripe payment |
-| | `GET /payments/status/{id}` | Check payment status |
+| | `POST /payments/validate-token` | Validate payment token |
+| | `GET /payments/status/{order_id}` | Check payment status |
+| **Webhooks** | `POST /webhooks/stripe` | Stripe webhook handler |
 
 See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for complete details.
 

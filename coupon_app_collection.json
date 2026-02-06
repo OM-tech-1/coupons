@@ -1,8 +1,8 @@
 {
     "info": {
         "_postman_id": "coupon-app-collection",
-        "name": "Coupon App API v2.0",
-        "description": "Complete API collection for the Coupon E-commerce application with Categories & Geography",
+        "name": "Coupon App API v2.1 (Stripe)",
+        "description": "Complete API collection for the Coupon E-commerce application with Categories, Geography & Stripe Payments",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
@@ -1100,6 +1100,43 @@
                                 "mark-token-used"
                             ]
                         }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Webhooks",
+            "item": [
+                {
+                    "name": "Stripe Webhook",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Stripe-Signature",
+                                "value": "{{stripe_signature}}",
+                                "description": "Stripe webhook signature for verification"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_test\",\n    \"type\": \"payment_intent.succeeded\",\n    \"data\": {\n        \"object\": {\n            \"id\": \"pi_test\",\n            \"status\": \"succeeded\"\n        }\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/webhooks/stripe",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "webhooks",
+                                "stripe"
+                            ]
+                        },
+                        "description": "Stripe sends this webhook when payment events occur. Do not call directly - Stripe handles this."
                     }
                 }
             ]
