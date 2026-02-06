@@ -1,7 +1,7 @@
 # Coupon App API Documentation
 
-**Base URL:** `http://156.67.216.229`  
-**Swagger UI:** http://156.67.216.229/docs
+**Base URL:** `https://api.vouchergalaxy.com`  
+**Swagger UI:** https://api.vouchergalaxy.com/docs
 
 ---
 
@@ -9,14 +9,14 @@
 
 ### Register
 ```bash
-curl -X POST http://156.67.216.229/auth/register \
+curl -X POST https://api.vouchergalaxy.com/auth/register \
   -H "Content-Type: application/json" \
   -d '{"country_code":"+91","number":"9876543210","password":"pass123","full_name":"Test User"}'
 ```
 
 ### Login
 ```bash
-curl -X POST http://156.67.216.229/auth/login \
+curl -X POST https://api.vouchergalaxy.com/auth/login \
   -H "Content-Type: application/json" \
   -d '{"country_code":"+91","number":"7907975711","password":"afsal@123"}'
 ```
@@ -27,12 +27,12 @@ curl -X POST http://156.67.216.229/auth/login \
 
 ### Get Profile
 ```bash
-curl http://156.67.216.229/user/me -H "Authorization: Bearer TOKEN"
+curl https://api.vouchergalaxy.com/user/me -H "Authorization: Bearer TOKEN"
 ```
 
 ### Update Profile (Password Required)
 ```bash
-curl -X PUT http://156.67.216.229/user/me \
+curl -X PUT https://api.vouchergalaxy.com/user/me \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
   -d '{"current_password":"afsal@123","full_name":"New Name","email":"email@example.com"}'
@@ -40,7 +40,7 @@ curl -X PUT http://156.67.216.229/user/me \
 
 ### Get Claimed Coupons (with revealed codes)
 ```bash
-curl http://156.67.216.229/user/coupons -H "Authorization: Bearer TOKEN"
+curl https://api.vouchergalaxy.com/user/coupons -H "Authorization: Bearer TOKEN"
 ```
 **Response (redeem_code is revealed after purchase):**
 ```json
@@ -66,28 +66,28 @@ curl http://156.67.216.229/user/coupons -H "Authorization: Bearer TOKEN"
 
 ### List All Categories
 ```bash
-curl http://156.67.216.229/categories/
+curl https://api.vouchergalaxy.com/categories/
 ```
 **Response:** Returns 10 categories (Pets, Automotive, Electronics, Fashion, Beauty, Food & Grocery, Health, Tools, Travel, Home Furnishings)
 
 ### List Categories with Coupon Counts
 ```bash
-curl http://156.67.216.229/categories/with-counts
+curl https://api.vouchergalaxy.com/categories/with-counts
 ```
 
 ### Get Category by Slug
 ```bash
-curl http://156.67.216.229/categories/pets-pet-supplies
+curl https://api.vouchergalaxy.com/categories/pets-pet-supplies
 ```
 
 ### Browse Coupons in Category
 ```bash
-curl "http://156.67.216.229/categories/electronics-gadgets/coupons?limit=20&active_only=true"
+curl "https://api.vouchergalaxy.com/categories/electronics-gadgets/coupons?limit=20&active_only=true"
 ```
 
 ### Create Category (Admin)
 ```bash
-curl -X POST http://156.67.216.229/categories/ \
+curl -X POST https://api.vouchergalaxy.com/categories/ \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
   -d '{
@@ -105,35 +105,35 @@ curl -X POST http://156.67.216.229/categories/ \
 
 ### List All Regions with Countries
 ```bash
-curl http://156.67.216.229/regions/
+curl https://api.vouchergalaxy.com/regions/
 ```
 **Response:** Returns regions (Asia, Middle East, Europe, etc.) with nested countries
 
 ### Get Region by Slug
 ```bash
-curl http://156.67.216.229/regions/asia
+curl https://api.vouchergalaxy.com/regions/asia
 ```
 
 ### Browse Coupons in Region
 ```bash
-curl "http://156.67.216.229/regions/middle-east/coupons?limit=20"
+curl "https://api.vouchergalaxy.com/regions/middle-east/coupons?limit=20"
 ```
 
 ### List All Countries
 ```bash
-curl http://156.67.216.229/countries/
+curl https://api.vouchergalaxy.com/countries/
 # Filter by region
-curl "http://156.67.216.229/countries/?region_id=REGION_UUID"
+curl "https://api.vouchergalaxy.com/countries/?region_id=REGION_UUID"
 ```
 
 ### Get Country by Slug
 ```bash
-curl http://156.67.216.229/countries/india
+curl https://api.vouchergalaxy.com/countries/india
 ```
 
 ### Browse Coupons in Country
 ```bash
-curl "http://156.67.216.229/countries/united-arab-emirates/coupons?limit=20"
+curl "https://api.vouchergalaxy.com/countries/united-arab-emirates/coupons?limit=20"
 ```
 
 ---
@@ -143,27 +143,27 @@ curl "http://156.67.216.229/countries/united-arab-emirates/coupons?limit=20"
 ### List Coupons (Enhanced with Filters)
 ```bash
 # Basic listing
-curl "http://156.67.216.229/coupons/?skip=0&limit=10&active_only=true"
+curl "https://api.vouchergalaxy.com/coupons/?skip=0&limit=10&active_only=true"
 
 # Filter by category
-curl "http://156.67.216.229/coupons/?category_id=CATEGORY_UUID&active_only=true"
+curl "https://api.vouchergalaxy.com/coupons/?category_id=CATEGORY_UUID&active_only=true"
 
 # Filter by region
-curl "http://156.67.216.229/coupons/?region_id=REGION_UUID&active_only=true"
+curl "https://api.vouchergalaxy.com/coupons/?region_id=REGION_UUID&active_only=true"
 
 # Filter by country
-curl "http://156.67.216.229/coupons/?country_id=COUNTRY_UUID&active_only=true"
+curl "https://api.vouchergalaxy.com/coupons/?country_id=COUNTRY_UUID&active_only=true"
 
 # Filter by availability type (online/local/both)
-curl "http://156.67.216.229/coupons/?availability_type=local&active_only=true"
+curl "https://api.vouchergalaxy.com/coupons/?availability_type=local&active_only=true"
 
 # Combine filters: Electronics coupons in India
-curl "http://156.67.216.229/coupons/?category_id=CATEGORY_UUID&country_id=COUNTRY_UUID&active_only=true"
+curl "https://api.vouchergalaxy.com/coupons/?category_id=CATEGORY_UUID&country_id=COUNTRY_UUID&active_only=true"
 ```
 
 ### Create Coupon (Admin) - With Category & Geography
 ```bash
-curl -X POST http://156.67.216.229/coupons/ \
+curl -X POST https://api.vouchergalaxy.com/coupons/ \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
   -d '{
@@ -182,9 +182,9 @@ curl -X POST http://156.67.216.229/coupons/ \
 
 ### Update/Delete Coupon (Admin)
 ```bash
-curl -X PUT http://156.67.216.229/coupons/{id} -H "Authorization: Bearer TOKEN" \
+curl -X PUT https://api.vouchergalaxy.com/coupons/{id} -H "Authorization: Bearer TOKEN" \
   -d '{"redeem_code":"NEWCODE456","price":5.99,"category_id":"CATEGORY_UUID"}'
-curl -X DELETE http://156.67.216.229/coupons/{id} -H "Authorization: Bearer TOKEN"
+curl -X DELETE https://api.vouchergalaxy.com/coupons/{id} -H "Authorization: Bearer TOKEN"
 ```
 
 ---
@@ -193,7 +193,7 @@ curl -X DELETE http://156.67.216.229/coupons/{id} -H "Authorization: Bearer TOKE
 
 ### Add to Cart
 ```bash
-curl -X POST http://156.67.216.229/cart/add \
+curl -X POST https://api.vouchergalaxy.com/cart/add \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
   -d '{"coupon_id":"uuid-here","quantity":1}'
@@ -201,7 +201,7 @@ curl -X POST http://156.67.216.229/cart/add \
 
 ### View Cart
 ```bash
-curl http://156.67.216.229/cart/ -H "Authorization: Bearer TOKEN"
+curl https://api.vouchergalaxy.com/cart/ -H "Authorization: Bearer TOKEN"
 ```
 **Response:**
 ```json
@@ -210,12 +210,12 @@ curl http://156.67.216.229/cart/ -H "Authorization: Bearer TOKEN"
 
 ### Remove from Cart
 ```bash
-curl -X DELETE http://156.67.216.229/cart/{coupon_id} -H "Authorization: Bearer TOKEN"
+curl -X DELETE https://api.vouchergalaxy.com/cart/{coupon_id} -H "Authorization: Bearer TOKEN"
 ```
 
 ### Clear Cart
 ```bash
-curl -X DELETE http://156.67.216.229/cart/ -H "Authorization: Bearer TOKEN"
+curl -X DELETE https://api.vouchergalaxy.com/cart/ -H "Authorization: Bearer TOKEN"
 ```
 
 ---
@@ -224,7 +224,7 @@ curl -X DELETE http://156.67.216.229/cart/ -H "Authorization: Bearer TOKEN"
 
 ### Checkout (Mock Payment)
 ```bash
-curl -X POST http://156.67.216.229/orders/checkout \
+curl -X POST https://api.vouchergalaxy.com/orders/checkout \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
   -d '{"payment_method":"mock"}'
@@ -236,12 +236,12 @@ curl -X POST http://156.67.216.229/orders/checkout \
 
 ### Get Orders
 ```bash
-curl http://156.67.216.229/orders/ -H "Authorization: Bearer TOKEN"
+curl https://api.vouchergalaxy.com/orders/ -H "Authorization: Bearer TOKEN"
 ```
 
 ### Get Order by ID
 ```bash
-curl http://156.67.216.229/orders/{order_id} -H "Authorization: Bearer TOKEN"
+curl https://api.vouchergalaxy.com/orders/{order_id} -H "Authorization: Bearer TOKEN"
 ```
 
 ---
@@ -280,13 +280,13 @@ curl http://156.67.216.229/orders/{order_id} -H "Authorization: Bearer TOKEN"
 
 ### Health Check (Simple)
 ```bash
-curl http://156.67.216.229/
+curl https://api.vouchergalaxy.com/
 ```
 **Response:** `{"status":"OK"}`
 
 ### Health Check (Detailed)
 ```bash
-curl http://156.67.216.229/health
+curl https://api.vouchergalaxy.com/health
 ```
 **Response:** `{"status":"OK","database":"connected"}`
 
@@ -311,7 +311,7 @@ curl http://156.67.216.229/health
 ### Initialize Payment
 Creates a Stripe PaymentIntent and returns a temporary token for the payment UI.
 ```bash
-curl -X POST http://156.67.216.229/payments/init \
+curl -X POST https://api.vouchergalaxy.com/payments/init \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
   -d '{"order_id":"ORDER_UUID", "amount": 1000, "currency": "USD"}'
@@ -330,7 +330,7 @@ curl -X POST http://156.67.216.229/payments/init \
 ### Validate Token
 Used by the Frontend UI to validate the token and get the Client Secret.
 ```bash
-curl -X POST http://156.67.216.229/payments/validate-token \
+curl -X POST https://api.vouchergalaxy.com/payments/validate-token \
   -H "Content-Type: application/json" \
   -d '{"token":"JWT_TOKEN"}'
 ```
@@ -338,14 +338,14 @@ curl -X POST http://156.67.216.229/payments/validate-token \
 ### Get Payment Status
 Check the status of a payment by Order ID.
 ```bash
-curl http://156.67.216.229/payments/status/{order_id} -H "Authorization: Bearer TOKEN"
+curl https://api.vouchergalaxy.com/payments/status/{order_id} -H "Authorization: Bearer TOKEN"
 ```
 **Response:** `{"status": "succeeded", "amount": 1000, "gateway": "stripe", ...}`
 
 ### Mark Token Used
 Invalidates the token after successful payment to prevent reuse.
 ```bash
-curl -X POST http://156.67.216.229/payments/mark-token-used \
+curl -X POST https://api.vouchergalaxy.com/payments/mark-token-used \
   -H "Content-Type: application/json" \
   -d '{"token":"JWT_TOKEN"}'
 ```

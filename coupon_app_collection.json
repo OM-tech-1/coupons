@@ -1108,7 +1108,7 @@
     "variable": [
         {
             "key": "base_url",
-            "value": "http://156.67.216.229",
+            "value": "https://api.vouchergalaxy.com",
             "type": "string"
         },
         {
