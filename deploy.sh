@@ -34,7 +34,7 @@ docker rm coupons-app 2>/dev/null || true
 docker run -d \
   --name coupon-api-container \
   --restart unless-stopped \
-  -p 80:8000 \
+  --network host \
   --env-file .env \
   coupon-api
 
