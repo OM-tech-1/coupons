@@ -65,6 +65,8 @@ class StripeWebhookService:
         event_data = event.get("data", {}).get("object", {})
         event_id = event.get("id")
         
+        event_id = event.get("id")
+        
         logger.info(f"Processing webhook event: {event_type} (ID: {event_id})")
         
         handlers = {
