@@ -48,6 +48,7 @@ class TokenValidateResponse(BaseModel):
     currency: str = Field(..., description="Currency code")
     order_id: str = Field(..., description="Order ID")
     publishable_key: str = Field(..., description="Stripe publishable key")
+    return_url: Optional[str] = Field(None, description="URL to return to after payment")
 
 
 class PaymentStatusRequest(BaseModel):

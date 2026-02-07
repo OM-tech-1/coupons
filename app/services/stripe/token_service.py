@@ -147,6 +147,7 @@ class PaymentTokenService:
             "amount": payment.amount,
             "currency": payment.currency,
             "order_total": order.total_amount,
+            "return_url": token_record.site_origin,
         }
 
     def mark_token_used(self, token_str: str) -> bool:

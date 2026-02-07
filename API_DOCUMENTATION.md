@@ -334,6 +334,17 @@ curl -X POST https://api.vouchergalaxy.com/payments/validate-token \
   -H "Content-Type: application/json" \
   -d '{"token":"JWT_TOKEN"}'
 ```
+**Response:**
+```json
+{
+  "client_secret": "pi_...",
+  "publishable_key": "pk_test_...",
+  "amount": 1000,
+  "currency": "USD",
+  "order_id": "uuid",
+  "return_url": "https://callback.com"
+}
+```
 
 ### Get Payment Status
 Check the status of a payment by Order ID.
