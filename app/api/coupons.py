@@ -45,6 +45,7 @@ def list_coupons(
     region_id: Optional[UUID] = Query(None, description="Filter by region ID"),
     country_id: Optional[UUID] = Query(None, description="Filter by country ID"),
     availability_type: Optional[str] = Query(None, pattern="^(online|local|both)$", description="Filter by availability type"),
+    search: Optional[str] = Query(None, description="Search by title, brand, or code"),
     db: Session = Depends(get_db)
 ):
     """List all coupons with optional filters (public endpoint with enhanced filtering)"""
@@ -56,7 +57,8 @@ def list_coupons(
         category_id=category_id,
         region_id=region_id,
         country_id=country_id,
-        availability_type=availability_type
+        availability_type=availability_type,
+        search=search
     )
 
 
@@ -142,4 +144,29 @@ def claim_coupon(
             detail=message
         )
     return {"message": message, "coupon_id": str(coupon_id)}
+
+
+@router.post("/{coupon_id}/view", status_code=status.HTTP_201_CREATED)
+def track_coupon_view(
+    coupon_id: UUID,
+    session_id: Optional[str] = Query(None, description="Session ID for anonymous tracking"),
+    db: Session = Depends(get_db)
+):
+    """Track a coupon view (public endpoint - no auth required)"""
+    from app.services.coupon_view_service import CouponViewService
+    from app.services.coupon_service import CouponService
+    
+    # Verify coupon exists
+    coupon = CouponService.get_by_id(db, coupon_id)
+    if not coupon:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Coupon not found"
+        )
+    
+    # Note: For authenticated user tracking, frontend should pass session_id
+    # which can be the user_id from their JWT token. This keeps the endpoint
+    # simple and doesn't require parsing auth headers optionally.
+    CouponViewService.track_view(db, coupon_id, user_id=None, session_id=session_id)
+    return {"message": "View tracked", "coupon_id": str(coupon_id)}
 

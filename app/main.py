@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from app.api import auth, coupons, users, cart, orders, categories, regions, countries
+from app.api import auth, coupons, users, cart, orders, categories, regions, countries, admin
 from app.api.stripe import payments_router, webhooks_router
 from app.api.external.payment import router as external_payment_router
 from app.database import Base, engine, SessionLocal
@@ -108,6 +108,7 @@ app.include_router(orders.router, prefix="/orders", tags=["Orders"])
 app.include_router(categories.router, prefix="/categories", tags=["Categories"])
 app.include_router(regions.router, prefix="/regions", tags=["Regions"])
 app.include_router(countries.router, prefix="/countries", tags=["Countries"])
+app.include_router(admin.router, prefix="/admin", tags=["Admin"])
 
 # Stripe payment routes
 app.include_router(payments_router)

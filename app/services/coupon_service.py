@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from uuid import UUID
 from typing import List, Optional
 from datetime import datetime
@@ -59,7 +59,8 @@ class CouponService:
         category_id: Optional[UUID] = None,
         region_id: Optional[UUID] = None,
         country_id: Optional[UUID] = None,
-        availability_type: Optional[str] = None
+        availability_type: Optional[str] = None,
+        search: Optional[str] = None
     ) -> List[Coupon]:
         """Get all coupons with optional filtering (cached)"""
         from sqlalchemy.orm import joinedload
@@ -71,7 +72,8 @@ class CouponService:
                            str(category_id) if category_id else "none",
                            str(region_id) if region_id else "none",
                            str(country_id) if country_id else "none",
-                           availability_type or "all")
+                           availability_type or "all",
+                           search or "none")
         cached = get_cache(cache_k)
         if cached is not None:
             # Return cached data (already serialized)
@@ -100,6 +102,17 @@ class CouponService:
         # Filter by region (requires joins through country)
         if region_id:
             query = query.join(CouponCountry).join(Country).filter(Country.region_id == region_id)
+        
+        # Search by title or brand (case-insensitive)
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(
+                or_(
+                    func.lower(Coupon.title).like(func.lower(search_term)),
+                    func.lower(Coupon.brand).like(func.lower(search_term)),
+                    func.lower(Coupon.code).like(func.lower(search_term))
+                )
+            )
         
         coupons = query.offset(skip).limit(limit).all()
         

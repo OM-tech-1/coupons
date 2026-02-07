@@ -10,6 +10,7 @@ from app.models.category import Category
 from app.models.region import Region
 from app.models.country import Country
 from app.models.coupon_country import CouponCountry
+from app.models.coupon_view import CouponView
 
 __all__ = [
     "User",
@@ -25,5 +26,6 @@ __all__ = [
     "Region",
     "Country",
     "CouponCountry",
+    "CouponView",
 ]
 

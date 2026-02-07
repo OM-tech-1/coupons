@@ -1,8 +1,8 @@
 {
     "info": {
         "_postman_id": "coupon-app-collection",
-        "name": "Coupon App API v2.1 (Stripe)",
-        "description": "Complete API collection for the Coupon E-commerce application with Categories, Geography & Stripe Payments",
+        "name": "Coupon App API v2.2 (Admin + Stripe)",
+        "description": "Complete API collection for the Coupon E-commerce application with Admin Dashboard, Categories, Geography & Stripe Payments",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
@@ -377,6 +377,38 @@
                     }
                 },
                 {
+                    "name": "Search Coupons",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/?search=amazon&active_only=true&limit=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "amazon",
+                                    "description": "Search by title, brand, or coupon code"
+                                },
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Search coupons by title, brand name, or coupon code (case-insensitive)"
+                    }
+                },
+                {
                     "name": "Filter Coupons by Category",
                     "request": {
                         "method": "GET",
@@ -640,6 +672,31 @@
                                 "claim"
                             ]
                         }
+                    }
+                },
+                {
+                    "name": "Track Coupon View",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/{{coupon_id}}/view?session_id=anon-123",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "{{coupon_id}}",
+                                "view"
+                            ],
+                            "query": [
+                                {
+                                    "key": "session_id",
+                                    "value": "anon-123",
+                                    "description": "Optional session ID for anonymous user tracking"
+                                }
+                            ]
+                        },
+                        "description": "Track when a user views coupon details. No auth required. Frontend should call this on coupon detail page load."
                     }
                 }
             ]
@@ -1140,6 +1197,293 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "Admin",
+            "description": "Admin-only endpoints for dashboard, user management, and order management",
+            "item": [
+                {
+                    "name": "Get Dashboard Stats",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/admin/dashboard",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "dashboard"
+                            ]
+                        },
+                        "description": "Returns aggregated dashboard stats: revenue, orders, users, coupons, top performers"
+                    }
+                },
+                {
+                    "name": "List All Users",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/admin/users?skip=0&limit=20&active_only=false",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                },
+                                {
+                                    "key": "active_only",
+                                    "value": "false"
+                                }
+                            ]
+                        },
+                        "description": "Returns paginated list of all users with order stats (total_orders, total_spent)"
+                    }
+                },
+                {
+                    "name": "Get User by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/{{user_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                "{{user_id}}"
+                            ]
+                        },
+                        "description": "Get specific user details with aggregated order stats"
+                    }
+                },
+                {
+                    "name": "Toggle User Status",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/{{user_id}}/status?is_active=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                "{{user_id}}",
+                                "status"
+                            ],
+                            "query": [
+                                {
+                                    "key": "is_active",
+                                    "value": "true",
+                                    "description": "Set to true to activate, false to deactivate"
+                                }
+                            ]
+                        },
+                        "description": "Activate or deactivate a user account"
+                    }
+                },
+                {
+                    "name": "List All Orders",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/admin/orders?skip=0&limit=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "orders"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "paid",
+                                    "disabled": true,
+                                    "description": "Filter: pending, paid, failed, cancelled"
+                                },
+                                {
+                                    "key": "user_id",
+                                    "value": "{{user_id}}",
+                                    "disabled": true,
+                                    "description": "Filter by specific user"
+                                }
+                            ]
+                        },
+                        "description": "Returns paginated list of all orders with user info"
+                    }
+                },
+                {
+                    "name": "Get Order by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/admin/orders/{{order_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "orders",
+                                "{{order_id}}"
+                            ]
+                        },
+                        "description": "Get specific order details (admin can view any order)"
+                    }
+                },
+                {
+                    "name": "Get All Coupons Analytics",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/admin/analytics/coupons?skip=0&limit=20&sort_by=views",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "analytics",
+                                "coupons"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "views",
+                                    "description": "Sort by: views, redemptions, or rate"
+                                }
+                            ]
+                        },
+                        "description": "Returns analytics for all coupons including views, redemptions, and rates"
+                    }
+                },
+                {
+                    "name": "Get Coupon Analytics by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/admin/analytics/coupons/{{coupon_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "analytics",
+                                "coupons",
+                                "{{coupon_id}}"
+                            ]
+                        },
+                        "description": "Returns detailed analytics for a specific coupon"
+                    }
+                }
+            ]
         }
     ],
     "variable": [
@@ -1175,6 +1519,11 @@
         },
         {
             "key": "order_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "user_id",
             "value": "",
             "type": "string"
         }
