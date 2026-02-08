@@ -1,9 +1,14 @@
 import paramiko
 import sys
 
-HOST = '156.67.216.229'
-USER = 'root'
-PASS = 'Uf7PJFeoC9j05es@'
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+HOST = os.getenv("VPS_HOST")
+USER = os.getenv("VPS_USER")
+PASS = os.getenv("VPS_PASSWORD")
 
 def find_directory():
     print(f"📡 Connecting to {HOST}...")

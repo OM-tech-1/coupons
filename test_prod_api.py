@@ -2,9 +2,17 @@ import requests
 import json
 import uuid
 
-BASE_URL = "http://156.67.216.229"
-USERNAME = "7907975711"  # Country code likely split in actual request, but auth endpoint takes them separately usually
-PASSWORD = "afsal@123"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Build URL from host if available, otherwise default to explicit or localhost
+VPS_HOST = os.getenv("VPS_HOST")
+BASE_URL = f"http://{VPS_HOST}" if VPS_HOST else "http://localhost:8000"
+
+USERNAME = os.getenv("TEST_USER_PHONE", "7907975711")
+PASSWORD = os.getenv("TEST_USER_PASSWORD", "afsal@123")
 
 # Colors for output
 GREEN = '\033[92m'

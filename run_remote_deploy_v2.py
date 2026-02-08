@@ -2,9 +2,14 @@ import paramiko
 import sys
 import time
 
-HOST = '156.67.216.229'
-USER = 'root'
-PASS = 'Uf7PJFeoC9j05es@'
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+HOST = os.getenv("VPS_HOST")
+USER = os.getenv("VPS_USER")
+PASS = os.getenv("VPS_PASSWORD")
 REPO_URL = "https://github.com/OM-tech-1/coupons.git"
 
 def run_deployment():

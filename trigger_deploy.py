@@ -3,9 +3,14 @@ import paramiko
 import sys
 import time
 
-HOSTNAME = "156.67.216.229"
-USERNAME = "root"
-PASSWORD = "Uf7PJFeoC9j05es@"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+HOSTNAME = os.getenv("VPS_HOST")
+USERNAME = os.getenv("VPS_USER")
+PASSWORD = os.getenv("VPS_PASSWORD")
 
 def connect():
     client = paramiko.SSHClient()

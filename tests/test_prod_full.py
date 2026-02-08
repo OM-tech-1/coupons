@@ -7,11 +7,10 @@ import json
 import sys
 import os
 
-BASE_URL = "https://api.vouchergalaxy.com"
-# BASE_URL = "http://156.67.216.229" # Fallback if SSL fails
+BASE_URL = os.getenv("API_BASE_URL", "https://api.vouchergalaxy.com")
 
-ADMIN_PHONE = os.getenv("ADMIN_PHONE", "7907975711")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "afsal@123")
+ADMIN_PHONE = os.getenv("ADMIN_PHONE")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 def generate_random_string(length=8):
     letters = string.ascii_lowercase
