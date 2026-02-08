@@ -6,9 +6,12 @@ from app.schemas.user import UserCreate, UserResponse
 from app.services.auth_service import register_user, authenticate_user
 from app.utils.jwt import create_access_token
 
+from app.middleware.rate_limit import limiter
+
 router = APIRouter(tags=["Auth"])
 
 @router.post("/register", response_model=UserResponse)
+@limiter.limit("10/minute")
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
     user = register_user(db, user_data)
     if not user:
@@ -19,6 +22,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     return user
 
 @router.post("/login", response_model=Token)
+@limiter.limit("10/minute")
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     user = authenticate_user(db, payload.phone_number, payload.password)
     if not user:

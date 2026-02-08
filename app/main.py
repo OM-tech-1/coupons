@@ -69,9 +69,15 @@ def run_migrations():
         
         conn.commit()
 
-run_migrations()
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+SHOW_DOCS = ENVIRONMENT != "production"
 
-app = FastAPI(title="Coupon E-commerce API")
+app = FastAPI(
+    title="Coupon E-commerce API",
+    docs_url="/docs" if SHOW_DOCS else None,
+    redoc_url="/redoc" if SHOW_DOCS else None,
+    openapi_url="/openapi.json" if SHOW_DOCS else None
+)
 
 # CORS configuration for payment domain
 PAYMENT_UI_DOMAIN = os.getenv("PAYMENT_UI_DOMAIN", "https://payment.vouchergalaxy.com")

@@ -1,8 +1,12 @@
 import hmac
 import hashlib
 import json
+import os
+from dotenv import load_dotenv
 
-API_KEY = "836c816bfd3529cf9efd137f1ba198c07af61e1c08278656777d6a9136651603"
+load_dotenv()
+
+API_KEY = os.getenv("EXTERNAL_API_KEY")
 URL = "https://api.vouchergalaxy.com/api/v1/external/payment-link"
 
 payload = {
