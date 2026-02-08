@@ -94,7 +94,7 @@ class ExternalPaymentService:
         token = self.token_service.generate_payment_token(
             order_id=new_order.id,
             payment_intent_id=new_order.stripe_payment_intent_id,
-            site_origin="external_api"
+            site_origin=str(request.return_url) if request.return_url else "external_api"
         )
         
         # 5. Construct URL

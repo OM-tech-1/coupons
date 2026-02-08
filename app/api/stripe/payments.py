@@ -109,6 +109,7 @@ async def validate_token(
             currency=token_data["currency"],
             order_id=token_data["order_id"],
             publishable_key=payment_service.get_publishable_key(),
+            return_url=token_data.get("return_url"),
         )
         
     except ValueError as e:
