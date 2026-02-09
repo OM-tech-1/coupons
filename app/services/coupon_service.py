@@ -33,6 +33,8 @@ class CouponService:
             category_id=coupon_data.category_id,
             availability_type=coupon_data.availability_type,
             price=coupon_data.price,
+            stock=coupon_data.stock,
+            is_featured=coupon_data.is_featured,
         )
         db.add(db_coupon)
         db.flush()  # Flush to get the coupon ID
@@ -121,6 +123,8 @@ class CouponService:
             {
                 "id": str(c.id),
                 "code": c.code,
+                "redeem_code": c.redeem_code,
+                "brand": c.brand,
                 "title": c.title,
                 "description": c.description,
                 "discount_type": c.discount_type,
@@ -131,6 +135,8 @@ class CouponService:
                 "expiration_date": str(c.expiration_date) if c.expiration_date else None,
                 "is_active": c.is_active,
                 "price": c.price,
+                "stock": c.stock,
+                "is_featured": c.is_featured,
                 "created_at": str(c.created_at) if c.created_at else None,
                 "category_id": str(c.category_id) if c.category_id else None,
                 "availability_type": c.availability_type,

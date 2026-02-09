@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, or_
 from uuid import UUID
 from typing import List, Optional, Tuple
 from datetime import datetime, timedelta
@@ -20,13 +20,24 @@ class AdminService:
         db: Session, 
         skip: int = 0, 
         limit: int = 20,
-        active_only: bool = False
+        active_only: bool = False,
+        search: Optional[str] = None
     ) -> PaginatedUsersResponse:
         """Get all users with aggregated order stats"""
         query = db.query(User)
         
         if active_only:
             query = query.filter(User.is_active == True)
+        
+        # Search by name or phone number
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(
+                or_(
+                    func.lower(User.full_name).like(func.lower(search_term)),
+                    User.phone_number.like(search_term)
+                )
+            )
         
         # Get total count
         total = query.count()

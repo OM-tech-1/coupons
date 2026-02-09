@@ -44,11 +44,12 @@ def list_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     active_only: bool = Query(False),
+    search: Optional[str] = Query(None, description="Search by name or phone number"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
     """List all users with order statistics"""
-    return AdminService.get_all_users(db, skip=skip, limit=limit, active_only=active_only)
+    return AdminService.get_all_users(db, skip=skip, limit=limit, active_only=active_only, search=search)
 
 
 @router.get("/users/{user_id}", response_model=AdminUserResponse)

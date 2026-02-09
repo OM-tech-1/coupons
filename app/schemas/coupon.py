@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Any
 from uuid import UUID
 
 
@@ -16,7 +16,10 @@ class CouponBase(BaseModel):
     min_purchase: float = Field(default=0.0, ge=0)
     max_uses: Optional[int] = Field(default=None, ge=1)
     expiration_date: Optional[datetime] = None
-    # New fields for categories and geography
+    # New fields for stock and featured
+    stock: Optional[int] = Field(default=None, ge=0, description="Available stock (null = unlimited)")
+    is_featured: bool = Field(default=False, description="Featured on homepage")
+    # Fields for categories and geography
     category_id: Optional[UUID] = None
     availability_type: str = Field(default="online", pattern="^(online|local|both)$")
     country_ids: List[UUID] = Field(default_factory=list)
@@ -39,7 +42,10 @@ class CouponUpdate(BaseModel):
     max_uses: Optional[int] = Field(default=None, ge=1)
     is_active: Optional[bool] = None
     expiration_date: Optional[datetime] = None
-    # New optional fields
+    # New fields for stock and featured
+    stock: Optional[int] = Field(default=None, ge=0)
+    is_featured: Optional[bool] = None
+    # Optional fields for categories/geography
     category_id: Optional[UUID] = None
     availability_type: Optional[str] = Field(default=None, pattern="^(online|local|both)$")
     country_ids: Optional[List[UUID]] = None
@@ -51,9 +57,26 @@ class CouponResponse(CouponBase):
     current_uses: int = 0
     is_active: bool = True
     created_at: datetime
+    stock: Optional[int] = None
+    is_featured: bool = False
+    # Computed field for stock_sold (= current_uses)
+    stock_sold: int = 0
     # Nested relationships (populated from joins)
     category: Optional['CategoryInCoupon'] = None
     countries: List['CountryInCoupon'] = Field(default_factory=list)
+
+    @model_validator(mode='before')
+    @classmethod
+    def compute_stock_sold(cls, data: Any) -> Any:
+        """Set stock_sold to current_uses value"""
+        if hasattr(data, '__dict__'):
+            # SQLAlchemy model object
+            data_dict = {k: v for k, v in data.__dict__.items() if not k.startswith('_')}
+            data_dict['stock_sold'] = data_dict.get('current_uses', 0)
+            return data_dict
+        elif isinstance(data, dict):
+            data['stock_sold'] = data.get('current_uses', 0)
+        return data
 
     class Config:
         from_attributes = True

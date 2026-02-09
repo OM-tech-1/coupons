@@ -25,10 +25,15 @@ class Coupon(Base):
     expiration_date = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    # New fields for categories and geography
+    # New fields for stock and featured
+    stock = Column(Integer, nullable=True, default=None)  # Available stock (None = unlimited)
+    is_featured = Column(Boolean, default=False, index=True)  # Featured on homepage
+    
+    # Fields for categories and geography
     category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=True, index=True)
     availability_type = Column(String(20), default="online", index=True)  # 'online', 'local', or 'both'
     
     # Relationships
     category = relationship("Category", back_populates="coupons")
     country_associations = relationship("CouponCountry", back_populates="coupon", cascade="all, delete-orphan")
+

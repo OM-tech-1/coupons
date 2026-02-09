@@ -571,7 +571,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"code\": \"PETLOVE50\",\n    \"redeem_code\": \"SECRET123\",\n    \"brand\": \"PetStore\",\n    \"title\": \"50% off pet food\",\n    \"description\": \"Amazing deal on all pet food\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 50.0,\n    \"price\": 2.99,\n    \"min_purchase\": 10.0,\n    \"max_uses\": 100,\n    \"category_id\": \"{{category_id}}\",\n    \"availability_type\": \"local\",\n    \"country_ids\": [\"{{country_id}}\"]\n}"
+                            "raw": "{\n    \"code\": \"PETLOVE50\",\n    \"redeem_code\": \"SECRET123\",\n    \"brand\": \"PetStore\",\n    \"title\": \"50% off pet food\",\n    \"description\": \"Amazing deal on all pet food\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 50.0,\n    \"price\": 2.99,\n    \"min_purchase\": 10.0,\n    \"max_uses\": 100,\n    \"stock\": 50,\n    \"is_featured\": true,\n    \"category_id\": \"{{category_id}}\",\n    \"availability_type\": \"local\",\n    \"country_ids\": [\"{{country_id}}\"]\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/coupons/",
@@ -607,7 +607,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"title\": \"Updated Title\",\n    \"price\": 14.99,\n    \"category_id\": \"{{category_id}}\",\n    \"availability_type\": \"both\"\n}"
+                            "raw": "{\n    \"title\": \"Updated Title\",\n    \"price\": 14.99,\n    \"stock\": 100,\n    \"is_featured\": false,\n    \"category_id\": \"{{category_id}}\",\n    \"availability_type\": \"both\"\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/coupons/{{coupon_id}}",
@@ -1244,7 +1244,7 @@
                         },
                         "method": "GET",
                         "url": {
-                            "raw": "{{base_url}}/admin/users?skip=0&limit=20&active_only=false",
+                            "raw": "{{base_url}}/admin/users?skip=0&limit=20&active_only=false&search=",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1264,6 +1264,11 @@
                                 {
                                     "key": "active_only",
                                     "value": "false"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "",
+                                    "description": "Search by name or phone number"
                                 }
                             ]
                         },
