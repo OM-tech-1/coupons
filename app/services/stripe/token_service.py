@@ -19,9 +19,13 @@ from app.models.order import Order
 
 logger = logging.getLogger(__name__)
 
-# Token secret from environment
-TOKEN_SECRET = os.getenv("PAYMENT_TOKEN_SECRET", "change-me-in-production")
+# Token secret from environment - MUST be configured
+TOKEN_SECRET = os.getenv("PAYMENT_TOKEN_SECRET")
 TOKEN_TTL_MINUTES = int(os.getenv("PAYMENT_TOKEN_TTL_MINUTES", "5"))
+
+# Fail fast if secret not configured
+if not TOKEN_SECRET:
+    raise RuntimeError("CRITICAL: PAYMENT_TOKEN_SECRET environment variable must be set")
 
 
 class PaymentTokenService:
