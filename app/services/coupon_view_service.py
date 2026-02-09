@@ -185,4 +185,117 @@ class CouponViewService:
             "skip": skip,
             "limit": limit
         }
-
+    
+    @staticmethod
+    def get_quick_stats(db: Session) -> dict:
+        """Get today's quick stats for dashboard"""
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Today's views
+        todays_views = db.query(func.count(CouponView.id)).filter(
+            CouponView.viewed_at >= today_start
+        ).scalar() or 0
+        
+        # Today's redemptions
+        todays_redemptions = db.query(func.count(OrderItem.id)).join(
+            Order, Order.id == OrderItem.order_id
+        ).filter(Order.status == 'paid', Order.created_at >= today_start).scalar() or 0
+        
+        # Unique viewers today
+        todays_unique = db.query(func.count(func.distinct(CouponView.session_id))).filter(
+            CouponView.viewed_at >= today_start
+        ).scalar() or 0
+        
+        todays_conv = round((todays_redemptions / todays_unique) * 100, 2) if todays_unique > 0 else 0.0
+        
+        # Overall stats
+        total_views = db.query(func.count(CouponView.id)).scalar() or 0
+        total_redemptions = db.query(func.count(OrderItem.id)).join(
+            Order, Order.id == OrderItem.order_id
+        ).filter(Order.status == 'paid').scalar() or 0
+        total_unique = db.query(func.count(func.distinct(CouponView.session_id))).scalar() or 0
+        avg_rate = round((total_redemptions / total_unique) * 100, 2) if total_unique > 0 else 0.0
+        
+        return {
+            "today": {"views": todays_views, "redemptions": todays_redemptions, "conversion_rate": todays_conv},
+            "overall": {"total_views": total_views, "total_redemptions": total_redemptions, "avg_redemption_rate": avg_rate}
+        }
+    
+    @staticmethod
+    def get_trends(db: Session, days: int = 30) -> dict:
+        """Get daily trends for views and redemptions"""
+        from sqlalchemy import cast, Date
+        start_date = datetime.utcnow() - timedelta(days=days)
+        
+        daily_views = db.query(
+            cast(CouponView.viewed_at, Date).label('date'),
+            func.count(CouponView.id).label('count')
+        ).filter(CouponView.viewed_at >= start_date).group_by(
+            cast(CouponView.viewed_at, Date)
+        ).order_by('date').all()
+        
+        daily_redemptions = db.query(
+            cast(Order.created_at, Date).label('date'),
+            func.count(OrderItem.id).label('count')
+        ).join(OrderItem, Order.id == OrderItem.order_id).filter(
+            Order.status == 'paid', Order.created_at >= start_date
+        ).group_by(cast(Order.created_at, Date)).order_by('date').all()
+        
+        return {
+            "period_days": days,
+            "views": [{"date": str(v.date), "count": v.count} for v in daily_views],
+            "redemptions": [{"date": str(r.date), "count": r.count} for r in daily_redemptions]
+        }
+    
+    @staticmethod
+    def get_category_performance(db: Session) -> list:
+        """Get performance stats grouped by category"""
+        from app.models.category import Category
+        categories = db.query(Category).filter(Category.is_active == True).all()
+        
+        result = []
+        for cat in categories:
+            coupon_ids = [c[0] for c in db.query(Coupon.id).filter(Coupon.category_id == cat.id).all()]
+            if not coupon_ids:
+                result.append({"category_id": str(cat.id), "category_name": cat.name, "coupon_count": 0, "views": 0, "redemptions": 0, "revenue": 0.0})
+                continue
+            
+            views = db.query(func.count(CouponView.id)).filter(CouponView.coupon_id.in_(coupon_ids)).scalar() or 0
+            stats = db.query(
+                func.count(OrderItem.id).label('redemptions'),
+                func.coalesce(func.sum(OrderItem.price_at_purchase), 0.0).label('revenue')
+            ).join(Order, Order.id == OrderItem.order_id).filter(
+                OrderItem.coupon_id.in_(coupon_ids), Order.status == 'paid'
+            ).first()
+            
+            result.append({"category_id": str(cat.id), "category_name": cat.name, "coupon_count": len(coupon_ids),
+                          "views": views, "redemptions": stats.redemptions or 0, "revenue": float(stats.revenue or 0)})
+        
+        result.sort(key=lambda x: x['revenue'], reverse=True)
+        return result
+    
+    @staticmethod
+    def get_monthly_stats(db: Session, months: int = 12) -> list:
+        """Get monthly orders and revenue"""
+        from sqlalchemy import extract
+        result = []
+        now = datetime.utcnow()
+        
+        for i in range(months):
+            month_date = now - timedelta(days=30 * i)
+            year, month = month_date.year, month_date.month
+            
+            stats = db.query(
+                func.count(Order.id).label('orders'),
+                func.coalesce(func.sum(Order.total_amount), 0.0).label('revenue')
+            ).filter(
+                Order.status == 'paid',
+                extract('year', Order.created_at) == year,
+                extract('month', Order.created_at) == month
+            ).first()
+            
+            result.append({"year": year, "month": month, "month_name": month_date.strftime("%B"),
+                          "orders": stats.orders or 0, "revenue": float(stats.revenue or 0)})
+        
+        result.reverse()
+        return result

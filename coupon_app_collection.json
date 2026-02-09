@@ -1505,6 +1505,132 @@
                         },
                         "description": "Returns detailed analytics for a specific coupon"
                     }
+                },
+                {
+                    "name": "Quick Stats (Today)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/admin/analytics/quick-stats",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "analytics",
+                                "quick-stats"
+                            ]
+                        },
+                        "description": "Returns today's views, redemptions, conversion rate + overall stats"
+                    }
+                },
+                {
+                    "name": "Trends (Chart Data)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/admin/analytics/trends?days=30",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "analytics",
+                                "trends"
+                            ],
+                            "query": [
+                                {
+                                    "key": "days",
+                                    "value": "30",
+                                    "description": "Number of days (7-90)"
+                                }
+                            ]
+                        },
+                        "description": "Returns daily views and redemptions for chart plotting"
+                    }
+                },
+                {
+                    "name": "Category Performance",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/admin/analytics/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "analytics",
+                                "categories"
+                            ]
+                        },
+                        "description": "Returns views, redemptions, revenue grouped by category"
+                    }
+                },
+                {
+                    "name": "Monthly Stats",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/admin/analytics/monthly?months=12",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "analytics",
+                                "monthly"
+                            ],
+                            "query": [
+                                {
+                                    "key": "months",
+                                    "value": "12",
+                                    "description": "Number of months (1-24)"
+                                }
+                            ]
+                        },
+                        "description": "Returns monthly orders and revenue breakdown"
+                    }
                 }
             ]
         }

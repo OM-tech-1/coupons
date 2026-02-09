@@ -144,12 +144,12 @@ class AdminService:
         # Get order statistics (on filtered set, excluding pagination)
         stats = db.query(
             func.coalesce(func.sum(
-                func.case((Order.status == 'paid', Order.total_amount), else_=0)
+                case((Order.status == 'paid', Order.total_amount), else_=0)
             ), 0.0).label('total_revenue'),
-            func.sum(func.case((Order.status == 'paid', 1), else_=0)).label('completed_count'),
-            func.sum(func.case((Order.status == 'pending', 1), else_=0)).label('pending_count'),
-            func.sum(func.case((Order.status == 'failed', 1), else_=0)).label('failed_count'),
-            func.sum(func.case((Order.status == 'cancelled', 1), else_=0)).label('cancelled_count')
+            func.sum(case((Order.status == 'paid', 1), else_=0)).label('completed_count'),
+            func.sum(case((Order.status == 'pending', 1), else_=0)).label('pending_count'),
+            func.sum(case((Order.status == 'failed', 1), else_=0)).label('failed_count'),
+            func.sum(case((Order.status == 'cancelled', 1), else_=0)).label('cancelled_count')
         ).first()
         
         orders = query.order_by(desc(Order.created_at)).offset(skip).limit(limit).all()

@@ -171,3 +171,47 @@ def get_coupon_analytics(
             detail="Coupon not found"
         )
     return analytics
+
+
+# ============== Dashboard Analytics ==============
+
+@router.get("/analytics/quick-stats")
+def get_quick_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Get today's quick stats: views, redemptions, conversion rate"""
+    from app.services.coupon_view_service import CouponViewService
+    return CouponViewService.get_quick_stats(db)
+
+
+@router.get("/analytics/trends")
+def get_trends(
+    days: int = Query(30, ge=7, le=90, description="Number of days for trend data"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Get daily trends for views and redemptions (for charts)"""
+    from app.services.coupon_view_service import CouponViewService
+    return CouponViewService.get_trends(db, days=days)
+
+
+@router.get("/analytics/categories")
+def get_category_performance(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Get performance stats grouped by category"""
+    from app.services.coupon_view_service import CouponViewService
+    return CouponViewService.get_category_performance(db)
+
+
+@router.get("/analytics/monthly")
+def get_monthly_stats(
+    months: int = Query(12, ge=1, le=24, description="Number of months"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Get monthly orders and revenue breakdown"""
+    from app.services.coupon_view_service import CouponViewService
+    return CouponViewService.get_monthly_stats(db, months=months)
