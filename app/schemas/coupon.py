@@ -19,6 +19,7 @@ class CouponBase(BaseModel):
     # New fields for stock and featured
     stock: Optional[int] = Field(default=None, ge=0, description="Available stock (null = unlimited)")
     is_featured: bool = Field(default=False, description="Featured on homepage")
+    is_active: bool = Field(default=True, description="Whether coupon is active")
     # Fields for categories and geography
     category_id: Optional[UUID] = None
     availability_type: str = Field(default="online", pattern="^(online|local|both)$")

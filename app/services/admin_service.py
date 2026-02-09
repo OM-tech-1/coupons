@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, or_
+from sqlalchemy import func, desc, or_, String, case
 from uuid import UUID
 from typing import List, Optional, Tuple
 from datetime import datetime, timedelta
@@ -109,17 +109,48 @@ class AdminService:
         skip: int = 0,
         limit: int = 20,
         status: Optional[str] = None,
-        user_id: Optional[UUID] = None
+        user_id: Optional[UUID] = None,
+        search: Optional[str] = None,
+        date_from: Optional[datetime] = None,
+        date_to: Optional[datetime] = None
     ) -> PaginatedOrdersResponse:
-        """Get all orders with filters"""
+        """Get all orders with filters and statistics"""
         query = db.query(Order)
         
+        # Apply filters
         if status:
             query = query.filter(Order.status == status)
         if user_id:
             query = query.filter(Order.user_id == user_id)
+        if date_from:
+            query = query.filter(Order.created_at >= date_from)
+        if date_to:
+            query = query.filter(Order.created_at <= date_to)
+        
+        # Search by order ID or user phone
+        if search:
+            search_term = f"%{search}%"
+            # Join with User to search by phone
+            query = query.join(User, Order.user_id == User.id).filter(
+                or_(
+                    func.cast(Order.id, String).like(search_term),
+                    User.phone_number.like(search_term),
+                    User.full_name.ilike(search_term)
+                )
+            )
         
         total = query.count()
+        
+        # Get order statistics (on filtered set, excluding pagination)
+        stats = db.query(
+            func.coalesce(func.sum(
+                func.case((Order.status == 'paid', Order.total_amount), else_=0)
+            ), 0.0).label('total_revenue'),
+            func.sum(func.case((Order.status == 'paid', 1), else_=0)).label('completed_count'),
+            func.sum(func.case((Order.status == 'pending', 1), else_=0)).label('pending_count'),
+            func.sum(func.case((Order.status == 'failed', 1), else_=0)).label('failed_count'),
+            func.sum(func.case((Order.status == 'cancelled', 1), else_=0)).label('cancelled_count')
+        ).first()
         
         orders = query.order_by(desc(Order.created_at)).offset(skip).limit(limit).all()
         
@@ -148,7 +179,12 @@ class AdminService:
             items=order_responses,
             total=total,
             skip=skip,
-            limit=limit
+            limit=limit,
+            total_revenue=float(stats.total_revenue or 0),
+            completed_count=int(stats.completed_count or 0),
+            pending_count=int(stats.pending_count or 0),
+            failed_count=int(stats.failed_count or 0),
+            cancelled_count=int(stats.cancelled_count or 0)
         )
     
     @staticmethod

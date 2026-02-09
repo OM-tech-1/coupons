@@ -46,11 +46,17 @@ class PaginatedUsersResponse(BaseModel):
 
 
 class PaginatedOrdersResponse(BaseModel):
-    """Paginated orders list"""
+    """Paginated orders list with statistics"""
     items: List[AdminOrderResponse]
     total: int
     skip: int
     limit: int
+    # Order statistics
+    total_revenue: float = 0.0
+    completed_count: int = 0
+    pending_count: int = 0
+    failed_count: int = 0
+    cancelled_count: int = 0
 
 
 class TopCouponResponse(BaseModel):

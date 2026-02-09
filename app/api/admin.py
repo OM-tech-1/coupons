@@ -96,11 +96,33 @@ def list_orders(
     limit: int = Query(20, ge=1, le=100),
     status: Optional[str] = Query(None, description="Filter by status: pending, paid, failed, cancelled"),
     user_id: Optional[UUID] = Query(None, description="Filter by user ID"),
+    search: Optional[str] = Query(None, description="Search by order ID, user phone, or name"),
+    date_from: Optional[str] = Query(None, description="Filter from date (ISO format: 2026-01-01)"),
+    date_to: Optional[str] = Query(None, description="Filter to date (ISO format: 2026-12-31)"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    """List all orders with filters"""
-    return AdminService.get_all_orders(db, skip=skip, limit=limit, status=status, user_id=user_id)
+    """List all orders with filters and statistics"""
+    from datetime import datetime
+    
+    # Parse date strings to datetime
+    parsed_date_from = None
+    parsed_date_to = None
+    if date_from:
+        try:
+            parsed_date_from = datetime.fromisoformat(date_from)
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            parsed_date_to = datetime.fromisoformat(date_to)
+        except ValueError:
+            pass
+    
+    return AdminService.get_all_orders(
+        db, skip=skip, limit=limit, status=status, user_id=user_id,
+        search=search, date_from=parsed_date_from, date_to=parsed_date_to
+    )
 
 
 @router.get("/orders/{order_id}", response_model=AdminOrderResponse)

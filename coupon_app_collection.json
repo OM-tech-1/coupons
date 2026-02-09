@@ -571,7 +571,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"code\": \"PETLOVE50\",\n    \"redeem_code\": \"SECRET123\",\n    \"brand\": \"PetStore\",\n    \"title\": \"50% off pet food\",\n    \"description\": \"Amazing deal on all pet food\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 50.0,\n    \"price\": 2.99,\n    \"min_purchase\": 10.0,\n    \"max_uses\": 100,\n    \"expiration_date\": \"2026-12-31T23:59:59\",\n    \"stock\": 50,\n    \"is_featured\": true,\n    \"category_id\": \"{{category_id}}\",\n    \"availability_type\": \"local\",\n    \"country_ids\": [\"{{country_id}}\"]\n}"
+                            "raw": "{\n    \"code\": \"PETLOVE50\",\n    \"redeem_code\": \"SECRET123\",\n    \"brand\": \"PetStore\",\n    \"title\": \"50% off pet food\",\n    \"description\": \"Amazing deal on all pet food\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 50.0,\n    \"price\": 2.99,\n    \"min_purchase\": 10.0,\n    \"max_uses\": 100,\n    \"expiration_date\": \"2026-12-31T23:59:59\",\n    \"stock\": 50,\n    \"is_featured\": true,\n    \"is_active\": true,\n    \"category_id\": \"{{category_id}}\",\n    \"availability_type\": \"local\",\n    \"country_ids\": [\"{{country_id}}\"]\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/coupons/",
@@ -1382,10 +1382,28 @@
                                     "value": "{{user_id}}",
                                     "disabled": true,
                                     "description": "Filter by specific user"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "",
+                                    "disabled": true,
+                                    "description": "Search by order ID, user phone, or name"
+                                },
+                                {
+                                    "key": "date_from",
+                                    "value": "2026-01-01",
+                                    "disabled": true,
+                                    "description": "Filter from date (ISO format)"
+                                },
+                                {
+                                    "key": "date_to",
+                                    "value": "2026-12-31",
+                                    "disabled": true,
+                                    "description": "Filter to date (ISO format)"
                                 }
                             ]
                         },
-                        "description": "Returns paginated list of all orders with user info"
+                        "description": "Returns paginated list of all orders with user info and statistics (total_revenue, completed_count, pending_count, failed_count, cancelled_count)"
                     }
                 },
                 {
