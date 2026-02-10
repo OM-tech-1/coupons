@@ -197,10 +197,16 @@ class CouponService:
 
     @staticmethod
     def delete(db: Session, coupon_id: UUID) -> bool:
-        """Delete a coupon"""
+        """Delete a coupon and all related records"""
         db_coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
         if not db_coupon:
             return False
+        
+        # Delete related records that have NOT NULL foreign keys
+        from app.models.user_coupon import UserCoupon
+        from app.models.coupon_view import CouponView
+        db.query(UserCoupon).filter(UserCoupon.coupon_id == coupon_id).delete()
+        db.query(CouponView).filter(CouponView.coupon_id == coupon_id).delete()
         
         db.delete(db_coupon)
         db.commit()
