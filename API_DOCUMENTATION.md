@@ -361,3 +361,74 @@ curl -X POST https://api.vouchergalaxy.com/payments/mark-token-used \
   -d '{"token":"JWT_TOKEN"}'
 ```
 
+
+---
+
+## Real-Time Features (Redis)
+
+### Get Trending Coupons
+Returns coupons with the highest view counts in the last 24 hours.
+```bash
+curl "https://api.vouchergalaxy.com/coupons/trending?limit=10"
+```
+
+### Get Featured Coupons
+Returns coupons marked as featured by admins.
+```bash
+curl "https://api.vouchergalaxy.com/coupons/featured"
+```
+
+### Get Recently Viewed
+Returns the last 20 coupons viewed by the current session.
+```bash
+curl "https://api.vouchergalaxy.com/coupons/recently-viewed?session_id=SESSION_ID"
+```
+
+### Get Real-Time Stock
+Returns the current stock level for a specific coupon.
+```bash
+curl "https://api.vouchergalaxy.com/coupons/{id}/stock"
+```
+
+---
+
+## Admin Analytics
+
+### Dashboard Stats
+Returns aggregated metrics for the admin dashboard, including performance graphs.
+```bash
+# Standard fetch (cached 60s)
+curl "https://api.vouchergalaxy.com/admin/dashboard" -H "Authorization: Bearer ADMIN_TOKEN"
+
+# Force refresh (bypass cache)
+curl "https://api.vouchergalaxy.com/admin/dashboard?refresh=true" -H "Authorization: Bearer ADMIN_TOKEN"
+```
+**Response includes graph data:**
+```json
+{
+  "total_revenue": 1050.0,
+  "performance": {
+    "views": [{"date": "2026-02-01", "count": 15}, ...],
+    "sold": [{"date": "2026-02-01", "count": 3}, ...]
+  },
+  ...
+}
+```
+
+### Coupon Analytics (Filtered)
+Get detailed analytics with filtering and sorting.
+```bash
+curl "https://api.vouchergalaxy.com/admin/analytics/coupons?limit=20&sort_by=views&active_only=true&search=summer" \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+**Parameters:**
+- `sort_by`: `views`, `redemptions`, `rate`
+- `active_only`: `true` / `false`
+- `category_id`: UUID
+- `search`: String (title, code, brand)
+
+### Trend Analysis
+Get daily views and redemptions for a date range.
+```bash
+curl "https://api.vouchergalaxy.com/admin/analytics/trends?days=30" -H "Authorization: Bearer ADMIN_TOKEN"
+```
