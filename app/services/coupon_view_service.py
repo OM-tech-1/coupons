@@ -93,7 +93,7 @@ class CouponViewService:
         
         # Revenue for this coupon
         revenue = db.query(
-            func.coalesce(func.sum(OrderItem.price_at_purchase), 0.0)
+            func.coalesce(func.sum(OrderItem.price), 0.0)
         ).join(Order, Order.id == OrderItem.order_id).filter(
             OrderItem.coupon_id == coupon_id,
             Order.status == 'paid'
@@ -186,7 +186,7 @@ class CouponViewService:
         
         # Bulk query: Get revenue per coupon
         revenue_data = dict(
-            db.query(OrderItem.coupon_id, func.coalesce(func.sum(OrderItem.price_at_purchase), 0.0))
+            db.query(OrderItem.coupon_id, func.coalesce(func.sum(OrderItem.price), 0.0))
             .join(Order, Order.id == OrderItem.order_id)
             .filter(OrderItem.coupon_id.in_(coupon_ids), Order.status == 'paid')
             .group_by(OrderItem.coupon_id)
@@ -312,7 +312,7 @@ class CouponViewService:
             views = db.query(func.count(CouponView.id)).filter(CouponView.coupon_id.in_(coupon_ids)).scalar() or 0
             stats = db.query(
                 func.count(OrderItem.id).label('redemptions'),
-                func.coalesce(func.sum(OrderItem.price_at_purchase), 0.0).label('revenue')
+                func.coalesce(func.sum(OrderItem.price), 0.0).label('revenue')
             ).join(Order, Order.id == OrderItem.order_id).filter(
                 OrderItem.coupon_id.in_(coupon_ids), Order.status == 'paid'
             ).first()
