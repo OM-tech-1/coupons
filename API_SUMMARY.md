@@ -59,6 +59,7 @@ This document provides a high-level overview of all available API endpoints curr
 | Endpoint | Method | Description |
 | :--- | :--- | :--- |
 | `/payment-link` | `POST` | **Signed Request**: Generate a hosted payment link. |
+| `/payment-status` | `POST` | **Signed Request**: Check payment status by reference ID. |
 
 ---
 

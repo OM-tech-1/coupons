@@ -1,6 +1,10 @@
 
 from sqlalchemy.orm import Session
-from app.schemas.external_payment import ExternalPaymentRequest, ExternalPaymentResponse
+from app.schemas.external_payment import (
+    ExternalPaymentRequest, 
+    ExternalPaymentResponse,
+    ExternalPaymentStatusResponse
+)
 from app.models.user import User
 from app.models.order import Order
 from app.services.stripe.payment_service import StripePaymentService
@@ -109,4 +113,46 @@ class ExternalPaymentService:
             user_status=user_status,
             amount=request.amount,
             currency=request.currency
+        )
+    
+    def get_payment_status_by_reference(self, reference_id: str) -> ExternalPaymentStatusResponse:
+        """
+        Get payment status by external reference ID.
+        """
+        from app.models.payment import Payment
+        from sqlalchemy import text
+        
+        # We query the JSON metadata using SQLAlchemy's text query or specific dialect methods if available.
+        # However, a simpler way in standard SQLAlchemy for JSON is to filter by the field if indexed, 
+        # or iterate if volume is low. But volume might be high.
+        # Postgres JSONB allows `payment_metadata['reference_id'].astext == reference_id`
+        
+        # Let's try to find it. Note: This assumes payment_metadata is a dict.
+        # In a real high-volume system, we'd index this specific key or use a separate column.
+        # For now, we search. 
+        
+        # Database dialect check for JSON querying
+        if self.db.bind.dialect.name == 'postgresql':
+            payment = self.db.query(Payment).filter(
+                Payment.payment_metadata['reference_id'].astext == reference_id
+            ).first()
+        else:
+            # Fallback for SQLite (mostly for tests)
+            # Inefficient for production, but acceptable for test datasets
+            all_payments = self.db.query(Payment).all()
+            payment = next(
+                (p for p in all_payments if p.payment_metadata and p.payment_metadata.get('reference_id') == reference_id), 
+                None
+            )
+
+        if not payment:
+            return None
+            
+        return ExternalPaymentStatusResponse(
+            reference_id=reference_id,
+            status=payment.status,
+            amount=payment.amount / 100.0,
+            currency=payment.currency,
+            created_at=payment.created_at,
+            order_id=payment.order_id
         )

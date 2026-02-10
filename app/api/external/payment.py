@@ -8,7 +8,12 @@ import hashlib
 import json
 
 from app.database import get_db
-from app.schemas.external_payment import ExternalPaymentRequest, ExternalPaymentResponse
+from app.schemas.external_payment import (
+    ExternalPaymentRequest, 
+    ExternalPaymentResponse,
+    ExternalPaymentStatusRequest,
+    ExternalPaymentStatusResponse
+)
 from app.services.external_payment_service import ExternalPaymentService
 from app.middleware.rate_limit import limiter
 
@@ -60,5 +65,38 @@ async def create_payment_link(
         logger.error(f"Error generating payment link: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=str(e)
+        )
+
+
+@router.post("/payment-status", response_model=ExternalPaymentStatusResponse)
+@limiter.limit("60/minute")
+async def get_payment_status(
+    request: Request,
+    payload: ExternalPaymentStatusRequest,
+    db: Session = Depends(get_db),
+    signature: str = Depends(verify_signature)
+):
+    """
+    Check the status of an external payment using its reference ID.
+    Requires valid HMAC signature in X-Signature header.
+    """
+    try:
+        service = ExternalPaymentService(db)
+        status_response = service.get_payment_status_by_reference(payload.reference_id)
+        
+        if not status_response:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Payment with reference_id {payload.reference_id} not found"
+            )
+            
+        return status_response
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error checking payment status: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )

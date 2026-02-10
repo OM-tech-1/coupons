@@ -1719,6 +1719,61 @@
                         },
                         "description": "Generates a signed payment link for external partners. Signature is automatically generated in the Pre-request script."
                     }
+                },
+                {
+                    "name": "Check Payment Status",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "// External API HMAC-SHA256 Signing Script",
+                                    "const sdk = require('postman-collection');",
+                                    "const crypto = require('crypto-js');",
+                                    "",
+                                    "const apiKey = pm.collectionVariables.get('external_api_key');",
+                                    "const body = pm.request.body.raw;",
+                                    "",
+                                    "if (apiKey && body) {",
+                                    "    // Generate HMAC-SHA256 signature",
+                                    "    const signature = crypto.HmacSHA256(body, apiKey).toString();",
+                                    "    pm.request.headers.add({",
+                                    "        key: 'X-Signature',",
+                                    "        value: signature",
+                                    "    });",
+                                    "    console.log('X-Signature Generated:', signature);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"reference_id\": \"REF-123456789\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/external/payment-status",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "external",
+                                "payment-status"
+                            ]
+                        },
+                        "description": "Check the status of an external payment using its reference ID. Requires valid HMAC signature."
+                    }
                 }
             ]
         },

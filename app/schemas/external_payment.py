@@ -3,6 +3,7 @@ from pydantic import BaseModel, HttpUrl, Field
 from typing import Optional
 from decimal import Decimal
 from uuid import UUID
+from datetime import datetime
 
 class ExternalPaymentRequest(BaseModel):
     phone_number: str = Field(..., description="User's phone number with country code")
@@ -20,3 +21,14 @@ class ExternalPaymentResponse(BaseModel):
     user_status: str  # "existing" or "created"
     amount: Decimal
     currency: str
+
+class ExternalPaymentStatusRequest(BaseModel):
+    reference_id: str = Field(..., description="External system reference ID to check")
+
+class ExternalPaymentStatusResponse(BaseModel):
+    reference_id: str
+    status: str
+    amount: Decimal
+    currency: str
+    created_at: datetime
+    order_id: UUID
