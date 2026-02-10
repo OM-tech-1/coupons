@@ -137,3 +137,69 @@ def test_claim_coupon(client, regular_user, sample_coupon):
     resp = client.post(f"/coupons/{coupon_id}/claim", headers=regular_user["headers"])
     assert resp.status_code == 201
     assert "coupon_id" in resp.json()
+
+
+# ============== Redis-Powered Frontend Endpoints ==============
+
+
+def test_trending_coupons(client, sample_coupon):
+    """GET /coupons/trending - returns trending coupons (falls back to newest when no Redis)."""
+    resp = client.get("/coupons/trending")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+
+
+def test_trending_coupons_with_period(client, sample_coupon):
+    """GET /coupons/trending?period=7d - accepts period parameter."""
+    resp = client.get("/coupons/trending?period=7d&limit=5")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+
+
+def test_recently_viewed(client):
+    """GET /coupons/recently-viewed - returns empty when no history exists."""
+    resp = client.get("/coupons/recently-viewed?session_id=test-session-abc")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+
+
+def test_recently_viewed_requires_session_id(client):
+    """GET /coupons/recently-viewed - requires session_id parameter."""
+    resp = client.get("/coupons/recently-viewed")
+    assert resp.status_code == 422  # validation error
+
+
+def test_featured_coupons(client):
+    """GET /coupons/featured - returns featured coupons."""
+    resp = client.get("/coupons/featured")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+
+
+def test_coupon_stock(client, sample_coupon):
+    """GET /coupons/{id}/stock - returns stock info."""
+    coupon_id = sample_coupon["id"]
+    resp = client.get(f"/coupons/{coupon_id}/stock")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "stock" in data
+    assert "coupon_id" in data
+
+
+def test_coupon_stock_not_found(client):
+    """GET /coupons/{id}/stock - returns 404 for non-existent coupon."""
+    resp = client.get("/coupons/00000000-0000-0000-0000-000000000000/stock")
+    assert resp.status_code == 404
+
+
+def test_view_tracking_with_session(client, sample_coupon):
+    """POST /coupons/{id}/view with session_id - feeds recently viewed."""
+    coupon_id = sample_coupon["id"]
+    resp = client.post(f"/coupons/{coupon_id}/view?session_id=user-session-xyz")
+    assert resp.status_code == 201
+    assert resp.json()["message"] == "View tracked"
+

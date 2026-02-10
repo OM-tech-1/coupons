@@ -62,6 +62,38 @@ def list_coupons(
     )
 
 
+@router.get("/trending")
+def get_trending_coupons(
+    period: str = Query("24h", pattern="^(24h|7d)$", description="Trending period: 24h or 7d"),
+    limit: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db)
+):
+    """Get trending coupons ranked by real-time view count"""
+    from app.services.redis_service import RedisService
+    return RedisService.get_trending_coupons(db, period=period, limit=limit)
+
+
+@router.get("/recently-viewed")
+def get_recently_viewed(
+    session_id: str = Query(..., description="Session or user ID"),
+    limit: int = Query(20, ge=1, le=50),
+    db: Session = Depends(get_db)
+):
+    """Get recently viewed coupons for a session/user"""
+    from app.services.redis_service import RedisService
+    return RedisService.get_recently_viewed(db, session_id=session_id, limit=limit)
+
+
+@router.get("/featured")
+def get_featured_coupons(
+    limit: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db)
+):
+    """Get featured coupons for homepage (fast cached response)"""
+    from app.services.redis_service import RedisService
+    return RedisService.get_featured_coupons(db, limit=limit)
+
+
 @router.get("/{coupon_id}", response_model=CouponResponse)
 def get_coupon(coupon_id: UUID, db: Session = Depends(get_db)):
     """Get a coupon by ID"""
@@ -155,6 +187,7 @@ def track_coupon_view(
     """Track a coupon view (public endpoint - no auth required)"""
     from app.services.coupon_view_service import CouponViewService
     from app.services.coupon_service import CouponService
+    from app.services.redis_service import RedisService
     
     # Verify coupon exists
     coupon = CouponService.get_by_id(db, coupon_id)
@@ -164,9 +197,31 @@ def track_coupon_view(
             detail="Coupon not found"
         )
     
-    # Note: For authenticated user tracking, frontend should pass session_id
-    # which can be the user_id from their JWT token. This keeps the endpoint
-    # simple and doesn't require parsing auth headers optionally.
+    # Track view in DB
     CouponViewService.track_view(db, coupon_id, user_id=None, session_id=session_id)
-    return {"message": "View tracked", "coupon_id": str(coupon_id)}
+    
+    # Feed Redis trending + recently viewed
+    coupon_id_str = str(coupon_id)
+    RedisService.record_trending_view(coupon_id_str)
+    if session_id:
+        RedisService.record_recently_viewed(session_id, coupon_id_str)
+    
+    return {"message": "View tracked", "coupon_id": coupon_id_str}
+
+
+@router.get("/{coupon_id}/stock")
+def get_coupon_stock(
+    coupon_id: UUID,
+    db: Session = Depends(get_db)
+):
+    """Get real-time stock count for a coupon (Redis-powered)"""
+    from app.services.redis_service import RedisService
+    
+    result = RedisService.get_stock(db, str(coupon_id))
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Coupon not found"
+        )
+    return result
 

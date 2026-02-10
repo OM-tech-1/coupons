@@ -69,12 +69,30 @@ class CategoryService:
 
     @staticmethod
     def get_by_slug(db: Session, slug: str) -> Optional[Category]:
-        """Get a category by its slug"""
-        return db.query(Category).filter(Category.slug == slug).first()
+        """Get a category by its slug (cached)"""
+        cache_k = cache_key("categories", "slug", slug)
+        cached = get_cache(cache_k)
+        if cached is not None:
+            return cached
+        
+        category = db.query(Category).filter(Category.slug == slug).first()
+        if category:
+            set_cache(cache_k, {
+                "id": str(category.id), "name": category.name, "slug": category.slug,
+                "description": category.description, "icon": category.icon,
+                "display_order": category.display_order, "is_active": category.is_active,
+                "created_at": str(category.created_at) if category.created_at else None,
+            }, CACHE_TTL_MEDIUM)
+        return category
 
     @staticmethod
     def get_with_coupon_counts(db: Session, active_only: bool = True) -> List[dict]:
-        """Get categories with active coupon counts"""
+        """Get categories with active coupon counts (cached)"""
+        cache_k = cache_key("categories", "with-counts", active_only)
+        cached = get_cache(cache_k)
+        if cached is not None:
+            return cached
+        
         query = db.query(Category)
         if active_only:
             query = query.filter(Category.is_active == True)
@@ -101,6 +119,9 @@ class CategoryService:
                 "created_at": cat.created_at,
                 "coupon_count": coupon_count
             })
+        
+        # Cache the computed result
+        set_cache(cache_k, result, CACHE_TTL_MEDIUM)
         
         return result
 

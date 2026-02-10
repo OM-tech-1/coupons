@@ -149,13 +149,43 @@ class CouponService:
 
     @staticmethod
     def get_by_id(db: Session, coupon_id: UUID) -> Optional[Coupon]:
-        """Get a coupon by its ID"""
-        return db.query(Coupon).filter(Coupon.id == coupon_id).first()
+        """Get a coupon by its ID (cached)"""
+        cache_k = cache_key("coupons", "id", str(coupon_id))
+        cached = get_cache(cache_k)
+        if cached is not None:
+            return cached
+        
+        coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
+        if coupon:
+            set_cache(cache_k, {
+                "id": str(coupon.id), "code": coupon.code, "redeem_code": coupon.redeem_code,
+                "brand": coupon.brand, "title": coupon.title, "description": coupon.description,
+                "discount_type": coupon.discount_type, "discount_amount": coupon.discount_amount,
+                "min_purchase": coupon.min_purchase, "max_uses": coupon.max_uses,
+                "current_uses": coupon.current_uses, "is_active": coupon.is_active,
+                "price": coupon.price, "stock": coupon.stock, "is_featured": coupon.is_featured,
+                "created_at": str(coupon.created_at) if coupon.created_at else None,
+                "expiration_date": str(coupon.expiration_date) if coupon.expiration_date else None,
+                "category_id": str(coupon.category_id) if coupon.category_id else None,
+                "availability_type": coupon.availability_type,
+            }, CACHE_TTL_MEDIUM)
+        return coupon
 
     @staticmethod
     def get_by_code(db: Session, code: str) -> Optional[Coupon]:
-        """Get a coupon by its code"""
-        return db.query(Coupon).filter(Coupon.code == code.upper()).first()
+        """Get a coupon by its code (cached)"""
+        upper_code = code.upper()
+        cache_k = cache_key("coupons", "code", upper_code)
+        cached = get_cache(cache_k)
+        if cached is not None:
+            return cached
+        
+        coupon = db.query(Coupon).filter(Coupon.code == upper_code).first()
+        if coupon:
+            set_cache(cache_k, {
+                "id": str(coupon.id), "code": coupon.code, "title": coupon.title,
+            }, CACHE_TTL_MEDIUM)
+        return coupon
 
     @staticmethod
     def update(db: Session, coupon_id: UUID, coupon_data: CouponUpdate) -> Optional[Coupon]:

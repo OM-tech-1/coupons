@@ -11,6 +11,7 @@ from app.schemas.admin import (
     AdminUserResponse, AdminOrderResponse, PaginatedUsersResponse,
     PaginatedOrdersResponse, DashboardResponse, TopCouponResponse
 )
+from app.cache import get_cache, set_cache, invalidate_cache, cache_key, CACHE_TTL_SHORT
 
 
 class AdminService:
@@ -213,7 +214,12 @@ class AdminService:
     
     @staticmethod
     def get_dashboard_stats(db: Session) -> DashboardResponse:
-        """Get aggregated dashboard statistics"""
+        """Get aggregated dashboard statistics (cached 60s)"""
+        cache_k = cache_key("admin", "dashboard")
+        cached = get_cache(cache_k)
+        if cached is not None:
+            return cached
+        
         now = datetime.utcnow()
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
@@ -295,7 +301,7 @@ class AdminService:
                 items_count=items_count
             ))
         
-        return DashboardResponse(
+        result = DashboardResponse(
             total_revenue=float(total_revenue),
             revenue_this_month=float(revenue_this_month),
             total_orders=total_orders,
@@ -309,3 +315,6 @@ class AdminService:
             top_coupons=top_coupons,
             recent_orders=recent_orders
         )
+        
+        set_cache(cache_k, result, CACHE_TTL_SHORT)
+        return result
