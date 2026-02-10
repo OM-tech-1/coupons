@@ -29,6 +29,8 @@ jobs:
           JWT_ALGORITHM: HS256
           REDIS_URL: ""
           ENVIRONMENT: test
+          PAYMENT_TOKEN_SECRET: ci-test-payment-token-secret
+          STRIPE_SECRET_KEY: sk_test_fake_key_for_ci
         run: pytest tests/ -v
 
   build-and-push:

@@ -16,6 +16,8 @@ os.environ["DATABASE_URL"] = "sqlite:///./test.db"
 os.environ["JWT_SECRET"] = "test-secret-key-for-ci"
 os.environ["JWT_ALGORITHM"] = "HS256"
 os.environ["REDIS_URL"] = ""
+os.environ["PAYMENT_TOKEN_SECRET"] = "test-payment-token-secret"
+os.environ["STRIPE_SECRET_KEY"] = "sk_test_fake_key_for_ci"
 os.environ["ENVIRONMENT"] = "test"
 
 # ---- Patch UUID for SQLite BEFORE any model imports ----
