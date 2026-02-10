@@ -160,7 +160,6 @@ def test_admin_coupon_analytics_filtering(client, admin_user, sample_coupon):
     # Analytics list item might be a dict with key 'code' or similar
     assert any(item["code"] == search_term for item in data["items"])
     
-    # Test category filter (if category exists)
     if sample_coupon.get("category_id"):
         cat_id = sample_coupon["category_id"]
         resp = client.get(f"/admin/analytics/coupons?category_id={cat_id}", 
@@ -168,4 +167,50 @@ def test_admin_coupon_analytics_filtering(client, admin_user, sample_coupon):
         assert resp.status_code == 200
         data = resp.json()
         assert len(data["items"]) >= 1
+
+
+def test_admin_dashboard_recent_orders_coupon(client, admin_user, sample_coupon, db):
+    """GET /admin/dashboard - verifies recent orders show coupon code."""
+    # Create an order with a coupon
+    from app.models.order import Order, OrderItem
+    from app.models.user import User
+    
+    # Get a user
+    user = db.query(User).filter(User.email == "user@example.com").first()
+    if not user:
+        # Should exist from fixtures, but fallback safety
+        return 
+        
+    # Create paid order with coupon
+    order = Order(
+        user_id=user.id,
+        total_amount=50.0,
+        status="paid",
+        payment_method="stripe"
+    )
+    db.add(order)
+    db.flush()
+    
+    item = OrderItem(
+        order_id=order.id,
+        coupon_id=sample_coupon["id"],
+        price=50.0,
+        quantity=1
+    )
+    db.add(item)
+    db.commit()
+    
+    # Refresh dashboard cache
+    resp = client.get("/admin/dashboard?refresh=true", headers=admin_user["headers"])
+    assert resp.status_code == 200
+    data = resp.json()
+    
+    # Check recent orders
+    recent = data["recent_orders"]
+    assert len(recent) > 0
+    # Find our order
+    found_order = next((o for o in recent if str(o["id"]) == str(order.id)), None)
+    assert found_order is not None
+    assert found_order["coupon_code"] == sample_coupon["code"]
+    assert found_order["payment_method"] == "stripe"
 

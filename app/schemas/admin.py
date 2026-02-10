@@ -32,6 +32,7 @@ class AdminOrderResponse(BaseModel):
     payment_method: Optional[str] = None
     created_at: datetime
     items_count: int = 0
+    coupon_code: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -77,6 +78,14 @@ class PerformanceResponse(BaseModel):
     views: List[PerformanceData]
     sold: List[PerformanceData]
 
+
+class TopCategoryResponse(BaseModel):
+    id: UUID
+    name: str
+    total_sales: int = 0
+    revenue: float = 0.0
+
+
 class DashboardResponse(BaseModel):
     """Dashboard aggregated metrics"""
     # Revenue
@@ -105,3 +114,6 @@ class DashboardResponse(BaseModel):
     
     # Graph Data
     performance: Optional[PerformanceResponse] = None
+    
+    # Top Category
+    top_category: Optional[TopCategoryResponse] = None

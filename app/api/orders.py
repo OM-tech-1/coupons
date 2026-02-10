@@ -53,3 +53,33 @@ def get_order(
             detail="Order not found"
         )
     return order
+    return order
+
+
+@router.get("/{order_id}/invoice")
+def download_invoice(
+    order_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Download invoice PDF for an order"""
+    order = OrderService.get_order_by_id(db, order_id, current_user.id)
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found"
+        )
+    
+    # Generate PDF
+    from app.services.invoice_service import InvoiceService
+    from fastapi.responses import StreamingResponse
+    
+    pdf_buffer = InvoiceService.generate_invoice_pdf(order, current_user)
+    
+    filename = f"invoice_{str(order.id)[:8]}.pdf"
+    
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

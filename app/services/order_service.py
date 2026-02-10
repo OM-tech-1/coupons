@@ -81,7 +81,10 @@ class OrderService:
     @staticmethod
     def get_order_by_id(db: Session, order_id: UUID, user_id: UUID) -> Optional[Order]:
         """Get an order by ID (must belong to user)"""
+        from sqlalchemy.orm import joinedload
         return db.query(Order).filter(
             Order.id == order_id,
             Order.user_id == user_id
+        ).options(
+            joinedload(Order.items).joinedload(OrderItem.coupon)
         ).first()

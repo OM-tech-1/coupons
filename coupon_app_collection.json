@@ -1226,7 +1226,7 @@
                                 "dashboard"
                             ]
                         },
-                        "description": "Returns aggregated dashboard stats: revenue, orders, users, coupons, top performers"
+                        "description": "Returns aggregated dashboard stats: revenue, orders, users, coupons, top performers, top_category, and recent orders with coupon info"
                     }
                 },
                 {
@@ -1432,6 +1432,34 @@
                             ]
                         },
                         "description": "Get specific order details (admin can view any order)"
+                    }
+                },
+                {
+                    "name": "Download Invoice",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/orders/{{order_id}}/invoice",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "orders",
+                                "{{order_id}}",
+                                "invoice"
+                            ]
+                        },
+                        "description": "Download PDF invoice for the order"
                     }
                 },
                 {

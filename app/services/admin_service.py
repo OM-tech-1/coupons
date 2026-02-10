@@ -10,9 +10,10 @@ from app.models.coupon import Coupon
 from app.schemas.admin import (
     AdminUserResponse, AdminOrderResponse, PaginatedUsersResponse,
     PaginatedOrdersResponse, DashboardResponse, TopCouponResponse,
-    PerformanceResponse, PerformanceData
+    PerformanceResponse, PerformanceData, TopCategoryResponse
 )
 from app.models.coupon_view import CouponView
+from app.models.category import Category
 from app.cache import get_cache, set_cache, invalidate_cache, cache_key, CACHE_TTL_SHORT
 
 
@@ -292,14 +293,19 @@ class AdminService:
         ]
         
         # === QUERY 5: Recent orders with JOIN (eliminates N+1) ===
-        from sqlalchemy.orm import aliased
+        # Subquery to get item count and first coupon code
         items_subq = db.query(
             OrderItem.order_id,
-            func.count(OrderItem.id).label('items_count')
+            func.count(OrderItem.id).label('items_count'),
+            func.min(Coupon.code).label('coupon_code')  # Get one coupon code if exists
+        ).outerjoin(
+            Coupon, Coupon.id == OrderItem.coupon_id
         ).group_by(OrderItem.order_id).subquery()
         
         recent_rows = db.query(
-            Order, User, func.coalesce(items_subq.c.items_count, 0).label('items_count')
+            Order, User, 
+            func.coalesce(items_subq.c.items_count, 0).label('items_count'),
+            items_subq.c.coupon_code
         ).outerjoin(
             User, User.id == Order.user_id
         ).outerjoin(
@@ -313,8 +319,9 @@ class AdminService:
                 user_name=user.full_name if user else None,
                 total_amount=order.total_amount, status=order.status,
                 payment_method=order.payment_method, created_at=order.created_at,
-                items_count=items_count
-            ) for order, user, items_count in recent_rows
+                items_count=items_count,
+                coupon_code=coupon_code
+            ) for order, user, items_count, coupon_code in recent_rows
         ]
         
         # === QUERY 6: Performance Graph (Views & Sales last 30 days) ===
@@ -358,6 +365,34 @@ class AdminService:
         sold_list = [PerformanceData(date=str(d), count=days_map[d]["sold"]) for d in sorted_dates]
         
         performance = PerformanceResponse(views=views_list, sold=sold_list)
+        
+        # === QUERY 7: Top Category ===
+        top_cat = db.query(
+            Category.id, Category.name,
+            func.count(OrderItem.id).label('total_sales'),
+            func.coalesce(func.sum(OrderItem.price), 0.0).label('revenue')
+        ).join(
+            Coupon, Coupon.category_id == Category.id
+        ).join(
+            OrderItem, OrderItem.coupon_id == Coupon.id
+        ).join(
+            Order, Order.id == OrderItem.order_id
+        ).filter(
+            Order.status == 'paid'
+        ).group_by(
+            Category.id, Category.name
+        ).order_by(
+            desc('total_sales')
+        ).first()
+
+        top_category = None
+        if top_cat:
+            top_category = TopCategoryResponse(
+                id=top_cat.id,
+                name=top_cat.name,
+                total_sales=top_cat.total_sales,
+                revenue=float(top_cat.revenue)
+            )
 
         result = DashboardResponse(
             total_revenue=float(total_revenue),
@@ -372,7 +407,8 @@ class AdminService:
             active_coupons=active_coupons,
             top_coupons=top_coupons,
             recent_orders=recent_orders,
-            performance=performance
+            performance=performance,
+            top_category=top_category
         )
         
         # Cache as dict (Pydantic models can't be json.dumps'd directly)
