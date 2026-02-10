@@ -197,19 +197,28 @@ class CouponService:
 
     @staticmethod
     def delete(db: Session, coupon_id: UUID) -> bool:
-        """Delete a coupon and all related records"""
+        """Delete a coupon. Soft-deletes if it has order history, hard-deletes otherwise."""
+        from app.models.order import OrderItem
+        from app.models.user_coupon import UserCoupon
+        from app.models.coupon_view import CouponView
+        
         db_coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
         if not db_coupon:
             return False
         
-        # Delete related records that have NOT NULL foreign keys
-        from app.models.user_coupon import UserCoupon
-        from app.models.coupon_view import CouponView
-        db.query(UserCoupon).filter(UserCoupon.coupon_id == coupon_id).delete()
-        db.query(CouponView).filter(CouponView.coupon_id == coupon_id).delete()
+        # Check if coupon has been purchased
+        has_orders = db.query(OrderItem).filter(OrderItem.coupon_id == coupon_id).first()
         
-        db.delete(db_coupon)
-        db.commit()
+        if has_orders:
+            # Soft-delete: deactivate instead of removing (preserves order history)
+            db_coupon.is_active = False
+            db.commit()
+        else:
+            # Hard-delete: no orders reference this coupon
+            db.query(UserCoupon).filter(UserCoupon.coupon_id == coupon_id).delete()
+            db.query(CouponView).filter(CouponView.coupon_id == coupon_id).delete()
+            db.delete(db_coupon)
+            db.commit()
         
         # Invalidate coupon caches
         invalidate_cache("coupons:list:*")
