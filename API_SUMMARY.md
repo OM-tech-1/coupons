@@ -62,6 +62,18 @@ This document provides a high-level overview of all available API endpoints curr
 
 ---
 
+## ⚡ 8. Real-Time Features (Redis)
+**Base URL:** `https://api.vouchergalaxy.com/coupons`
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/trending` | `GET` | List trending coupons (most viewed in 24h). |
+| `/featured` | `GET` | List admin-featured coupons. |
+| `/recently-viewed` | `GET` | List coupons viewed by current session. |
+| `/{id}/stock` | `GET` | Get real-time stock count. |
+
+---
+
 ## 🛠️ 6. Admin Dashboard
 **Base URL:** `https://api.vouchergalaxy.com/admin`
 
@@ -70,6 +82,9 @@ This document provides a high-level overview of all available API endpoints curr
 | `/stats` | `GET` | Get platform-wide statistics (active users, orders). |
 | `/users` | `GET` | Manage site users. |
 | `/coupons` | `POST/PUT` | Create or update coupon inventory. |
+| `/dashboard` | `GET` | **New**: Aggregated analytics dashboard. |
+| `/analytics/coupons` | `GET` | **New**: Detailed coupon performance stats. |
+| `/analytics/trends` | `GET` | **New**: Daily views/redemptions trend data. |
 
 ---
 
@@ -86,4 +101,9 @@ This document provides a high-level overview of all available API endpoints curr
 ## 📘 Developer Resources
 - **Swagger Documentation**: `https://api.vouchergalaxy.com/docs` (Interactive UI)
 - **Redoc Documentation**: `https://api.vouchergalaxy.com/redoc` (Clean Reference)
-- **Security Guide**: [API_PAYMENT_LINK_GUIDE.md](file:///Users/jihane/Documents/coupons/API_PAYMENT_LINK_GUIDE.md)
+
+> [!IMPORTANT]
+> **Production Hardening**: For security, interactive documentation (Swagger/Redoc) is **disabled** in the production environment (`ENVIRONMENT=production`). These URLs will return a `404 Not Found`. Please refer to the local documentation files for integration details:
+> - [**API_PAYMENT_LINK_GUIDE.md**](file:///Users/jihane/Documents/coupons/API_PAYMENT_LINK_GUIDE.md)
+
+- **Security Report**: [SECURITY_HARDENING_REPORT.md](file:///Users/jihane/.gemini/antigravity/brain/47585431-3684-4727-ab1b-7114cf376db1/SECURITY_HARDENING_REPORT.md)

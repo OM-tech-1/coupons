@@ -59,7 +59,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"country_code\": \"+91\",\n    \"number\": \"7907975711\",\n    \"password\": \"afsal@123\"\n}"
+                            "raw": "{\n    \"country_code\": \"{{user_country_code}}\",\n    \"number\": \"{{user_phone}}\",\n    \"password\": \"{{user_password}}\"\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/auth/login",
@@ -1661,6 +1661,158 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "External Integration",
+            "item": [
+                {
+                    "name": "Generate Payment Link",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "// External API HMAC-SHA256 Signing Script",
+                                    "const sdk = require('postman-collection');",
+                                    "const crypto = require('crypto-js');",
+                                    "",
+                                    "const apiKey = pm.collectionVariables.get('external_api_key');",
+                                    "const body = pm.request.body.raw;",
+                                    "",
+                                    "if (apiKey && body) {",
+                                    "    // Generate HMAC-SHA256 signature",
+                                    "    const signature = crypto.HmacSHA256(body, apiKey).toString();",
+                                    "    pm.request.headers.add({",
+                                    "        key: 'X-Signature',",
+                                    "        value: signature",
+                                    "    });",
+                                    "    console.log('X-Signature Generated:', signature);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"phone_number\": \"+971501234567\",\n    \"amount\": 150.0,\n    \"currency\": \"AED\",\n    \"reference_id\": \"REF-{{$guid}}\",\n    \"return_url\": \"https://omillionaire.com\",\n    \"webhook_url\": \"https://n8n.thegreencertificate.com/webhook/external-demo\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/external/payment-link",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "external",
+                                "payment-link"
+                            ]
+                        },
+                        "description": "Generates a signed payment link for external partners. Signature is automatically generated in the Pre-request script."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Real-Time Features (Redis)",
+            "item": [
+                {
+                    "name": "Trending Coupons (Last 24h)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/trending?limit=10&period=24h",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "trending"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "period",
+                                    "value": "24h"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Featured Coupons",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/featured?limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "featured"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Recently Viewed",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/recently-viewed?session_id=anon-123",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "recently-viewed"
+                            ],
+                            "query": [
+                                {
+                                    "key": "session_id",
+                                    "value": "anon-123"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Stock",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/{{coupon_id}}/stock",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "{{coupon_id}}",
+                                "stock"
+                            ]
+                        }
+                    }
+                }
+            ]
         }
     ],
     "variable": [
@@ -1702,6 +1854,26 @@
         {
             "key": "user_id",
             "value": "",
+            "type": "string"
+        },
+        {
+            "key": "external_api_key",
+            "value": "YOUR_EXTERNAL_API_KEY",
+            "type": "string"
+        },
+        {
+            "key": "user_country_code",
+            "value": "+91",
+            "type": "string"
+        },
+        {
+            "key": "user_phone",
+            "value": "7907975711",
+            "type": "string"
+        },
+        {
+            "key": "user_password",
+            "value": "afsal@123",
             "type": "string"
         }
     ]
