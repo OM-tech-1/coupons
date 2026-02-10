@@ -215,12 +215,14 @@ class AdminService:
         )
     
     @staticmethod
-    def get_dashboard_stats(db: Session) -> DashboardResponse:
+    def get_dashboard_stats(db: Session, refresh: bool = False) -> DashboardResponse:
         """Get aggregated dashboard statistics (cached 60s, optimized queries)"""
         cache_k = cache_key("admin", "dashboard")
-        cached = get_cache(cache_k)
-        if cached is not None:
-            return cached
+        
+        if not refresh:
+            cached = get_cache(cache_k)
+            if cached is not None:
+                return cached
         
         now = datetime.utcnow()
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)

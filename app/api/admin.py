@@ -30,11 +30,12 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
 
 @router.get("/dashboard", response_model=DashboardResponse)
 def get_dashboard(
+    refresh: bool = Query(False, description="Force refresh cache"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
     """Get aggregated dashboard statistics"""
-    return AdminService.get_dashboard_stats(db)
+    return AdminService.get_dashboard_stats(db, refresh=refresh)
 
 
 # ============== User Management ==============
