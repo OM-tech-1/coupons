@@ -14,6 +14,7 @@ import secrets
 import string
 import os
 import uuid
+from sqlalchemy import func
 
 class ExternalPaymentService:
     def __init__(self, db: Session):
@@ -120,25 +121,15 @@ class ExternalPaymentService:
         Get payment status by external reference ID.
         """
         from app.models.payment import Payment
-        from sqlalchemy import text
-        
-        # We query the JSON metadata using SQLAlchemy's text query or specific dialect methods if available.
-        # However, a simpler way in standard SQLAlchemy for JSON is to filter by the field if indexed, 
-        # or iterate if volume is low. But volume might be high.
-        # Postgres JSONB allows `payment_metadata['reference_id'].astext == reference_id`
-        
-        # Let's try to find it. Note: This assumes payment_metadata is a dict.
-        # In a real high-volume system, we'd index this specific key or use a separate column.
-        # For now, we search. 
         
         # Database dialect check for JSON querying
         if self.db.bind.dialect.name == 'postgresql':
+            # Use json_extract_path_text for Postgres JSON columns
             payment = self.db.query(Payment).filter(
-                Payment.payment_metadata['reference_id'].astext == reference_id
+                func.json_extract_path_text(Payment.payment_metadata, 'reference_id') == reference_id
             ).first()
         else:
             # Fallback for SQLite (mostly for tests)
-            # Inefficient for production, but acceptable for test datasets
             all_payments = self.db.query(Payment).all()
             payment = next(
                 (p for p in all_payments if p.payment_metadata and p.payment_metadata.get('reference_id') == reference_id), 
