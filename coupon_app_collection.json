@@ -1717,7 +1717,7 @@
                                 "payment-link"
                             ]
                         },
-                        "description": "Generates a signed payment link for external partners. Signature is automatically generated in the Pre-request script."
+                        "description": "Generates a signed payment link for external partners. Signature is automatically generated in the Pre-request script.\n\n**Supported Currencies:** AED, SAR, QAR, USD, INR, EUR.\n**Note:** OMR is NOT supported.\n\n**Webhook:** Payload returns the actual transaction currency."
                     }
                 },
                 {

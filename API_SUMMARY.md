@@ -60,6 +60,7 @@ This document provides a high-level overview of all available API endpoints curr
 | :--- | :--- | :--- |
 | `/payment-link` | `POST` | **Signed Request**: Generate a hosted payment link. |
 | `/payment-status` | `POST` | **Signed Request**: Check payment status by reference ID. |
+> **Note**: For supported currencies (AED, SAR, etc.) and webhook details, see [API_PAYMENT_LINK_GUIDE.md](file:///Users/jihane/Documents/coupons/API_PAYMENT_LINK_GUIDE.md).
 
 ---
 
