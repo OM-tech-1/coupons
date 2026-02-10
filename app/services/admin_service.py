@@ -214,7 +214,7 @@ class AdminService:
     
     @staticmethod
     def get_dashboard_stats(db: Session) -> DashboardResponse:
-        """Get aggregated dashboard statistics (cached 60s)"""
+        """Get aggregated dashboard statistics (cached 60s, optimized queries)"""
         cache_k = cache_key("admin", "dashboard")
         cached = get_cache(cache_k)
         if cached is not None:
@@ -223,38 +223,51 @@ class AdminService:
         now = datetime.utcnow()
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
-        # Revenue stats
-        total_revenue = db.query(
+        # === QUERY 1: All order + revenue stats in ONE query ===
+        order_stats = db.query(
+            func.count(Order.id).label('total_orders'),
+            func.count(case((Order.status == 'paid', 1))).label('completed_orders'),
+            func.count(case((Order.status == 'pending', 1))).label('pending_orders'),
+            func.coalesce(func.sum(case((Order.status == 'paid', Order.total_amount), else_=0.0)), 0.0).label('total_revenue'),
+            func.coalesce(func.sum(case(
+                (db.query(Order).filter(Order.status == 'paid', Order.created_at >= month_start).exists().correlate(Order), Order.total_amount),
+                else_=0.0
+            )), 0.0).label('revenue_this_month_placeholder'),
+        ).first()
+        
+        total_orders = order_stats.total_orders
+        completed_orders = order_stats.completed_orders
+        pending_orders = order_stats.pending_orders
+        total_revenue = float(order_stats.total_revenue)
+        
+        # Revenue this month (simpler separate query — avoids complex correlated subquery)
+        revenue_this_month = float(db.query(
             func.coalesce(func.sum(Order.total_amount), 0.0)
-        ).filter(Order.status == 'paid').scalar() or 0.0
+        ).filter(Order.status == 'paid', Order.created_at >= month_start).scalar() or 0.0)
         
-        revenue_this_month = db.query(
-            func.coalesce(func.sum(Order.total_amount), 0.0)
-        ).filter(
-            Order.status == 'paid',
-            Order.created_at >= month_start
-        ).scalar() or 0.0
+        # === QUERY 2: All user stats in ONE query ===
+        user_stats = db.query(
+            func.count(User.id).label('total'),
+            func.count(case((User.is_active == True, 1))).label('active'),
+            func.count(case((User.created_at >= month_start, 1))).label('new_this_month'),
+        ).first()
         
-        # Order stats
-        total_orders = db.query(Order).count()
-        completed_orders = db.query(Order).filter(Order.status == 'paid').count()
-        pending_orders = db.query(Order).filter(Order.status == 'pending').count()
+        total_users = user_stats.total
+        active_users = user_stats.active
+        new_users_month = user_stats.new_this_month
         
-        # User stats
-        total_users = db.query(User).count()
-        active_users = db.query(User).filter(User.is_active == True).count()
-        new_users_month = db.query(User).filter(User.created_at >= month_start).count()
+        # === QUERY 3: Coupon stats in ONE query ===
+        coupon_stats = db.query(
+            func.count(Coupon.id).label('total'),
+            func.count(case((Coupon.is_active == True, 1))).label('active'),
+        ).first()
         
-        # Coupon stats
-        total_coupons = db.query(Coupon).count()
-        active_coupons = db.query(Coupon).filter(Coupon.is_active == True).count()
+        total_coupons = coupon_stats.total
+        active_coupons = coupon_stats.active
         
-        # Top performing coupons (by sales count)
+        # === QUERY 4: Top performing coupons ===
         top_coupons_query = db.query(
-            Coupon.id,
-            Coupon.code,
-            Coupon.title,
-            Coupon.brand,
+            Coupon.id, Coupon.code, Coupon.title, Coupon.brand,
             func.count(OrderItem.id).label('total_sales'),
             func.coalesce(func.sum(OrderItem.price * OrderItem.quantity), 0.0).label('revenue')
         ).join(
@@ -265,45 +278,44 @@ class AdminService:
             Order.status == 'paid'
         ).group_by(
             Coupon.id, Coupon.code, Coupon.title, Coupon.brand
-        ).order_by(
-            desc('total_sales')
-        ).limit(5).all()
+        ).order_by(desc('total_sales')).limit(5).all()
         
         top_coupons = [
             TopCouponResponse(
-                id=c.id,
-                code=c.code,
-                title=c.title,
-                brand=c.brand,
-                total_sales=c.total_sales,
-                revenue=float(c.revenue)
+                id=c.id, code=c.code, title=c.title, brand=c.brand,
+                total_sales=c.total_sales, revenue=float(c.revenue)
             ) for c in top_coupons_query
         ]
         
-        # Recent orders
-        recent = db.query(Order).order_by(desc(Order.created_at)).limit(5).all()
-        recent_orders = []
-        for order in recent:
-            user = db.query(User).filter(User.id == order.user_id).first()
-            items_count = db.query(func.count(OrderItem.id)).filter(
-                OrderItem.order_id == order.id
-            ).scalar() or 0
-            
-            recent_orders.append(AdminOrderResponse(
-                id=order.id,
-                user_id=order.user_id,
+        # === QUERY 5: Recent orders with JOIN (eliminates N+1) ===
+        from sqlalchemy.orm import aliased
+        items_subq = db.query(
+            OrderItem.order_id,
+            func.count(OrderItem.id).label('items_count')
+        ).group_by(OrderItem.order_id).subquery()
+        
+        recent_rows = db.query(
+            Order, User, func.coalesce(items_subq.c.items_count, 0).label('items_count')
+        ).outerjoin(
+            User, User.id == Order.user_id
+        ).outerjoin(
+            items_subq, items_subq.c.order_id == Order.id
+        ).order_by(desc(Order.created_at)).limit(5).all()
+        
+        recent_orders = [
+            AdminOrderResponse(
+                id=order.id, user_id=order.user_id,
                 user_phone=user.phone_number if user else None,
                 user_name=user.full_name if user else None,
-                total_amount=order.total_amount,
-                status=order.status,
-                payment_method=order.payment_method,
-                created_at=order.created_at,
+                total_amount=order.total_amount, status=order.status,
+                payment_method=order.payment_method, created_at=order.created_at,
                 items_count=items_count
-            ))
+            ) for order, user, items_count in recent_rows
+        ]
         
         result = DashboardResponse(
-            total_revenue=float(total_revenue),
-            revenue_this_month=float(revenue_this_month),
+            total_revenue=total_revenue,
+            revenue_this_month=revenue_this_month,
             total_orders=total_orders,
             completed_orders=completed_orders,
             pending_orders=pending_orders,
