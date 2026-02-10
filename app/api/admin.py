@@ -149,12 +149,18 @@ def get_coupons_analytics(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     sort_by: str = Query("views", pattern="^(views|redemptions|rate)$", description="Sort by: views, redemptions, rate"),
+    category_id: Optional[UUID] = Query(None, description="Filter by category ID"),
+    active_only: bool = Query(False, description="Show only active coupons"),
+    search: Optional[str] = Query(None, description="Search by title, code, or brand"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
     """Get analytics for all coupons (views, redemptions, rates)"""
     from app.services.coupon_view_service import CouponViewService
-    return CouponViewService.get_all_coupons_analytics(db, skip=skip, limit=limit, sort_by=sort_by)
+    return CouponViewService.get_all_coupons_analytics(
+        db, skip=skip, limit=limit, sort_by=sort_by,
+        category_id=category_id, active_only=active_only, search=search
+    )
 
 
 @router.get("/analytics/coupons/{coupon_id}")

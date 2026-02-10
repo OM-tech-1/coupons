@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, or_
 from uuid import UUID
 from typing import List, Optional
 from datetime import datetime, timedelta
@@ -161,19 +161,43 @@ class CouponViewService:
         db: Session,
         skip: int = 0,
         limit: int = 20,
-        sort_by: str = "views"  # views, redemptions, rate
+        sort_by: str = "views",  # views, redemptions, rate
+        category_id: Optional[UUID] = None,
+        active_only: bool = False,
+        search: Optional[str] = None
     ) -> dict:
-        """Get analytics for all coupons with pagination (cached 5 min)"""
-        cache_k = cache_key("analytics", "coupons", skip, limit, sort_by)
+        """Get analytics for all coupons with pagination and filtering (cached 5 min)"""
+        # Include filters in cache key to avoid collisions
+        cache_k = cache_key("analytics", "coupons", skip, limit, sort_by, str(category_id), str(active_only), str(search))
         cached = get_cache(cache_k)
         if cached is not None:
             return cached
         
-        # Get total count first
-        total = db.query(func.count(Coupon.id)).scalar() or 0
+        # Base query
+        query = db.query(Coupon)
         
-        # Get coupons
-        coupons = db.query(Coupon).offset(skip).limit(limit).all()
+        # Apply filters
+        if active_only:
+            query = query.filter(Coupon.is_active == True)
+        
+        if category_id:
+            query = query.filter(Coupon.category_id == category_id)
+            
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(
+                or_(
+                    Coupon.title.ilike(search_term),
+                    Coupon.code.ilike(search_term),
+                    Coupon.brand.ilike(search_term)
+                )
+            )
+        
+        # Get total count first (after filtering)
+        total = query.with_entities(func.count(Coupon.id)).scalar() or 0
+        
+        # Get coupons (paginated)
+        coupons = query.offset(skip).limit(limit).all()
         coupon_ids = [c.id for c in coupons]
         
         if not coupon_ids:

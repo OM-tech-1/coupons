@@ -136,3 +136,36 @@ def test_admin_dashboard_performance(client, admin_user, sample_coupon):
     # Note: timestamp diffs might make exact date matching flaky in tests, 
     # but at least check the structure valid
     assert all("date" in item and "count" in item for item in perf["views"])
+
+
+def test_admin_coupon_analytics_filtering(client, admin_user, sample_coupon):
+    """GET /admin/analytics/coupons - verifies filtering capabilities."""
+    # Test active_only
+    resp = client.get("/admin/analytics/coupons?active_only=true", 
+                      headers=admin_user["headers"])
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "items" in data
+    # Assuming sample_coupon is active, it should be present
+    # Service returns 'coupon_id' as string, not 'id'
+    assert any(c["coupon_id"] == str(sample_coupon["id"]) for c in data["items"])
+    
+    # Test search
+    search_term = sample_coupon["code"]
+    resp = client.get(f"/admin/analytics/coupons?search={search_term}", 
+                      headers=admin_user["headers"])
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["items"]) >= 1
+    # Analytics list item might be a dict with key 'code' or similar
+    assert any(item["code"] == search_term for item in data["items"])
+    
+    # Test category filter (if category exists)
+    if sample_coupon.get("category_id"):
+        cat_id = sample_coupon["category_id"]
+        resp = client.get(f"/admin/analytics/coupons?category_id={cat_id}", 
+                          headers=admin_user["headers"])
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data["items"]) >= 1
+
