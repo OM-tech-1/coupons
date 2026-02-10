@@ -115,7 +115,7 @@ class StripeWebhookService:
         logger.info(f"Payment {payment.id} marked as succeeded")
         
         # Dispatch Outbound Webhook
-        self._send_outbound_webhook(order, "success")
+        self._send_outbound_webhook(order, "success", currency=payment.currency)
         
         return {
             "status": "success",
@@ -159,7 +159,7 @@ class StripeWebhookService:
         logger.info(f"Payment {payment.id} marked as failed: {failure_reason}")
         
         # Dispatch Outbound Webhook
-        self._send_outbound_webhook(order, "failed", failure_reason=failure_reason)
+        self._send_outbound_webhook(order, "failed", failure_reason=failure_reason, currency=payment.currency)
         
         return {
             "status": "success",
@@ -212,7 +212,7 @@ class StripeWebhookService:
         
         return {"status": "success", "payment_id": str(payment.id)}
 
-    def _send_outbound_webhook(self, order: Order, status: str, failure_reason: str = None):
+    def _send_outbound_webhook(self, order: Order, status: str, failure_reason: str = None, currency: str = "USD"):
         """
         Send a notification to the external system's webhook_url if configured.
         Uses HMAC signature for security.
@@ -236,7 +236,7 @@ class StripeWebhookService:
                 "order_id": str(order.id),
                 "status": status,
                 "amount": order.total_amount,
-                "currency": "USD", # Default or from order
+                "currency": currency,
                 "payment_id": order.stripe_payment_intent_id,
                 "failure_reason": failure_reason
                 # Add reference_id if available (stored in payment metadata)
