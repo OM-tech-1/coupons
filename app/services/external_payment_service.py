@@ -124,9 +124,9 @@ class ExternalPaymentService:
         
         # Database dialect check for JSON querying
         if self.db.bind.dialect.name == 'postgresql':
-            # Use json_extract_path_text for Postgres JSON columns
+            # Use ->> operator for Postgres JSON/JSONB text extraction
             payment = self.db.query(Payment).filter(
-                func.json_extract_path_text(Payment.payment_metadata, 'reference_id') == reference_id
+                Payment.payment_metadata.op('->>')('reference_id') == reference_id
             ).first()
         else:
             # Fallback for SQLite (mostly for tests)
