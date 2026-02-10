@@ -69,6 +69,14 @@ class TopCouponResponse(BaseModel):
     revenue: float = 0.0
 
 
+class PerformanceData(BaseModel):
+    date: str
+    count: int
+
+class PerformanceResponse(BaseModel):
+    views: List[PerformanceData]
+    sold: List[PerformanceData]
+
 class DashboardResponse(BaseModel):
     """Dashboard aggregated metrics"""
     # Revenue
@@ -94,3 +102,6 @@ class DashboardResponse(BaseModel):
     
     # Recent orders
     recent_orders: List[AdminOrderResponse] = []
+    
+    # Graph Data
+    performance: Optional[PerformanceResponse] = None

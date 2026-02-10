@@ -9,8 +9,10 @@ from app.models.order import Order, OrderItem
 from app.models.coupon import Coupon
 from app.schemas.admin import (
     AdminUserResponse, AdminOrderResponse, PaginatedUsersResponse,
-    PaginatedOrdersResponse, DashboardResponse, TopCouponResponse
+    PaginatedOrdersResponse, DashboardResponse, TopCouponResponse,
+    PerformanceResponse, PerformanceData
 )
+from app.models.coupon_view import CouponView
 from app.cache import get_cache, set_cache, invalidate_cache, cache_key, CACHE_TTL_SHORT
 
 
@@ -313,9 +315,51 @@ class AdminService:
             ) for order, user, items_count in recent_rows
         ]
         
+        # === QUERY 6: Performance Graph (Views & Sales last 30 days) ===
+        # Initialize dates map for last 30 days
+        days_map = {}
+        today = now.date()
+        for i in range(30):
+            d = today - timedelta(days=i)
+            days_map[d] = {"views": 0, "sold": 0}
+            
+        start_date = now - timedelta(days=30)
+        
+        # Views query (group by day)
+        views_query = db.query(
+            func.date(CouponView.viewed_at).label('day'),
+            func.count(CouponView.id).label('count')
+        ).filter(
+            CouponView.viewed_at >= start_date
+        ).group_by('day').all()
+        
+        for row in views_query:
+            if row.day in days_map:
+                days_map[row.day]["views"] = row.count
+
+        # Sales query (group by day)
+        sales_query = db.query(
+            func.date(Order.created_at).label('day'),
+            func.count(Order.id).label('count')
+        ).filter(
+            Order.status == 'paid',
+            Order.created_at >= start_date
+        ).group_by('day').all()
+        
+        for row in sales_query:
+            if row.day in days_map:
+                days_map[row.day]["sold"] = row.count
+        
+        # Sort by date and create response objects
+        sorted_dates = sorted(days_map.keys())
+        views_list = [PerformanceData(date=str(d), count=days_map[d]["views"]) for d in sorted_dates]
+        sold_list = [PerformanceData(date=str(d), count=days_map[d]["sold"]) for d in sorted_dates]
+        
+        performance = PerformanceResponse(views=views_list, sold=sold_list)
+
         result = DashboardResponse(
-            total_revenue=total_revenue,
-            revenue_this_month=revenue_this_month,
+            total_revenue=float(total_revenue),
+            revenue_this_month=float(revenue_this_month),
             total_orders=total_orders,
             completed_orders=completed_orders,
             pending_orders=pending_orders,
@@ -325,7 +369,8 @@ class AdminService:
             total_coupons=total_coupons,
             active_coupons=active_coupons,
             top_coupons=top_coupons,
-            recent_orders=recent_orders
+            recent_orders=recent_orders,
+            performance=performance
         )
         
         # Cache as dict (Pydantic models can't be json.dumps'd directly)
