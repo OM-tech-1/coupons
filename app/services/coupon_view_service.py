@@ -91,6 +91,35 @@ class CouponViewService:
         if unique_viewers > 0:
             redemption_rate = round((total_redemptions / unique_viewers) * 100, 2)
         
+        # Revenue for this coupon
+        revenue = db.query(
+            func.coalesce(func.sum(OrderItem.price_at_purchase), 0.0)
+        ).join(Order, Order.id == OrderItem.order_id).filter(
+            OrderItem.coupon_id == coupon_id,
+            Order.status == 'paid'
+        ).scalar() or 0.0
+        
+        # Daily performance trend (last 30 days)
+        from sqlalchemy import cast, Date
+        start_date = datetime.utcnow() - timedelta(days=30)
+        
+        daily_views = db.query(
+            cast(CouponView.viewed_at, Date).label('date'),
+            func.count(CouponView.id).label('count')
+        ).filter(
+            CouponView.coupon_id == coupon_id,
+            CouponView.viewed_at >= start_date
+        ).group_by(cast(CouponView.viewed_at, Date)).order_by('date').all()
+        
+        daily_sold = db.query(
+            cast(Order.created_at, Date).label('date'),
+            func.count(OrderItem.id).label('count')
+        ).join(OrderItem, Order.id == OrderItem.order_id).filter(
+            OrderItem.coupon_id == coupon_id,
+            Order.status == 'paid',
+            Order.created_at >= start_date
+        ).group_by(cast(Order.created_at, Date)).order_by('date').all()
+        
         return {
             "coupon_id": str(coupon_id),
             "code": coupon.code,
@@ -100,9 +129,16 @@ class CouponViewService:
             "total_views": total_views,
             "unique_viewers": unique_viewers,
             "total_redemptions": total_redemptions,
+            "sold_count": total_redemptions,
             "redemption_rate": redemption_rate,
+            "conversion_rate": redemption_rate,
+            "revenue": float(revenue),
             "views_last_7_days": views_last_7_days,
-            "views_last_30_days": views_last_30_days
+            "views_last_30_days": views_last_30_days,
+            "performance": {
+                "views": [{"date": str(v.date), "count": v.count} for v in daily_views],
+                "sold": [{"date": str(s.date), "count": s.count} for s in daily_sold]
+            }
         }
     
     @staticmethod
@@ -148,12 +184,22 @@ class CouponViewService:
             .all()
         )
         
+        # Bulk query: Get revenue per coupon
+        revenue_data = dict(
+            db.query(OrderItem.coupon_id, func.coalesce(func.sum(OrderItem.price_at_purchase), 0.0))
+            .join(Order, Order.id == OrderItem.order_id)
+            .filter(OrderItem.coupon_id.in_(coupon_ids), Order.status == 'paid')
+            .group_by(OrderItem.coupon_id)
+            .all()
+        )
+        
         # Build analytics list
         analytics = []
         for coupon in coupons:
             total_views = view_counts.get(coupon.id, 0)
             unique_viewers = unique_counts.get(coupon.id, 0)
             total_redemptions = redemption_counts.get(coupon.id, 0)
+            coupon_revenue = float(revenue_data.get(coupon.id, 0))
             
             redemption_rate = 0.0
             if unique_viewers > 0:
@@ -168,7 +214,10 @@ class CouponViewService:
                 "total_views": total_views,
                 "unique_viewers": unique_viewers,
                 "total_redemptions": total_redemptions,
-                "redemption_rate": redemption_rate
+                "sold_count": total_redemptions,
+                "redemption_rate": redemption_rate,
+                "conversion_rate": redemption_rate,
+                "revenue": coupon_revenue
             })
         
         # Sort based on criteria

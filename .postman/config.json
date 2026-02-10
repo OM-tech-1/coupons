@@ -1,0 +1,15 @@
+{
+  "workspace": {
+    "id": "f633e77e-dc0b-4a49-8410-0d982feee56c"
+  },
+  "entities": {
+    "environments": [],
+    "flows": [],
+    "globals": [],
+    "mocks": [],
+    "specs": [],
+    "collections": [
+      "../coupon_app_collection.json"
+    ]
+  }
+}
