@@ -316,5 +316,6 @@ class AdminService:
             recent_orders=recent_orders
         )
         
-        set_cache(cache_k, result, CACHE_TTL_SHORT)
+        # Cache as dict (Pydantic models can't be json.dumps'd directly)
+        set_cache(cache_k, result.model_dump(mode='json'), CACHE_TTL_SHORT)
         return result
