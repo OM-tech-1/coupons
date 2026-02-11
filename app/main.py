@@ -127,7 +127,7 @@ app.include_router(external_payment_router, prefix="/api/v1/external", tags=["Ex
 @app.get("/")
 def health_check():
     """Basic health check endpoint."""
-    return {"status": "OK", "version": "2.0.0"}
+    return {"status": "OK", "version": "2.0.1"} # Production Release: Stripe Live Keys Configured
 
 
 @app.get("/health")
