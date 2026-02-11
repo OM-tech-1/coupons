@@ -139,9 +139,16 @@ class ExternalPaymentService:
         if not payment:
             return None
             
+        # Map internal status to external status
+        status_map = {
+            "succeeded": "success",
+            "initiated": "pending", # Optional: normalize initiated to pending if desired, but user specifically asked for success
+        }
+        external_status = status_map.get(payment.status, payment.status)
+            
         return ExternalPaymentStatusResponse(
             reference_id=reference_id,
-            status=payment.status,
+            status=external_status,
             amount=payment.amount / 100.0,
             currency=payment.currency,
             created_at=payment.created_at,

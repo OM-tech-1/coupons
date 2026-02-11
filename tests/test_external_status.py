@@ -74,7 +74,7 @@ def test_external_payment_status_flow(client, monkeypatch, db):
     assert resp.status_code == 200
     data = resp.json()
     assert data["reference_id"] == ref_id
-    assert data["status"] == "initiated"  # Default status
+    assert data["status"] == "pending"  # Mapped from initiated
     assert float(data["amount"]) == 50.0
     assert data["currency"] == "USD"
     assert "created_at" in data
@@ -98,3 +98,63 @@ def test_external_payment_status_not_found(client, monkeypatch):
     
     assert resp.status_code == 404
     assert resp.json()["detail"] == f"Payment with reference_id {ref_id} not found"
+
+def test_external_payment_status_success_mapping(client, monkeypatch, db):
+    """Test that 'succeeded' internal status maps to 'success'"""
+    
+    # 1. Setup Mocking
+    from app.api.external import payment
+    monkeypatch.setattr(payment, "EXTERNAL_API_SECRET", "test-secret")
+    
+    # 2. Directly create a successful payment in DB
+    from app.models.payment import Payment, PaymentStatus
+    from app.models.order import Order
+    from app.models.user import User
+    import uuid
+    
+    # Create User first
+    user = User(
+        phone_number="+100000000",
+        hashed_password="hashed_secret",
+        full_name="Test User",
+        role="USER"
+    )
+    db.add(user)
+    db.commit()
+    
+    order = Order(
+        user_id=user.id,
+        total_amount=100.0,
+        status="paid"
+    )
+    db.add(order)
+    db.commit()
+    
+    ref_id = "REF_SUCCESS_001"
+    payment_obj = Payment(
+        order_id=order.id,
+        amount=10000, # cents
+        currency="USD",
+        status=PaymentStatus.SUCCEEDED.value,
+        payment_metadata={"reference_id": ref_id}
+    )
+    db.add(payment_obj)
+    db.commit()
+    
+    # 3. Check status via API
+    import json
+    import hmac
+    import hashlib
+    
+    payload = {"reference_id": ref_id}
+    body = json.dumps(payload, separators=(',', ':'))
+    sig = hmac.new(b"test-secret", body.encode(), hashlib.sha256).hexdigest()
+    
+    resp = client.post(
+        "/api/v1/external/payment-status",
+        data=body,
+        headers={"Content-Type": "application/json", "X-Signature": sig}
+    )
+    
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "success"
