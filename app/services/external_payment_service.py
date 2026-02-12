@@ -55,21 +55,51 @@ class ExternalPaymentService:
         return new_user, "created"
 
     def process_payment_request(self, request: ExternalPaymentRequest) -> ExternalPaymentResponse:
+        # 0. Idempotency Check
+        existing_order = self.db.query(Order).filter(Order.reference_id == request.reference_id).first()
+        if existing_order:
+            # If order exists, return existing payment link logic (simplified for now)
+            # In a real scenario, we might want to check status, etc.
+            # Regenerate token for the existing order
+            user = self.db.query(User).get(existing_order.user_id)
+            user_status = "existing"
+            
+            # Check if payment intent exists
+            if not existing_order.stripe_payment_intent_id:
+                # Should not happen if flow completed previously, but safety check
+                pass 
+                
+            token = self.token_service.generate_payment_token(
+                order_id=existing_order.id,
+                payment_intent_id=existing_order.stripe_payment_intent_id,
+                site_origin=str(request.return_url) if request.return_url else "external_api"
+            )
+            
+            base_url = f"{self.payment_ui_domain}/pay"
+            payment_url = f"{base_url}?token={token.token}"
+            if request.return_url:
+                payment_url += f"&return_url={request.return_url}"
+                
+            return ExternalPaymentResponse(
+                payment_url=payment_url,
+                order_id=existing_order.id,
+                user_status=user_status,
+                amount=existing_order.total_amount,
+                currency=request.currency # Assuming same currency
+            )
+
         # 1. Resolve User
         user, user_status = self._get_or_create_user(request)
         
         # 2. Create Pending Order
-        # Note: External orders might not have items initially, or we treat the amount as a direct charge.
-        # Since Order usually needs items, we might need to handle this. 
-        # For now, we create an order without items, just `total_amount`.
-        # The schema supports this as `items` is a relationship, not strictly required for insert if logic allows.
         new_order = Order(
             user_id=user.id,
             total_amount=float(request.amount),
             status="pending",
             payment_state="awaiting_payment",
             payment_method="stripe",
-            webhook_url=str(request.webhook_url) if request.webhook_url else None
+            webhook_url=str(request.webhook_url) if request.webhook_url else None,
+            reference_id=request.reference_id
         )
         self.db.add(new_order)
         self.db.commit()
@@ -120,29 +150,31 @@ class ExternalPaymentService:
         """
         Get payment status by external reference ID.
         """
-        from app.models.payment import Payment
+        # Query Order directly by reference_id
+        order = self.db.query(Order).filter(Order.reference_id == reference_id).first()
         
-        # Database dialect check for JSON querying
-        if self.db.bind.dialect.name == 'postgresql':
-            # Use ->> operator for Postgres JSON/JSONB text extraction
-            payment = self.db.query(Payment).filter(
-                Payment.payment_metadata.op('->>')('reference_id') == reference_id
-            ).first()
-        else:
-            # Fallback for SQLite (mostly for tests)
-            all_payments = self.db.query(Payment).all()
-            payment = next(
-                (p for p in all_payments if p.payment_metadata and p.payment_metadata.get('reference_id') == reference_id), 
-                None
-            )
-
-        if not payment:
+        if not order:
             return None
             
+        # Get associated payment
+        from app.models.payment import Payment
+        payment = self.db.query(Payment).filter(Payment.order_id == order.id).first()
+        
+        if not payment:
+            # Order exists but no payment record yet (rare but possible if step 3 failed)
+            return ExternalPaymentStatusResponse(
+                reference_id=reference_id,
+                status="pending",
+                amount=order.total_amount,
+                currency="USD", # Default fallback if no payment record
+                created_at=order.created_at,
+                order_id=order.id
+            )
+
         # Map internal status to external status
         status_map = {
             "succeeded": "success",
-            "initiated": "pending", # Optional: normalize initiated to pending if desired, but user specifically asked for success
+            "initiated": "pending",
         }
         external_status = status_map.get(payment.status, payment.status)
             
