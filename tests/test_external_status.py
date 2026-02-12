@@ -122,10 +122,12 @@ def test_external_payment_status_success_mapping(client, monkeypatch, db):
     db.add(user)
     db.commit()
     
+    ref_id = "REF_SUCCESS_001"
     order = Order(
         user_id=user.id,
         total_amount=100.0,
-        status="paid"
+        status="paid",
+        reference_id=ref_id
     )
     db.add(order)
     db.commit()
