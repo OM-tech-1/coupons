@@ -90,8 +90,8 @@ class VPSClient:
 def cmd_deploy(vps: VPSClient, args: argparse.Namespace) -> None:
     """Deploy application to VPS"""
     print("\n📦 Deploying to VPS...")
-    vps.run(f"cd {APP_DIR} && git pull", stream=True)
-    vps.run(f"docker build -t {IMAGE_NAME} .", stream=True)
+    vps.run(f"cd {APP_DIR} && git fetch --all && git reset --hard origin/main && git pull", stream=True)
+    vps.run(f"cd {APP_DIR} && docker build -t {IMAGE_NAME} .", stream=True)
     vps.run(f"docker stop {CONTAINER_NAME} || true")
     vps.run(f"docker rm {CONTAINER_NAME} || true")
     vps.run(f"docker run -d --name {CONTAINER_NAME} --restart unless-stopped "
