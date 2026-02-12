@@ -68,7 +68,7 @@ class OrderResponse(BaseModel):
 
 
 class CheckoutRequest(BaseModel):
-    payment_method: str = "mock"  # mock, razorpay, stripe
+    payment_method: str = "stripe"  # mock, razorpay, stripe
 
 
 class PaymentVerifyRequest(BaseModel):

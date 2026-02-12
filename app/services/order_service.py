@@ -31,19 +31,28 @@ class OrderService:
                 payment_method="free"
             )
         else:
-            # Process payment
-            payment_result: PaymentResult = process_payment(total, method=payment_method)
-            
-            if not payment_result.success:
-                return None, payment_result.message
-            
-            order = Order(
-                user_id=user_id,
-                total_amount=total,
-                status="paid",
-                payment_id=payment_result.payment_id,
-                payment_method=payment_result.gateway
-            )
+            if payment_method == "stripe":
+                # Async payment flow - create pending order
+                order = Order(
+                    user_id=user_id,
+                    total_amount=total,
+                    status="pending_payment",
+                    payment_method="stripe"
+                )
+            else:
+                # Process payment (mock/synchronous)
+                payment_result: PaymentResult = process_payment(total, method=payment_method)
+                
+                if not payment_result.success:
+                    return None, payment_result.message
+                
+                order = Order(
+                    user_id=user_id,
+                    total_amount=total,
+                    status="paid",
+                    payment_id=payment_result.payment_id,
+                    payment_method=payment_result.gateway
+                )
         
         db.add(order)
         db.flush()  # Get order ID

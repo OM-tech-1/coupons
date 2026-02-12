@@ -13,7 +13,7 @@ read -r PAYMENT_URL SIGNATURE PAYLOAD <<< $(python3 -c "
 import hmac, hashlib, json
 payload = {
     'phone_number': '+971501234567',
-    'amount': 100.0,
+    'amount': 3.4,
     'currency': 'AED',
     'reference_id': '$REF_ID',
     'return_url': 'https://vouchergalaxy.com/success',
@@ -35,7 +35,7 @@ api_key = '$API_KEY'
 url = '$URL'
 payload = {
     'phone_number': '+971501234567',
-    'amount': 100.0,
+    'amount': 3.4,
     'currency': 'AED',
     'reference_id': '$REF_ID',
     'return_url': 'https://vouchergalaxy.com/success',
