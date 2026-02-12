@@ -13,6 +13,7 @@ class UserCoupon(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     coupon_id = Column(UUID(as_uuid=True), ForeignKey("coupons.id"), nullable=False)
     claimed_at = Column(DateTime, default=datetime.utcnow)
+    used_at = Column(DateTime, nullable=True)  # When the coupon was redeemed/used
 
     # Relationships
     coupon = relationship("Coupon", backref="user_coupons")

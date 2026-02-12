@@ -46,6 +46,8 @@ def list_coupons(
     country_id: Optional[UUID] = Query(None, description="Filter by country ID"),
     availability_type: Optional[str] = Query(None, pattern="^(online|local|both)$", description="Filter by availability type"),
     search: Optional[str] = Query(None, description="Search by title, brand, or code"),
+    is_featured: Optional[bool] = Query(None, description="Filter by featured status"),
+    min_discount: Optional[float] = Query(None, ge=0, description="Filter by minimum discount amount"),
     db: Session = Depends(get_db)
 ):
     """List all coupons with optional filters (public endpoint with enhanced filtering)"""
@@ -58,7 +60,9 @@ def list_coupons(
         region_id=region_id,
         country_id=country_id,
         availability_type=availability_type,
-        search=search
+        search=search,
+        is_featured=is_featured,
+        min_discount=min_discount
     )
 
 

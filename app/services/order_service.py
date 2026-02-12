@@ -1,9 +1,10 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from uuid import UUID
 from typing import List, Optional, Tuple
 
 from app.models.order import Order, OrderItem
 from app.models.cart import CartItem
+from app.models.coupon import Coupon
 from app.models.user_coupon import UserCoupon
 from app.services.cart_service import CartService
 from app.services.payment_service import process_payment, PaymentResult
@@ -75,16 +76,23 @@ class OrderService:
 
     @staticmethod
     def get_user_orders(db: Session, user_id: UUID) -> List[Order]:
-        """Get all orders for a user"""
-        return db.query(Order).filter(Order.user_id == user_id).order_by(Order.created_at.desc()).all()
+        """Get all orders for a user with coupon and category details"""
+        return db.query(Order).filter(
+            Order.user_id == user_id
+        ).options(
+            joinedload(Order.items)
+            .joinedload(OrderItem.coupon)
+            .joinedload(Coupon.category)
+        ).order_by(Order.created_at.desc()).all()
 
     @staticmethod
     def get_order_by_id(db: Session, order_id: UUID, user_id: UUID) -> Optional[Order]:
-        """Get an order by ID (must belong to user)"""
-        from sqlalchemy.orm import joinedload
+        """Get an order by ID (must belong to user) with coupon and category details"""
         return db.query(Order).filter(
             Order.id == order_id,
             Order.user_id == user_id
         ).options(
-            joinedload(Order.items).joinedload(OrderItem.coupon)
+            joinedload(Order.items)
+            .joinedload(OrderItem.coupon)
+            .joinedload(Coupon.category)
         ).first()

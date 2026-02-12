@@ -53,7 +53,6 @@ def get_order(
             detail="Order not found"
         )
     return order
-    return order
 
 
 @router.get("/{order_id}/invoice")

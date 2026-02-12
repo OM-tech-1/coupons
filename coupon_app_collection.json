@@ -1,7 +1,7 @@
 {
     "info": {
         "_postman_id": "coupon-app-collection",
-        "name": "Coupon App API v2.2 (Admin + Stripe)",
+        "name": "Coupon App API v2.3 (Admin + Stripe + Wallet)",
         "description": "Complete API collection for the Coupon E-commerce application with Admin Dashboard, Categories, Geography & Stripe Payments",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
@@ -534,6 +534,39 @@
                     }
                 },
                 {
+                    "name": "Filter Coupons (Featured & Discount)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/coupons/?is_featured=true&min_discount=20&active_only=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "is_featured",
+                                    "value": "true",
+                                    "description": "Filter by featured status"
+                                },
+                                {
+                                    "key": "min_discount",
+                                    "value": "20",
+                                    "description": "Filter by minimum discount amount"
+                                },
+                                {
+                                    "key": "active_only",
+                                    "value": "true"
+                                }
+                            ]
+                        },
+                        "description": "Filter coupons by featured status and minimum discount amount"
+                    }
+                },
+                {
                     "name": "Get Coupon by ID",
                     "request": {
                         "method": "GET",
@@ -791,6 +824,89 @@
                             ]
                         }
                     }
+                },
+                {
+                    "name": "Get Coupon Detail (Owned)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/user/coupons/{{coupon_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "user",
+                                "coupons",
+                                "{{coupon_id}}"
+                            ]
+                        },
+                        "description": "Get detailed view of a specific coupon owned by the user. Returns full coupon info including redeem_code, brand, category, discount details, purchase date, expiry, and status."
+                    }
+                },
+                {
+                    "name": "Wallet Summary",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/user/wallet",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "user",
+                                "wallet"
+                            ]
+                        },
+                        "description": "Get wallet summary with counts: total_coupons, active, used, expired"
+                    }
+                },
+                {
+                    "name": "Wallet Coupons",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/user/wallet/coupons",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "user",
+                                "wallet",
+                                "coupons"
+                            ]
+                        },
+                        "description": "Get all coupons in wallet with purchased_date, expires_date, code, redeem_code, category, and status (active/expired)"
+                    }
                 }
             ]
         },
@@ -975,7 +1091,8 @@
                                 "orders",
                                 ""
                             ]
-                        }
+                        },
+                        "description": "Get all user orders. Each order item now includes full coupon details: code, redeem_code, title, description, category, is_active, expiration_date. Also includes flattened 'coupon_title', 'coupon_description', and 'coupon_type' for convenience."
                     }
                 },
                 {
@@ -1001,7 +1118,8 @@
                                 "orders",
                                 "{{order_id}}"
                             ]
-                        }
+                        },
+                        "description": "Get a specific order with enriched coupon details per item: code, redeem_code, title, description, category, is_active, expiration_date. Also includes flattened 'coupon_title', 'coupon_description', and 'coupon_type' for convenience."
                     }
                 },
                 {

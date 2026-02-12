@@ -62,7 +62,9 @@ class CouponService:
         region_id: Optional[UUID] = None,
         country_id: Optional[UUID] = None,
         availability_type: Optional[str] = None,
-        search: Optional[str] = None
+        search: Optional[str] = None,
+        is_featured: Optional[bool] = None,
+        min_discount: Optional[float] = None
     ) -> List[Coupon]:
         """Get all coupons with optional filtering (cached)"""
         from sqlalchemy.orm import joinedload
@@ -75,7 +77,9 @@ class CouponService:
                            str(region_id) if region_id else "none",
                            str(country_id) if country_id else "none",
                            availability_type or "all",
-                           search or "none")
+                           search or "none",
+                           str(is_featured) if is_featured is not None else "none",
+                           str(min_discount) if min_discount is not None else "none")
         cached = get_cache(cache_k)
         if cached is not None:
             # Return cached data (already serialized)
@@ -96,6 +100,12 @@ class CouponService:
         
         if availability_type:
             query = query.filter(Coupon.availability_type == availability_type)
+        
+        if is_featured is not None:
+            query = query.filter(Coupon.is_featured == is_featured)
+
+        if min_discount is not None:
+            query = query.filter(Coupon.discount_amount >= min_discount)
         
         # Filter by country (requires join)
         if country_id:
