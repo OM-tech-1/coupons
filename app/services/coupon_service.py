@@ -149,6 +149,7 @@ class CouponService:
                 "is_featured": c.is_featured,
                 "created_at": str(c.created_at) if c.created_at else None,
                 "category_id": str(c.category_id) if c.category_id else None,
+                "category": {"id": str(c.category.id), "name": c.category.name} if c.category else None,
                 "availability_type": c.availability_type,
             }
             for c in coupons
