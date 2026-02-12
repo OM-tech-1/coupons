@@ -87,6 +87,7 @@ allowed_origins = [
     PAYMENT_UI_DOMAIN,
     MAIN_SITE_DOMAIN,
     "https://api.vouchergalaxy.com",  # API domain
+    "https://cms.vouchergalaxy.com",  # CMS domain
     "http://localhost:3000",  # Local development
     "http://localhost:5173",  # Vite dev server
     "http://localhost:8000",  # Local API
