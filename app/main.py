@@ -83,9 +83,9 @@ app = FastAPI(
 PAYMENT_UI_DOMAIN = os.getenv("PAYMENT_UI_DOMAIN", "https://payment.vouchergalaxy.com")
 MAIN_SITE_DOMAIN = os.getenv("MAIN_SITE_DOMAIN", "https://vouchergalaxy.com")
 
-allowed_origins = [
     PAYMENT_UI_DOMAIN,
     MAIN_SITE_DOMAIN,
+    "https://www.vouchergalaxy.com",  # Main site (www)
     "https://api.vouchergalaxy.com",  # API domain
     "https://cms.vouchergalaxy.com",  # CMS domain
     "http://localhost:3000",  # Local development
