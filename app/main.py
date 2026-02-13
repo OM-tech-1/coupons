@@ -94,13 +94,8 @@ allowed_origins = [
     "http://localhost:8000",  # Local API
 ]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Setup rate limiting
+setup_rate_limiting(app)
 
 # Add GZip compression for responses > 1KB
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -124,8 +119,15 @@ async def cache_control_middleware(request, call_next):
 
     return response
 
-# Setup rate limiting
-setup_rate_limiting(app)
+# CORS must be the last middleware added so it's the outermost wrapper
+# This ensures CORS headers are added even to 429/500 responses from other middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(coupons.router, prefix="/coupons", tags=["Coupons"])
