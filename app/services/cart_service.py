@@ -1,4 +1,6 @@
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm.exc import StaleDataError
+from sqlalchemy.exc import IntegrityError
 from uuid import UUID
 from typing import List, Optional, Tuple
 
@@ -11,7 +13,6 @@ class CartService:
     @staticmethod
     def add_to_cart(db: Session, user_id: UUID, coupon_id: UUID, quantity: int = 1) -> Tuple[Optional[CartItem], str]:
         """Add a coupon to user's cart"""
-        # Check if coupon exists
         coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
         if not coupon:
             return None, "Coupon not found"
@@ -27,9 +28,14 @@ class CartService:
         
         if existing:
             existing.quantity += quantity
-            db.commit()
-            db.refresh(existing)
-            return existing, "Quantity updated"
+            try:
+                db.commit()
+                db.refresh(existing)
+                return existing, "Quantity updated"
+            except StaleDataError:
+                # Row was deleted by a concurrent checkout, create fresh
+                db.rollback()
+                existing = None
         
         # Add new item
         cart_item = CartItem(
@@ -38,9 +44,23 @@ class CartService:
             quantity=quantity
         )
         db.add(cart_item)
-        db.commit()
-        db.refresh(cart_item)
-        return cart_item, "Added to cart"
+        try:
+            db.commit()
+            db.refresh(cart_item)
+            return cart_item, "Added to cart"
+        except IntegrityError:
+            # Duplicate from race condition — reload and update quantity
+            db.rollback()
+            existing = db.query(CartItem).filter(
+                CartItem.user_id == user_id,
+                CartItem.coupon_id == coupon_id
+            ).first()
+            if existing:
+                existing.quantity += quantity
+                db.commit()
+                db.refresh(existing)
+                return existing, "Quantity updated"
+            return None, "Failed to add to cart"
 
     @staticmethod
     def get_cart(db: Session, user_id: UUID) -> List[CartItem]:
