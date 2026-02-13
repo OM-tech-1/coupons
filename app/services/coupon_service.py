@@ -151,6 +151,7 @@ class CouponService:
                 "category_id": str(c.category_id) if c.category_id else None,
                 "category": {"id": str(c.category.id), "name": c.category.name, "slug": c.category.slug} if c.category else None,
                 "availability_type": c.availability_type,
+                "countries": [{"id": str(ca.country.id), "name": ca.country.name, "slug": ca.country.slug, "country_code": ca.country.country_code} for ca in c.country_associations] if c.country_associations else [],
             }
             for c in coupons
         ]
@@ -161,12 +162,19 @@ class CouponService:
     @staticmethod
     def get_by_id(db: Session, coupon_id: UUID) -> Optional[Coupon]:
         """Get a coupon by its ID (cached)"""
+        from sqlalchemy.orm import joinedload
+        from app.models.coupon_country import CouponCountry
+        
         cache_k = cache_key("coupons", "id", str(coupon_id))
         cached = get_cache(cache_k)
         if cached is not None:
             return cached
         
-        coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
+        coupon = db.query(Coupon).options(
+            joinedload(Coupon.category),
+            joinedload(Coupon.country_associations).joinedload(CouponCountry.country)
+        ).filter(Coupon.id == coupon_id).first()
+        
         if coupon:
             set_cache(cache_k, {
                 "id": str(coupon.id), "code": coupon.code, "redeem_code": coupon.redeem_code,
@@ -178,7 +186,9 @@ class CouponService:
                 "created_at": str(coupon.created_at) if coupon.created_at else None,
                 "expiration_date": str(coupon.expiration_date) if coupon.expiration_date else None,
                 "category_id": str(coupon.category_id) if coupon.category_id else None,
+                "category": {"id": str(coupon.category.id), "name": coupon.category.name, "slug": coupon.category.slug} if coupon.category else None,
                 "availability_type": coupon.availability_type,
+                "countries": [{"id": str(ca.country.id), "name": ca.country.name, "slug": ca.country.slug, "country_code": ca.country.country_code} for ca in coupon.country_associations] if coupon.country_associations else [],
             }, CACHE_TTL_MEDIUM)
         return coupon
 
