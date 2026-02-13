@@ -2,17 +2,20 @@
 Rate limiting middleware using SlowAPI.
 Protects the API from abuse and ensures fair usage.
 """
+import os
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from starlette.requests import Request
 
-# Create limiter instance with IP-based rate limiting
+# Use Redis for rate limit storage (works across Gunicorn workers)
+REDIS_URL = os.getenv("REDIS_URL")
+
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["100/minute"],  # Default: 100 requests per minute per IP
-    storage_uri=None  # In-memory storage (use Redis URI for distributed)
+    default_limits=["100/minute"],
+    storage_uri=REDIS_URL  # Redis-backed; falls back to in-memory if None
 )
 
 

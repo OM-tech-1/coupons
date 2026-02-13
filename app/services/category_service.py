@@ -87,28 +87,30 @@ class CategoryService:
 
     @staticmethod
     def get_with_coupon_counts(db: Session, active_only: bool = True) -> List[dict]:
-        """Get categories with active coupon counts (cached)"""
+        """Get categories with active coupon counts (single query, cached)"""
+        from sqlalchemy import func, case
+
         cache_k = cache_key("categories", "with-counts", active_only)
         cached = get_cache(cache_k)
         if cached is not None:
             return cached
         
-        query = db.query(Category)
+        # Single query with LEFT JOIN instead of N+1
+        active_coupon_count = func.count(
+            case((Coupon.is_active == True, Coupon.id), else_=None)
+        ).label("coupon_count")
+
+        query = db.query(Category, active_coupon_count).outerjoin(
+            Coupon, Coupon.category_id == Category.id
+        ).group_by(Category.id)
+
         if active_only:
             query = query.filter(Category.is_active == True)
-        
-        categories = query.order_by(Category.display_order, Category.name).all()
-        
-        result = []
-        for cat in categories:
-            coupon_count = db.query(Coupon).filter(
-                and_(
-                    Coupon.category_id == cat.id,
-                    Coupon.is_active == True
-                )
-            ).count()
-            
-            result.append({
+
+        rows = query.order_by(Category.display_order, Category.name).all()
+
+        result = [
+            {
                 "id": cat.id,
                 "name": cat.name,
                 "slug": cat.slug,
@@ -117,12 +119,12 @@ class CategoryService:
                 "display_order": cat.display_order,
                 "is_active": cat.is_active,
                 "created_at": cat.created_at,
-                "coupon_count": coupon_count
-            })
+                "coupon_count": count
+            }
+            for cat, count in rows
+        ]
         
-        # Cache the computed result
         set_cache(cache_k, result, CACHE_TTL_MEDIUM)
-        
         return result
 
     @staticmethod

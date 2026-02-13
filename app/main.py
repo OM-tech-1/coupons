@@ -104,6 +104,25 @@ app.add_middleware(
 # Add GZip compression for responses > 1KB
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+# Cache-Control headers for public read-only endpoints
+PUBLIC_CACHEABLE_PREFIXES = ("/coupons", "/categories", "/countries", "/regions")
+
+@app.middleware("http")
+async def cache_control_middleware(request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+
+    if (
+        request.method == "GET"
+        and any(path.startswith(p) for p in PUBLIC_CACHEABLE_PREFIXES)
+        and "authorization" not in request.headers
+    ):
+        response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=30"
+    else:
+        response.headers["Cache-Control"] = "no-cache, no-store"
+
+    return response
+
 # Setup rate limiting
 setup_rate_limiting(app)
 

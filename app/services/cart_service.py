@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from uuid import UUID
 from typing import List, Optional, Tuple
 
@@ -44,8 +44,10 @@ class CartService:
 
     @staticmethod
     def get_cart(db: Session, user_id: UUID) -> List[CartItem]:
-        """Get all items in user's cart"""
-        return db.query(CartItem).filter(CartItem.user_id == user_id).all()
+        """Get all items in user's cart (with coupon details eagerly loaded)"""
+        return db.query(CartItem).options(
+            joinedload(CartItem.coupon)
+        ).filter(CartItem.user_id == user_id).all()
 
     @staticmethod
     def get_cart_total(db: Session, user_id: UUID) -> float:

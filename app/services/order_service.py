@@ -68,8 +68,12 @@ class OrderService:
             )
             db.add(order_item)
             
-            # Add coupons to user's claimed list
-            for _ in range(cart_item.quantity):
+            # Add coupon to user's claimed list (one entry per unique coupon)
+            existing_claim = db.query(UserCoupon).filter(
+                UserCoupon.user_id == user_id,
+                UserCoupon.coupon_id == cart_item.coupon_id
+            ).first()
+            if not existing_claim:
                 user_coupon = UserCoupon(
                     user_id=user_id,
                     coupon_id=cart_item.coupon_id

@@ -37,7 +37,7 @@ class Payment(Base):
     # Payment details
     amount = Column(Float, nullable=False)  # Store in smallest unit (cents)
     currency = Column(String(3), default="USD", nullable=False)
-    status = Column(String(20), default=PaymentStatus.INITIATED.value)
+    status = Column(String(20), default=PaymentStatus.INITIATED.value, index=True)
     
     # Gateway info
     gateway = Column(String(50), default=PaymentGateway.STRIPE.value)

@@ -37,7 +37,12 @@ def get_cart(
 ):
     """Get current user's cart"""
     items = CartService.get_cart(db, current_user.id)
-    total = CartService.get_cart_total(db, current_user.id)
+    # Compute total from fetched items instead of a second DB query
+    total = sum(
+        (item.coupon.price or 0) * item.quantity
+        for item in items
+        if item.coupon
+    )
     return {
         "items": items,
         "total_items": sum(i.quantity for i in items),
