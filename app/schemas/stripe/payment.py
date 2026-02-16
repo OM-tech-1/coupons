@@ -3,7 +3,7 @@ Stripe Payment Schemas
 
 Request and response models for Stripe payment endpoints.
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
@@ -17,14 +17,13 @@ class PaymentInitRequest(BaseModel):
     metadata: Optional[dict] = Field(default=None, description="Optional metadata")
     return_url: Optional[str] = Field(default=None, description="URL to return after payment")
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "order_id": "550e8400-e29b-41d4-a716-446655440000",
-                "amount": 1999,
-                "currency": "USD",
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "order_id": "550e8400-e29b-41d4-a716-446655440000",
+            "amount": 1999,
+            "currency": "USD",
         }
+    })
 
 
 class PaymentInitResponse(BaseModel):

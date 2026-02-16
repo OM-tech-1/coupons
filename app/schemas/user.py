@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator, model_validator, EmailStr
+from pydantic import BaseModel, field_validator, model_validator, EmailStr, ConfigDict
 from typing import Optional
 from datetime import date
 from uuid import UUID
@@ -42,8 +42,7 @@ class UserResponse(UserBase):
     role: str
     is_active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserProfileResponse(BaseModel):
@@ -64,13 +63,11 @@ class UserProfileResponse(BaseModel):
     role: str
     is_active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserProfileUpdate(BaseModel):
-    """Update profile - requires current password for verification"""
-    current_password: str  # Required for any update
+    current_password: Optional[str] = None  # Optional, not required for update
     
     # Updatable fields (all optional)
     full_name: Optional[str] = None

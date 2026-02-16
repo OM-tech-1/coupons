@@ -35,6 +35,7 @@ class CouponService:
             price=coupon_data.price,
             stock=coupon_data.stock,
             is_featured=coupon_data.is_featured,
+            picture_url=coupon_data.picture_url,
         )
         db.add(db_coupon)
         db.flush()  # Flush to get the coupon ID
@@ -151,6 +152,7 @@ class CouponService:
                 "category_id": str(c.category_id) if c.category_id else None,
                 "category": {"id": str(c.category.id), "name": c.category.name, "slug": c.category.slug} if c.category else None,
                 "availability_type": c.availability_type,
+                "picture_url": c.picture_url,
                 "countries": [{"id": str(ca.country.id), "name": ca.country.name, "slug": ca.country.slug, "country_code": ca.country.country_code} for ca in c.country_associations] if c.country_associations else [],
             }
             for c in coupons
@@ -187,7 +189,9 @@ class CouponService:
                 "expiration_date": str(coupon.expiration_date) if coupon.expiration_date else None,
                 "category_id": str(coupon.category_id) if coupon.category_id else None,
                 "category": {"id": str(coupon.category.id), "name": coupon.category.name, "slug": coupon.category.slug} if coupon.category else None,
+                "category": {"id": str(coupon.category.id), "name": coupon.category.name, "slug": coupon.category.slug} if coupon.category else None,
                 "availability_type": coupon.availability_type,
+                "picture_url": coupon.picture_url,
                 "countries": [{"id": str(ca.country.id), "name": ca.country.name, "slug": ca.country.slug, "country_code": ca.country.country_code} for ca in coupon.country_associations] if coupon.country_associations else [],
             }, CACHE_TTL_MEDIUM)
         return coupon
@@ -204,7 +208,7 @@ class CouponService:
         coupon = db.query(Coupon).filter(Coupon.code == upper_code).first()
         if coupon:
             set_cache(cache_k, {
-                "id": str(coupon.id), "code": coupon.code, "title": coupon.title,
+                "id": str(coupon.id), "code": coupon.code, "title": coupon.title, "picture_url": coupon.picture_url,
             }, CACHE_TTL_MEDIUM)
         return coupon
 

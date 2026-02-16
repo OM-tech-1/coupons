@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, ConfigDict
 from datetime import datetime
 from typing import Optional, List, Any
 from uuid import UUID
@@ -20,6 +20,7 @@ class CouponBase(BaseModel):
     stock: Optional[int] = Field(default=None, ge=0, description="Available stock (null = unlimited)")
     is_featured: bool = Field(default=False, description="Featured on homepage")
     is_active: bool = Field(default=True, description="Whether coupon is active")
+    picture_url: Optional[str] = None
     # Fields for categories and geography
     category_id: Optional[UUID] = None
     availability_type: str = Field(default="online", pattern="^(online|local|both)$")
@@ -42,6 +43,7 @@ class CouponUpdate(BaseModel):
     min_purchase: Optional[float] = Field(default=None, ge=0)
     max_uses: Optional[int] = Field(default=None, ge=1)
     is_active: Optional[bool] = None
+    picture_url: Optional[str] = None
     expiration_date: Optional[datetime] = None
     # New fields for stock and featured
     stock: Optional[int] = Field(default=None, ge=0)
@@ -79,8 +81,7 @@ class CouponResponse(CouponBase):
             data['stock_sold'] = data.get('current_uses', 0)
         return data
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Nested schemas for relationships (to avoid circular imports)
@@ -90,8 +91,7 @@ class CategoryInCoupon(BaseModel):
     name: str
     slug: str
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CountryInCoupon(BaseModel):
@@ -101,8 +101,7 @@ class CountryInCoupon(BaseModel):
     slug: str
     country_code: str
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Update forward references

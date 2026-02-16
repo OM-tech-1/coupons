@@ -1,0 +1,1 @@
+ALTER TABLE coupons ADD COLUMN IF NOT EXISTS picture_url VARCHAR(500);

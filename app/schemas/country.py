@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, ConfigDict
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
@@ -59,8 +59,7 @@ class CountryResponse(BaseModel):
     is_active: bool = True
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CountryWithRegion(CountryResponse):

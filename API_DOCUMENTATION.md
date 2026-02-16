@@ -30,12 +30,12 @@ curl -X POST https://api.vouchergalaxy.com/auth/login \
 curl https://api.vouchergalaxy.com/user/me -H "Authorization: Bearer TOKEN"
 ```
 
-### Update Profile (Password Required)
+### Update Profile
 ```bash
 curl -X PUT https://api.vouchergalaxy.com/user/me \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
-  -d '{"current_password":"afsal@123","full_name":"New Name","email":"email@example.com"}'
+  -d '{"full_name":"New Name","email":"email@example.com"}'
 ```
 
 ### Get Claimed Coupons (with revealed codes)
@@ -176,16 +176,28 @@ curl -X POST https://api.vouchergalaxy.com/coupons/ \
     "price": 2.99,
     "category_id": "CATEGORY_UUID",
     "availability_type": "local",
-    "country_ids": ["COUNTRY_UUID_1", "COUNTRY_UUID_2"]
+    "country_ids": ["COUNTRY_UUID_1", "COUNTRY_UUID_2"],
+    "picture_url": "https://s3-bucket-url/coupons/image.jpg"
   }'
 ```
+
 
 ### Update/Delete Coupon (Admin)
 ```bash
 curl -X PUT https://api.vouchergalaxy.com/coupons/{id} -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
   -d '{"redeem_code":"NEWCODE456","price":5.99,"category_id":"CATEGORY_UUID"}'
 curl -X DELETE https://api.vouchergalaxy.com/coupons/{id} -H "Authorization: Bearer TOKEN"
 ```
+
+### Upload Coupon Image (Admin)
+Uploads an image to S3 and returns the URL.
+```bash
+curl -X POST https://api.vouchergalaxy.com/upload/image \
+  -H "Authorization: Bearer TOKEN" \
+  -F "file=@/path/to/image.jpg"
+```
+**Response:** `{"url": "https://s3-bucket-url/coupons/image.jpg"}`
 
 ---
 

@@ -102,6 +102,11 @@ jobs:
               -e API_BASE_URL="${{ secrets.API_BASE_URL }}" \
               -e EXTERNAL_API_KEY="${{ secrets.EXTERNAL_API_KEY }}" \
               -e ENVIRONMENT="${{ secrets.ENVIRONMENT }}" \
+              -e AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
+              -e AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+              -e AWS_REGION="${{ secrets.AWS_REGION }}" \
+              -e S3_BUCKET_NAME="${{ secrets.S3_BUCKET_NAME }}" \
+              -e S3_PREFIX="${{ secrets.S3_PREFIX }}" \
               --restart unless-stopped \
               ghcr.io/om-tech-1/coupons:latest
 

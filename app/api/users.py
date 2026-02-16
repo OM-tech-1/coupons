@@ -30,13 +30,7 @@ def update_my_profile(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Update current user's profile (requires password verification)"""
-    # Verify current password
-    if not verify_password(profile_data.current_password, current_user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect password"
-        )
+    """Update current user's profile"""
     
     # Update fields that were provided
     update_data = profile_data.model_dump(exclude_unset=True, exclude={"current_password", "new_password"})

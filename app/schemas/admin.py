@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
@@ -17,8 +17,7 @@ class AdminUserResponse(BaseModel):
     total_orders: int = 0
     total_spent: float = 0.0
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminOrderResponse(BaseModel):
@@ -34,8 +33,7 @@ class AdminOrderResponse(BaseModel):
     items_count: int = 0
     coupon_code: Optional[str] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaginatedUsersResponse(BaseModel):

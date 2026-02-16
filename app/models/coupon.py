@@ -25,6 +25,7 @@ class Coupon(Base):
     expiration_date = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
+    picture_url = Column(String(500), nullable=True)
     stock = Column(Integer, nullable=True, default=None)
     is_featured = Column(Boolean, default=False, index=True)
     

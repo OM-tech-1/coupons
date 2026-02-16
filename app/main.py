@@ -40,7 +40,8 @@ def run_migrations():
         ('redeem_code', 'VARCHAR(100)'),
         ('brand', 'VARCHAR(100)'),
         ('category_id', 'UUID'),
-        ('availability_type', "VARCHAR(20) DEFAULT 'online'")
+        ('availability_type', "VARCHAR(20) DEFAULT 'online'"),
+        ('picture_url', 'VARCHAR(500)')
     ]
 
     # Order columns
@@ -138,6 +139,9 @@ app.include_router(categories.router, prefix="/categories", tags=["Categories"])
 app.include_router(regions.router, prefix="/regions", tags=["Regions"])
 app.include_router(countries.router, prefix="/countries", tags=["Countries"])
 app.include_router(admin.router, prefix="/admin", tags=["Admin"])
+
+from app.api import upload
+app.include_router(upload.router, prefix="", tags=["Upload"])
 
 # Stripe payment routes
 app.include_router(payments_router)

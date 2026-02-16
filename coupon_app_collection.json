@@ -604,7 +604,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"code\": \"PETLOVE50\",\n    \"redeem_code\": \"SECRET123\",\n    \"brand\": \"PetStore\",\n    \"title\": \"50% off pet food\",\n    \"description\": \"Amazing deal on all pet food\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 50.0,\n    \"price\": 2.99,\n    \"min_purchase\": 10.0,\n    \"max_uses\": 100,\n    \"expiration_date\": \"2026-12-31T23:59:59\",\n    \"stock\": 50,\n    \"is_featured\": true,\n    \"is_active\": true,\n    \"category_id\": \"{{category_id}}\",\n    \"availability_type\": \"local\",\n    \"country_ids\": [\"{{country_id}}\"]\n}"
+                            "raw": "{\n    \"code\": \"PETLOVE50\",\n    \"redeem_code\": \"SECRET123\",\n    \"brand\": \"PetStore\",\n    \"title\": \"50% off pet food\",\n    \"description\": \"Amazing deal on all pet food\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 50.0,\n    \"price\": 2.99,\n    \"min_purchase\": 10.0,\n    \"max_uses\": 100,\n    \"expiration_date\": \"2026-12-31T23:59:59\",\n    \"stock\": 50,\n    \"is_featured\": true,\n    \"is_active\": true,\n    \"category_id\": \"{{category_id}}\",\n    \"availability_type\": \"local\",\n    \"country_ids\": [\"{{country_id}}\"],\n    \"picture_url\": \"https://chatbot-amzs3.s3.ap-southeast-2.amazonaws.com/coupons/pet.jpg\"\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/coupons/",
@@ -650,6 +650,43 @@
                             "path": [
                                 "coupons",
                                 "{{coupon_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Upload Coupon Image",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/upload/image",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "upload",
+                                "image"
                             ]
                         }
                     }
@@ -785,7 +822,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"current_password\": \"afsal@123\",\n    \"full_name\": \"Afsal Basheer\",\n    \"email\": \"afsal@example.com\",\n    \"gender\": \"Male\",\n    \"country_of_residence\": \"India\"\n}"
+                            "raw": "{\n    \"full_name\": \"Afsal Basheer\",\n    \"email\": \"afsal@example.com\",\n    \"gender\": \"Male\",\n    \"country_of_residence\": \"India\"\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/user/me",
