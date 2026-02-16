@@ -87,8 +87,21 @@ jobs:
             docker run -d \
               --name coupon-api-container \
               -p 127.0.0.1:8000:8000 \
-              --env-file /root/.env \
-              -e REDIS_URL=${{ secrets.REDIS_URL }} \
+              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              -e JWT_ALGORITHM="${{ secrets.JWT_ALGORITHM }}" \
+              -e JWT_EXPIRE_MINUTES="${{ secrets.JWT_EXPIRE_MINUTES }}" \
+              -e REDIS_URL="${{ secrets.REDIS_URL }}" \
+              -e STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
+              -e STRIPE_PUBLISHABLE_KEY="${{ secrets.STRIPE_PUBLISHABLE_KEY }}" \
+              -e STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+              -e PAYMENT_TOKEN_SECRET="${{ secrets.PAYMENT_TOKEN_SECRET }}" \
+              -e PAYMENT_TOKEN_TTL_MINUTES="${{ secrets.PAYMENT_TOKEN_TTL_MINUTES }}" \
+              -e PAYMENT_UI_DOMAIN="${{ secrets.PAYMENT_UI_DOMAIN }}" \
+              -e MAIN_SITE_DOMAIN="${{ secrets.MAIN_SITE_DOMAIN }}" \
+              -e API_BASE_URL="${{ secrets.API_BASE_URL }}" \
+              -e EXTERNAL_API_KEY="${{ secrets.EXTERNAL_API_KEY }}" \
+              -e ENVIRONMENT="${{ secrets.ENVIRONMENT }}" \
               --restart unless-stopped \
               ghcr.io/om-tech-1/coupons:latest
 
