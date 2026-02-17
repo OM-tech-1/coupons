@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from app.database import get_db
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse, CategoryWithCouponCount
 from app.schemas.coupon import CouponResponse
 from app.services.category_service import CategoryService
+from app.services.category_service import CategoryService
 from app.services.coupon_service import CouponService
-from app.utils.security import get_current_user
+from app.utils.security import get_current_user, get_current_user_optional
+from app.utils.currency import get_currency_from_phone_code
 from app.models.user import User
 
 router = APIRouter()
@@ -51,7 +53,8 @@ def get_coupons_in_category(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     active_only: bool = Query(True),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """Browse coupons in a specific category (public endpoint)"""
     category = CategoryService.get_by_slug(db, slug)
@@ -60,13 +63,18 @@ def get_coupons_in_category(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Category with slug '{slug}' not found"
         )
+        
+    currency_code = "USD"
+    if current_user:
+        currency_code = getattr(current_user, "context_currency", None) or get_currency_from_phone_code(current_user.phone_number)
     
     return CouponService.get_all(
         db,
         skip=skip,
         limit=limit,
         active_only=active_only,
-        category_id=category.id
+        category_id=category.id,
+        currency_code=currency_code
     )
 
 

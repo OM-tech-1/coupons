@@ -5,6 +5,7 @@ from app.schemas.auth import LoginRequest, Token
 from app.schemas.user import UserCreate, UserResponse
 from app.services.auth_service import register_user, authenticate_user
 from app.utils.jwt import create_access_token
+from app.utils.currency import get_currency_from_phone_code
 
 from app.middleware.rate_limit import limiter
 
@@ -31,5 +32,11 @@ def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)
             detail="Incorrect phone number or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token = create_access_token(data={"sub": str(user.id)})
+    
+    # Calculate currency once and store in token
+    currency_code = get_currency_from_phone_code(user.phone_number)
+    access_token = create_access_token(
+        data={"sub": str(user.id)},
+        currency=currency_code
+    )
     return {"access_token": access_token, "token_type": "bearer"}

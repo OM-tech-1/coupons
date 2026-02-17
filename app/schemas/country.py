@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
@@ -11,14 +11,16 @@ class CountryBase(BaseModel):
     country_code: str = Field(..., min_length=2, max_length=2, description="ISO 3166-1 alpha-2 code")
     region_id: UUID
     
-    @validator('slug')
+    @field_validator('slug')
+    @classmethod
     def validate_slug(cls, v):
         """Ensure slug is URL-friendly (lowercase, hyphens only)"""
         if not re.match(r'^[a-z0-9-]+$', v):
             raise ValueError('Slug must contain only lowercase letters, numbers, and hyphens')
         return v
     
-    @validator('country_code')
+    @field_validator('country_code')
+    @classmethod
     def validate_country_code(cls, v):
         """Ensure country code is uppercase 2-letter ISO code"""
         if not re.match(r'^[A-Z]{2}$', v.upper()):
@@ -37,13 +39,15 @@ class CountryUpdate(BaseModel):
     region_id: Optional[UUID] = None
     is_active: Optional[bool] = None
     
-    @validator('slug')
+    @field_validator('slug')
+    @classmethod
     def validate_slug(cls, v):
         if v is not None and not re.match(r'^[a-z0-9-]+$', v):
             raise ValueError('Slug must contain only lowercase letters, numbers, and hyphens')
         return v
     
-    @validator('country_code')
+    @field_validator('country_code')
+    @classmethod
     def validate_country_code(cls, v):
         if v is not None and not re.match(r'^[A-Z]{2}$', v.upper()):
             raise ValueError('Country code must be a 2-letter ISO 3166-1 alpha-2 code')

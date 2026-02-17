@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from uuid import UUID as PyUUID
+from typing import Optional
 from app.config import JWT_SECRET, JWT_ALGORITHM
 from app.database import get_db
 from app.models.user import User
@@ -17,6 +18,7 @@ pwd_context = CryptContext(
     argon2__parallelism=2
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
 
 
 def verify_password(plain_password, hashed_password):
@@ -45,6 +47,7 @@ def get_current_user(
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id: str = payload.get("sub")
+        currency: str = payload.get("currency")
         if user_id is None:
             raise credentials_exception
     except JWTError:
@@ -54,15 +57,46 @@ def get_current_user(
     ck = cache_key("user", "auth", user_id)
     cached = get_cache(ck)
 
-    user = db.query(User).filter(User.id == user_id).first()
-    if user is None:
-        raise credentials_exception
-
-    # Cache the user marker if not already cached
-    if cached is None:
-        set_cache(ck, {"id": str(user.id)}, CACHE_TTL_SHORT)
-
+    if user:
+        # Attach currency context from token (optimization)
+        user.context_currency = currency
+        
     return user
+
+
+def get_current_user_optional(
+    token: str = Depends(oauth2_scheme_optional),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """Return current user if token is valid, else None"""
+    if not token:
+        return None
+        
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id: str = payload.get("sub")
+        currency: str = payload.get("currency")
+        if user_id is None:
+            return None
+    except JWTError:
+        return None
+
+    # Check cache
+    ck = cache_key("user", "auth", user_id)
+    cached = get_cache(ck)
+    
+    # Check DB
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if user:
+         if cached is None:
+            set_cache(ck, {"id": str(user.id)}, CACHE_TTL_SHORT)
+         
+         # Attach currency context from token
+         user.context_currency = currency
+         return user
+         
+    return None
 
 
 def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:

@@ -20,6 +20,7 @@ curl -X POST https://api.vouchergalaxy.com/auth/login \
   -H "Content-Type: application/json" \
   -d '{"country_code":"+91","number":"7907975711","password":"afsal@123"}'
 ```
+**JWT Optimization:** The access token payload now includes a `currency` claim (e.g., `"currency": "INR"`), which is derived from the user's phone number during login.
 
 ---
 
@@ -54,7 +55,8 @@ curl https://api.vouchergalaxy.com/user/coupons -H "Authorization: Bearer TOKEN"
       "redeem_code": "ABC123XYZ",
       "brand": "McDonald's",
       "title": "50% off any meal",
-      "discount_amount": 50.0
+      "discount_amount": 50.0,
+      "currency_symbol": "₹"
     }
   }
 ]
@@ -84,6 +86,7 @@ curl https://api.vouchergalaxy.com/categories/pets-pet-supplies
 ```bash
 curl "https://api.vouchergalaxy.com/categories/electronics-gadgets/coupons?limit=20&active_only=true"
 ```
+**Note:** Currencies are automatically adjusted based on the user's token (if logged in) or phone number.
 
 ### Create Category (Admin)
 ```bash
@@ -141,6 +144,12 @@ curl "https://api.vouchergalaxy.com/countries/united-arab-emirates/coupons?limit
 ## Coupons
 
 ### List Coupons (Enhanced with Filters)
+**Multi-Currency Support:**
+The API automatically detects the user's currency from the `currency` claim in their JWT access token. 
+- If logged in, the currency from the token is used (e.g., INR for +91 numbers).
+- If anonymous, it defaults to USD (or can be inferred from other contexts if implemented).
+- Returns `currency_symbol` and adjusted `price`/`discount_amount`.
+
 ```bash
 # Basic listing
 curl "https://api.vouchergalaxy.com/coupons/?skip=0&limit=10&active_only=true"
@@ -177,7 +186,11 @@ curl -X POST https://api.vouchergalaxy.com/coupons/ \
     "category_id": "CATEGORY_UUID",
     "availability_type": "local",
     "country_ids": ["COUNTRY_UUID_1", "COUNTRY_UUID_2"],
-    "picture_url": "https://s3-bucket-url/coupons/image.jpg"
+    "picture_url": "https://s3-bucket-url/coupons/image.jpg",
+    "pricing": {
+      "INR": {"price": 250, "discount_amount": 50},
+      "AED": {"price": 10, "discount_amount": 2}
+    }
   }'
 ```
 

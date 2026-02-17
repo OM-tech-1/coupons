@@ -7,6 +7,7 @@ from datetime import datetime
 from app.models.coupon import Coupon
 from app.schemas.coupon import CouponCreate, CouponUpdate
 from app.cache import get_cache, set_cache, invalidate_cache, cache_key, CACHE_TTL_MEDIUM
+from app.utils.currency import get_currency_symbol
 
 
 class CouponService:
@@ -36,6 +37,7 @@ class CouponService:
             stock=coupon_data.stock,
             is_featured=coupon_data.is_featured,
             picture_url=coupon_data.picture_url,
+            pricing=coupon_data.pricing,
         )
         db.add(db_coupon)
         db.flush()  # Flush to get the coupon ID
@@ -54,6 +56,24 @@ class CouponService:
         return db_coupon
 
     @staticmethod
+    def _apply_currency(coupon: Coupon, currency_code: str = "USD") -> Coupon:
+        """Apply currency-specific pricing to coupon object"""
+        # Set default symbol
+        coupon.currency_symbol = get_currency_symbol("USD")
+        
+        if not currency_code or currency_code == "USD":
+            return coupon
+            
+        # Look for pricing override
+        if coupon.pricing and currency_code in coupon.pricing:
+            pricing_data = coupon.pricing[currency_code]
+            coupon.price = pricing_data.get("price", coupon.price)
+            coupon.discount_amount = pricing_data.get("discount_amount", coupon.discount_amount)
+            coupon.currency_symbol = get_currency_symbol(currency_code)
+            
+        return coupon
+
+    @staticmethod
     def get_all(
         db: Session,
         skip: int = 0,
@@ -65,7 +85,8 @@ class CouponService:
         availability_type: Optional[str] = None,
         search: Optional[str] = None,
         is_featured: Optional[bool] = None,
-        min_discount: Optional[float] = None
+        min_discount: Optional[float] = None,
+        currency_code: str = "USD"
     ) -> List[Coupon]:
         """Get all coupons with optional filtering (cached)"""
         from sqlalchemy.orm import joinedload
@@ -82,9 +103,44 @@ class CouponService:
                            str(is_featured) if is_featured is not None else "none",
                            str(min_discount) if min_discount is not None else "none")
         cached = get_cache(cache_k)
+        cached = get_cache(cache_k)
         if cached is not None:
-            # Return cached data (already serialized)
-            return cached
+            # Reconstruct Coupon objects from cache and apply currency
+            coupons = []
+            for c_data in cached:
+                # We need to reconstruct objects to be compatible with Pydantic from_attributes
+                # OR we can return dicts if the API layer handles it.
+                # Assuming API expects objects or dicts compatible with response model.
+                
+                # Let's use a dynamic object or simple class logic
+                c_obj = Coupon(**{k: v for k, v in c_data.items() if k not in ['category', 'countries', 'pricing']})
+                # Restore pricing for calculation
+                c_obj.pricing = c_data.get('pricing')
+                
+                # Restore relationships manually if needed, or rely on dict access in schema
+                # Pydantic's from_attributes works with objects having attributes.
+                # To support validation, let's keep it simple: modify the Dict if possible 
+                # OR modify the object.
+                
+                CouponService._apply_currency(c_obj, currency_code)
+                
+                # Restore relationship structures for schema
+                if c_data.get('category'):
+                    from app.models.category import Category
+                    c_obj.category = Category(**c_data['category'])
+                
+                # For countries, it's a list of dicts. 
+                # Schema expects c.country_associations which yield c.country
+                # This is tricky with raw objects. 
+                # Let's try to mimic the structure Expected by Pydantic.
+                
+                # Actually, simpler: modify c_data dict and return dicts?
+                # But type hint says List[Coupon].
+                # Let's stick to modifying the object.
+                
+                coupons.append(c_obj)
+                
+            return coupons
         
         # Query database with eager loading for relationships
         query = db.query(Coupon).options(
@@ -153,24 +209,39 @@ class CouponService:
                 "category": {"id": str(c.category.id), "name": c.category.name, "slug": c.category.slug} if c.category else None,
                 "availability_type": c.availability_type,
                 "picture_url": c.picture_url,
+                "pricing": c.pricing,
                 "countries": [{"id": str(ca.country.id), "name": ca.country.name, "slug": ca.country.slug, "country_code": ca.country.country_code} for ca in c.country_associations] if c.country_associations else [],
             }
             for c in coupons
         ]
         set_cache(cache_k, cache_data, CACHE_TTL_MEDIUM)
         
+        # Apply currency to live objects
+        for c in coupons:
+            CouponService._apply_currency(c, currency_code)
+            
         return coupons
 
     @staticmethod
-    def get_by_id(db: Session, coupon_id: UUID) -> Optional[Coupon]:
+    def get_by_id(db: Session, coupon_id: UUID, currency_code: str = "USD") -> Optional[Coupon]:
         """Get a coupon by its ID (cached)"""
         from sqlalchemy.orm import joinedload
         from app.models.coupon_country import CouponCountry
         
         cache_k = cache_key("coupons", "id", str(coupon_id))
         cached = get_cache(cache_k)
+        cached = get_cache(cache_k)
         if cached is not None:
-            return cached
+            # Reconstruct object
+            c_obj = Coupon(**{k: v for k, v in cached.items() if k not in ['category', 'countries', 'pricing']})
+            c_obj.pricing = cached.get('pricing')
+            CouponService._apply_currency(c_obj, currency_code)
+            
+            if cached.get('category'):
+                from app.models.category import Category
+                c_obj.category = Category(**cached['category'])
+            
+            return c_obj
         
         coupon = db.query(Coupon).options(
             joinedload(Coupon.category),
@@ -189,27 +260,38 @@ class CouponService:
                 "expiration_date": str(coupon.expiration_date) if coupon.expiration_date else None,
                 "category_id": str(coupon.category_id) if coupon.category_id else None,
                 "category": {"id": str(coupon.category.id), "name": coupon.category.name, "slug": coupon.category.slug} if coupon.category else None,
-                "category": {"id": str(coupon.category.id), "name": coupon.category.name, "slug": coupon.category.slug} if coupon.category else None,
                 "availability_type": coupon.availability_type,
                 "picture_url": coupon.picture_url,
+                "pricing": coupon.pricing,
                 "countries": [{"id": str(ca.country.id), "name": ca.country.name, "slug": ca.country.slug, "country_code": ca.country.country_code} for ca in coupon.country_associations] if coupon.country_associations else [],
             }, CACHE_TTL_MEDIUM)
+            
+            CouponService._apply_currency(coupon, currency_code)
+            
         return coupon
 
     @staticmethod
-    def get_by_code(db: Session, code: str) -> Optional[Coupon]:
+    def get_by_code(db: Session, code: str, currency_code: str = "USD") -> Optional[Coupon]:
         """Get a coupon by its code (cached)"""
         upper_code = code.upper()
         cache_k = cache_key("coupons", "code", upper_code)
         cached = get_cache(cache_k)
         if cached is not None:
-            return cached
+             # Reconstruct
+            c_obj = Coupon(**{k: v for k, v in cached.items() if k not in ['pricing']})
+            c_obj.pricing = cached.get('pricing')
+            CouponService._apply_currency(c_obj, currency_code)
+            return c_obj
         
         coupon = db.query(Coupon).filter(Coupon.code == upper_code).first()
         if coupon:
             set_cache(cache_k, {
                 "id": str(coupon.id), "code": coupon.code, "title": coupon.title, "picture_url": coupon.picture_url,
+                "pricing": coupon.pricing,
+                "discount_amount": coupon.discount_amount, "price": coupon.price
             }, CACHE_TTL_MEDIUM)
+            CouponService._apply_currency(coupon, currency_code)
+            
         return coupon
 
     @staticmethod

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, model_validator, ConfigDict
 from datetime import datetime
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from uuid import UUID
 
 
@@ -25,6 +25,7 @@ class CouponBase(BaseModel):
     category_id: Optional[UUID] = None
     availability_type: str = Field(default="online", pattern="^(online|local|both)$")
     country_ids: List[UUID] = Field(default_factory=list)
+    pricing: Optional[Dict[str, Dict[str, float]]] = Field(default=None, description="Multi-currency pricing e.g. {'INR': {'price': 100, 'discount_amount': 50}}")
 
 
 class CouponCreate(CouponBase):
@@ -52,6 +53,7 @@ class CouponUpdate(BaseModel):
     category_id: Optional[UUID] = None
     availability_type: Optional[str] = Field(default=None, pattern="^(online|local|both)$")
     country_ids: Optional[List[UUID]] = None
+    pricing: Optional[Dict[str, Dict[str, float]]] = None
 
 
 class CouponResponse(CouponBase):
@@ -64,6 +66,7 @@ class CouponResponse(CouponBase):
     is_featured: bool = False
     # Computed field for stock_sold (= current_uses)
     stock_sold: int = 0
+    currency_symbol: str = "$"
     # Nested relationships (populated from joins)
     category: Optional['CategoryInCoupon'] = None
     countries: List['CountryInCoupon'] = Field(default_factory=list)

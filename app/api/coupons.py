@@ -6,7 +6,8 @@ from uuid import UUID
 from app.database import get_db
 from app.schemas.coupon import CouponCreate, CouponUpdate, CouponResponse
 from app.services.coupon_service import CouponService
-from app.utils.security import get_current_user
+from app.utils.security import get_current_user, get_current_user_optional
+from app.utils.currency import get_currency_from_phone_code
 from app.models.user import User
 
 router = APIRouter()
@@ -48,9 +49,15 @@ def list_coupons(
     search: Optional[str] = Query(None, description="Search by title, brand, or code"),
     is_featured: Optional[bool] = Query(None, description="Filter by featured status"),
     min_discount: Optional[float] = Query(None, ge=0, description="Filter by minimum discount amount"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """List all coupons with optional filters (public endpoint with enhanced filtering)"""
+    currency_code = "USD"
+    if current_user:
+        # Optimization: Use currency from JWT context if available, else derive it
+        currency_code = getattr(current_user, "context_currency", None) or get_currency_from_phone_code(current_user.phone_number)
+        
     return CouponService.get_all(
         db,
         skip=skip,
@@ -62,7 +69,8 @@ def list_coupons(
         availability_type=availability_type,
         search=search,
         is_featured=is_featured,
-        min_discount=min_discount
+        min_discount=min_discount,
+        currency_code=currency_code
     )
 
 
@@ -99,9 +107,17 @@ def get_featured_coupons(
 
 
 @router.get("/{coupon_id}", response_model=CouponResponse)
-def get_coupon(coupon_id: UUID, db: Session = Depends(get_db)):
+def get_coupon(
+    coupon_id: UUID, 
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
     """Get a coupon by ID"""
-    coupon = CouponService.get_by_id(db, coupon_id)
+    currency_code = "USD"
+    if current_user:
+        currency_code = getattr(current_user, "context_currency", None) or get_currency_from_phone_code(current_user.phone_number)
+        
+    coupon = CouponService.get_by_id(db, coupon_id, currency_code=currency_code)
     if not coupon:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

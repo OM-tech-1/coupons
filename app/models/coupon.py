@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey, Index, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -27,6 +27,7 @@ class Coupon(Base):
     
     picture_url = Column(String(500), nullable=True)
     stock = Column(Integer, nullable=True, default=None)
+    pricing = Column(JSON, nullable=True)
     is_featured = Column(Boolean, default=False, index=True)
     
     category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=True, index=True)
