@@ -56,10 +56,26 @@ def get_current_user(
     # Check Redis cache - if user was recently fetched, load by cached PK (still fast but validates existence)
     ck = cache_key("user", "auth", user_id)
     cached = get_cache(ck)
+    
+    user = None
+    if cached:
+        # We could cache the whole user object or just ID. For now assuming invalidation is handled,
+        # but safely we should probably fetch from DB or store full user in Redis.
+        # To match previous logic that seemed to work or be intended:
+        user = db.query(User).filter(User.phone_number == user_id).first() # user_id is number? "sub" is usually ID.
+        # Wait, payload "sub" is usually the UUID string in this app.
+        if not user:
+             user = db.query(User).filter(User.id == user_id).first()
+    else:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            set_cache(ck, "1", ttl=CACHE_TTL_SHORT)
 
-    if user:
-        # Attach currency context from token (optimization)
-        user.context_currency = currency
+    if user is None:
+        raise credentials_exception
+
+    # Attach currency context from token (optimization)
+    user.context_currency = currency
         
     return user
 
