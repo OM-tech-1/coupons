@@ -141,21 +141,33 @@ class RedisService:
     @staticmethod
     def _coupon_to_dict(coupon: Coupon, trending_score: int) -> dict:
         """Convert a Coupon model to a serializable dict."""
+        def sanitize(val):
+            if isinstance(val, bytes):
+                # If we find bytes, it's likely binary data mistakenly saved in a string column.
+                # In this case, we can't safely decode it as UTF-8 if it's an image (0x89PNG).
+                # Best safe bet: return None or a placeholder for now to prevent 500 API Crash.
+                try:
+                    return val.decode('utf-8')
+                except UnicodeDecodeError:
+                    return None # Or "Invalid Binary Data"
+            return val
+
         return {
             "id": str(coupon.id),
-            "code": coupon.code,
-            "brand": coupon.brand,
-            "title": coupon.title,
-            "description": coupon.description,
-            "discount_type": coupon.discount_type,
+            "code": sanitize(coupon.code),
+            "brand": sanitize(coupon.brand),
+            "title": sanitize(coupon.title),
+            "description": sanitize(coupon.description),
+            "discount_type": sanitize(coupon.discount_type),
             "discount_amount": coupon.discount_amount,
             "price": coupon.price,
             "stock": coupon.stock,
             "is_featured": coupon.is_featured,
             "is_active": coupon.is_active,
+            "picture_url": sanitize(coupon.picture_url), # Added picture_url which was missing!
             "expiration_date": str(coupon.expiration_date) if coupon.expiration_date else None,
             "created_at": str(coupon.created_at) if coupon.created_at else None,
             "category_id": str(coupon.category_id) if coupon.category_id else None,
-            "availability_type": coupon.availability_type,
+            "availability_type": sanitize(coupon.availability_type),
             "trending_score": trending_score,
         }

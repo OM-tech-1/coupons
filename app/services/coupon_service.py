@@ -186,15 +186,23 @@ class CouponService:
         coupons = query.offset(skip).limit(limit).all()
         
         # Cache the result (serialize for caching)
+        def sanitize(val):
+            if isinstance(val, bytes):
+                try:
+                    return val.decode('utf-8')
+                except UnicodeDecodeError:
+                    return None
+            return val
+
         cache_data = [
             {
                 "id": str(c.id),
-                "code": c.code,
-                "redeem_code": c.redeem_code,
-                "brand": c.brand,
-                "title": c.title,
-                "description": c.description,
-                "discount_type": c.discount_type,
+                "code": sanitize(c.code),
+                "redeem_code": sanitize(c.redeem_code),
+                "brand": sanitize(c.brand),
+                "title": sanitize(c.title),
+                "description": sanitize(c.description),
+                "discount_type": sanitize(c.discount_type),
                 "discount_amount": c.discount_amount,
                 "min_purchase": c.min_purchase,
                 "max_uses": c.max_uses,
@@ -206,11 +214,11 @@ class CouponService:
                 "is_featured": c.is_featured,
                 "created_at": str(c.created_at) if c.created_at else None,
                 "category_id": str(c.category_id) if c.category_id else None,
-                "category": {"id": str(c.category.id), "name": c.category.name, "slug": c.category.slug} if c.category else None,
-                "availability_type": c.availability_type,
-                "picture_url": c.picture_url,
+                "category": {"id": str(c.category.id), "name": sanitize(c.category.name), "slug": sanitize(c.category.slug)} if c.category else None,
+                "availability_type": sanitize(c.availability_type),
+                "picture_url": sanitize(c.picture_url),
                 "pricing": c.pricing,
-                "countries": [{"id": str(ca.country.id), "name": ca.country.name, "slug": ca.country.slug, "country_code": ca.country.country_code} for ca in c.country_associations] if c.country_associations else [],
+                "countries": [{"id": str(ca.country.id), "name": sanitize(ca.country.name), "slug": sanitize(ca.country.slug), "country_code": sanitize(ca.country.country_code)} for ca in c.country_associations] if c.country_associations else [],
             }
             for c in coupons
         ]
@@ -225,6 +233,15 @@ class CouponService:
     @staticmethod
     def get_by_id(db: Session, coupon_id: UUID, currency_code: str = "USD") -> Optional[Coupon]:
         """Get a coupon by its ID (cached)"""
+        # Helper for sanitization
+        def sanitize(val):
+            if isinstance(val, bytes):
+                try:
+                    return val.decode('utf-8')
+                except UnicodeDecodeError:
+                    return None
+            return val
+
         from sqlalchemy.orm import joinedload
         from app.models.coupon_country import CouponCountry
         
@@ -250,20 +267,29 @@ class CouponService:
         
         if coupon:
             set_cache(cache_k, {
-                "id": str(coupon.id), "code": coupon.code, "redeem_code": coupon.redeem_code,
-                "brand": coupon.brand, "title": coupon.title, "description": coupon.description,
-                "discount_type": coupon.discount_type, "discount_amount": coupon.discount_amount,
-                "min_purchase": coupon.min_purchase, "max_uses": coupon.max_uses,
-                "current_uses": coupon.current_uses, "is_active": coupon.is_active,
-                "price": coupon.price, "stock": coupon.stock, "is_featured": coupon.is_featured,
+                "id": str(coupon.id), 
+                "code": sanitize(coupon.code), 
+                "redeem_code": sanitize(coupon.redeem_code),
+                "brand": sanitize(coupon.brand), 
+                "title": sanitize(coupon.title), 
+                "description": sanitize(coupon.description),
+                "discount_type": sanitize(coupon.discount_type), 
+                "discount_amount": coupon.discount_amount,
+                "min_purchase": coupon.min_purchase, 
+                "max_uses": coupon.max_uses,
+                "current_uses": coupon.current_uses, 
+                "is_active": coupon.is_active,
+                "price": coupon.price, 
+                "stock": coupon.stock, 
+                "is_featured": coupon.is_featured,
                 "created_at": str(coupon.created_at) if coupon.created_at else None,
                 "expiration_date": str(coupon.expiration_date) if coupon.expiration_date else None,
                 "category_id": str(coupon.category_id) if coupon.category_id else None,
-                "category": {"id": str(coupon.category.id), "name": coupon.category.name, "slug": coupon.category.slug} if coupon.category else None,
-                "availability_type": coupon.availability_type,
-                "picture_url": coupon.picture_url,
+                "category": {"id": str(coupon.category.id), "name": sanitize(coupon.category.name), "slug": sanitize(coupon.category.slug)} if coupon.category else None,
+                "availability_type": sanitize(coupon.availability_type),
+                "picture_url": sanitize(coupon.picture_url),
                 "pricing": coupon.pricing,
-                "countries": [{"id": str(ca.country.id), "name": ca.country.name, "slug": ca.country.slug, "country_code": ca.country.country_code} for ca in coupon.country_associations] if coupon.country_associations else [],
+                "countries": [{"id": str(ca.country.id), "name": sanitize(ca.country.name), "slug": sanitize(ca.country.slug), "country_code": sanitize(ca.country.country_code)} for ca in coupon.country_associations] if coupon.country_associations else [],
             }, CACHE_TTL_MEDIUM)
             
             CouponService._apply_currency(coupon, currency_code)
@@ -273,6 +299,15 @@ class CouponService:
     @staticmethod
     def get_by_code(db: Session, code: str, currency_code: str = "USD") -> Optional[Coupon]:
         """Get a coupon by its code (cached)"""
+        # Helper for sanitization
+        def sanitize(val):
+            if isinstance(val, bytes):
+                try:
+                    return val.decode('utf-8')
+                except UnicodeDecodeError:
+                    return None
+            return val
+
         upper_code = code.upper()
         cache_k = cache_key("coupons", "code", upper_code)
         cached = get_cache(cache_k)
@@ -286,7 +321,10 @@ class CouponService:
         coupon = db.query(Coupon).filter(Coupon.code == upper_code).first()
         if coupon:
             set_cache(cache_k, {
-                "id": str(coupon.id), "code": coupon.code, "title": coupon.title, "picture_url": coupon.picture_url,
+                "id": str(coupon.id), 
+                "code": sanitize(coupon.code), 
+                "title": sanitize(coupon.title), 
+                "picture_url": sanitize(coupon.picture_url),
                 "pricing": coupon.pricing,
                 "discount_amount": coupon.discount_amount, "price": coupon.price
             }, CACHE_TTL_MEDIUM)
