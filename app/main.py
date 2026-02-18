@@ -157,6 +157,38 @@ def health_check():
     return {"status": "OK", "version": "2.0.1"} # Production Release: Stripe Live Keys Configured
 
 
+# Custom exception handler for validation errors to prevents 500 on binary inputs
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    """
+    Overrides default validation handling to sanitize binary data in inputs.
+    Prevents UnicodeDecodeError when jsonable_encoder tries to encode bytes.
+    """
+    errors = exc.errors()
+    safe_errors = []
+    
+    for error in errors:
+        # Sanitize 'input' field if it is bytes
+        if "input" in error and isinstance(error["input"], bytes):
+            try:
+                # Try validation of utf-8
+                error["input"].decode('utf-8')
+            except UnicodeDecodeError:
+                # Replace with safe placeholder and add a helpful message
+                error["input"] = "<binary data>"
+                error["msg"] += " (binary data received, expected text)"
+        safe_errors.append(error)
+
+    return JSONResponse(
+        status_code=422,
+        content={"detail": jsonable_encoder(safe_errors)},
+    )
+
+
 @app.get("/health")
 def detailed_health_check():
     """Detailed health check with database connection status."""
