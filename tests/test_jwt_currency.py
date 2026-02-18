@@ -53,9 +53,10 @@ def test_jwt_contains_currency(client):
 
 def test_jwt_currency_default(client):
     """Test that unknown country code defaults to USD in JWT"""
-    # 1. Register generic user (+1 202xxxxxxx)
-    suffix = str(uuid.uuid4().int)[:7]
-    number = f"202{suffix}"
+    # 1. Register generic user (+1 202-555-xxxx) which is valid format
+    # Use uuid to ensure uniqueness but keep valid structure
+    suffix = str(uuid.uuid4().int)[:4]
+    number = f"202555{suffix}"
     
     # Register payload must match UserCreate schema
     register_payload = {
