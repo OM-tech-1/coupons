@@ -27,8 +27,19 @@ def checkout(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=message
         )
+    
+    # Determine and set currency
+    currency_code = "USD"
+    if current_user:
+        currency_code = getattr(current_user, "context_currency", None) or get_currency_from_phone_code(current_user.phone_number)
+    
+    order.currency = currency_code
+    order.currency_symbol = get_currency_symbol(currency_code)
+    
     return order
 
+
+from app.utils.currency import get_currency_from_phone_code, get_currency_symbol
 
 @router.get("/", response_model=List[OrderResponse])
 def get_my_orders(
@@ -36,7 +47,20 @@ def get_my_orders(
     current_user: User = Depends(get_current_user)
 ):
     """Get current user's orders"""
-    return OrderService.get_user_orders(db, current_user.id)
+    orders = OrderService.get_user_orders(db, current_user.id)
+    
+    # Apply currency to orders
+    currency_code = "USD"
+    if current_user:
+        currency_code = getattr(current_user, "context_currency", None) or get_currency_from_phone_code(current_user.phone_number)
+    
+    symbol = get_currency_symbol(currency_code)
+    
+    for order in orders:
+        order.currency = currency_code
+        order.currency_symbol = symbol
+        
+    return orders
 
 
 @router.get("/{order_id}", response_model=OrderResponse)
