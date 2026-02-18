@@ -30,6 +30,9 @@ def add_to_cart(
     return {"message": message, "coupon_id": str(item.coupon_id)}
 
 
+from app.utils.currency import get_currency_from_phone_code, get_currency_symbol
+from app.services.coupon_service import CouponService
+
 @router.get("/", response_model=CartResponse)
 def get_cart(
     db: Session = Depends(get_db),
@@ -37,16 +40,30 @@ def get_cart(
 ):
     """Get current user's cart"""
     items = CartService.get_cart(db, current_user.id)
+    
+    # Determine currency
+    currency_code = "USD"
+    if current_user:
+        currency_code = getattr(current_user, "context_currency", None) or get_currency_from_phone_code(current_user.phone_number)
+    
+    # Apply currency to each item's coupon
+    for item in items:
+        if item.coupon:
+            CouponService._apply_currency(item.coupon, currency_code)
+
     # Compute total from fetched items instead of a second DB query
     total = sum(
         (item.coupon.price or 0) * item.quantity
         for item in items
         if item.coupon
     )
+    
     return {
         "items": items,
         "total_items": sum(i.quantity for i in items),
-        "total_amount": total
+        "total_amount": total,
+        "currency": currency_code,
+        "currency_symbol": get_currency_symbol(currency_code)
     }
 
 

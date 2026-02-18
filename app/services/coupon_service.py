@@ -58,8 +58,9 @@ class CouponService:
     @staticmethod
     def _apply_currency(coupon: Coupon, currency_code: str = "USD") -> Coupon:
         """Apply currency-specific pricing to coupon object"""
-        # Set default symbol
+        # Set default symbol and code
         coupon.currency_symbol = get_currency_symbol("USD")
+        coupon.currency = "USD"
         
         if not currency_code or currency_code == "USD":
             return coupon
@@ -70,6 +71,7 @@ class CouponService:
             coupon.price = pricing_data.get("price", coupon.price)
             coupon.discount_amount = pricing_data.get("discount_amount", coupon.discount_amount)
             coupon.currency_symbol = get_currency_symbol(currency_code)
+            coupon.currency = currency_code
             
         return coupon
 

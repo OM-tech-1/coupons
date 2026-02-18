@@ -19,6 +19,8 @@ class CouponInCart(BaseModel):
     title: str
     price: float
     discount_amount: float
+    currency: str = "USD"
+    currency_symbol: str = "$"
     
     class Config:
         from_attributes = True
@@ -39,3 +41,5 @@ class CartResponse(BaseModel):
     items: List[CartItemResponse]
     total_items: int
     total_amount: float
+    currency: str = "USD"
+    currency_symbol: str = "$"

@@ -67,6 +67,7 @@ class CouponResponse(CouponBase):
     # Computed field for stock_sold (= current_uses)
     stock_sold: int = 0
     currency_symbol: str = "$"
+    currency: str = "USD"
     # Nested relationships (populated from joins)
     category: Optional['CategoryInCoupon'] = None
     countries: List['CountryInCoupon'] = Field(default_factory=list)
