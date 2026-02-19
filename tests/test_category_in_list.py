@@ -25,7 +25,8 @@ def test_coupon_list_includes_category_name(client, admin_user, sample_category)
     data = resp.json()
     
     # Find our test coupon
-    test_coupon = next((c for c in data if c["code"] == "TESTCAT50"), None)
+    # Find our test coupon by title (code is hidden)
+    test_coupon = next((c for c in data if c["title"] == "Test Category Coupon"), None)
     assert test_coupon is not None
     
     # Verify category object is present with id and name

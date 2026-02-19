@@ -47,7 +47,9 @@ def test_list_coupons(client, sample_coupon):
     assert resp.status_code == 200
     data = resp.json()
     assert len(data) >= 1
-    assert any(c["code"] == "TEST50" for c in data)
+    # Code is hidden in public response
+    # assert any(c["code"] == "TEST50" for c in data)
+    assert any(c["title"] == "Test 50% Off" for c in data)
 
 
 def test_get_coupon_by_id(client, sample_coupon):
@@ -57,7 +59,8 @@ def test_get_coupon_by_id(client, sample_coupon):
     assert resp.status_code == 200
     data = resp.json()
     assert data["id"] == coupon_id
-    assert data["code"] == "TEST50"
+    # Code is hidden
+    assert "code" not in data
 
 
 def test_get_coupon_not_found(client):

@@ -75,6 +75,8 @@ def test_filter_min_discount(client, admin_user):
     found_high = False
     for c in data:
         assert c["discount_amount"] >= 40.0
-        if c["code"] == "HIGHVAL50":
+    for c in data:
+        assert c["discount_amount"] >= 40.0
+        if c["title"] == "50% Off":
             found_high = True
     assert found_high
