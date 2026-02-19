@@ -61,45 +61,46 @@ def test_payment_init_explicit_pricing_aed(mock_db):
     app.dependency_overrides[get_current_user] = lambda: mock_user
     app.dependency_overrides[get_db] = lambda: mock_db
     
-    with patch("app.services.stripe.payment_service.get_stripe_client") as mock_stripe_client:
-        
-        # Mock Stripe
-        mock_stripe = MagicMock()
-        mock_stripe_client.return_value = mock_stripe
-        mock_stripe.PaymentIntent.create.return_value = MagicMock(id="pi_123", client_secret="secret")
-        
-        # Mock Data
-        mock_coupon = Coupon(price=10.0, pricing={"AED": 50.0, "INR": 500.0})
-        mock_item = OrderItem(quantity=2, coupon=mock_coupon)
-        mock_item.coupon = mock_coupon # Explicitly set relationship for logic
-        mock_order = Order(id=MOCK_ORDER_ID, user_id=MOCK_USER_ID, total_amount=20.0, items=[mock_item])
-        
-        # Configure DB Query Side Effect
-        def query_side_effect(model):
-            mock_q = MagicMock()
-            if model == Order:
-                 mock_q.filter.return_value.first.return_value = mock_order
-                 mock_q.options.return_value.filter.return_value.first.return_value = mock_order
-            elif model == Payment:
-                 # Return None for existing payment check
-                 mock_q.filter.return_value.first.return_value = None
-            return mock_q
-        
-        mock_db.query.side_effect = query_side_effect
-
-        response = client.post(
-            "/payments/init",
-            json={"order_id": MOCK_ORDER_ID, "return_url": "http://test.com"}
-        )
-        
-        # Validation
-        assert response.status_code == 200
-        
-        # Check Stripe Call
-        mock_stripe.PaymentIntent.create.assert_called_once()
-        call_args = mock_stripe.PaymentIntent.create.call_args[1]
-        
-        assert call_args["amount"] == 10000
-        assert call_args["currency"] == "aed"
+    try:
+        with patch("app.services.stripe.payment_service.get_stripe_client") as mock_stripe_client:
+            
+            # Mock Stripe
+            mock_stripe = MagicMock()
+            mock_stripe_client.return_value = mock_stripe
+            mock_stripe.PaymentIntent.create.return_value = MagicMock(id="pi_123", client_secret="secret")
+            
+            # Mock Data
+            mock_coupon = Coupon(price=10.0, pricing={"AED": 50.0, "INR": 500.0}, is_active=True, code="TEST_AED")
+            mock_item = OrderItem(quantity=2, coupon=mock_coupon)
+            mock_item.coupon = mock_coupon # Explicitly set relationship for logic
+            mock_order = Order(id=MOCK_ORDER_ID, user_id=MOCK_USER_ID, total_amount=20.0, items=[mock_item])
+            
+            # Configure DB Query Side Effect
+            def query_side_effect(model):
+                mock_q = MagicMock()
+                if model == Order:
+                     mock_q.filter.return_value.first.return_value = mock_order
+                     mock_q.options.return_value.filter.return_value.first.return_value = mock_order
+                elif model == Payment:
+                     # Return None for existing payment check
+                     mock_q.filter.return_value.first.return_value = None
+                return mock_q
+            
+            mock_db.query.side_effect = query_side_effect
     
-    app.dependency_overrides = {}
+            response = client.post(
+                "/payments/init",
+                json={"order_id": MOCK_ORDER_ID, "return_url": "http://test.com"}
+            )
+            
+            # Validation
+            assert response.status_code == 200
+            
+            # Check Stripe Call
+            mock_stripe.PaymentIntent.create.assert_called_once()
+            call_args = mock_stripe.PaymentIntent.create.call_args[1]
+            
+            assert call_args["amount"] == 10000
+            assert call_args["currency"] == "aed"
+    finally:
+        app.dependency_overrides = {}
