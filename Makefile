@@ -43,8 +43,9 @@ restart:
 	docker restart coupon-api-container
 
 clean-db:
-	@echo "⚠️  Resetting Database..."
-	python3 scripts/reset_db.py
+	@echo "⚠️  Resetting Database (inside container)..."
+	@echo "NOTE: You must 'make deploy' first if scripts/ was just added."
+	docker exec -it coupon-api-container python scripts/reset_db.py
 
 create-admin:
 	@echo "👤 Creating Admin User..."
