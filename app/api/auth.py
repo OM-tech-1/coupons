@@ -8,6 +8,7 @@ from app.utils.jwt import create_access_token
 from app.utils.currency import get_currency_from_phone_code
 
 from app.middleware.rate_limit import limiter
+import logging
 
 router = APIRouter(tags=["Auth"])
 
@@ -25,7 +26,6 @@ def register(request: Request, user_data: UserCreate, db: Session = Depends(get_
 @router.post("/login", response_model=Token)
 @limiter.limit("10/minute")
 def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
-    import logging
     logger = logging.getLogger(__name__)
     logger.info(f"Login attempt for phone: {payload.phone_number} (from {payload.country_code} {payload.number})")
     
