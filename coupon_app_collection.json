@@ -1523,6 +1523,64 @@
                     }
                 },
                 {
+                    "name": "Promote User to Admin",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/{{user_id}}/promote",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                "{{user_id}}",
+                                "promote"
+                            ]
+                        },
+                        "description": "Promote a standard user to ADMIN role"
+                    }
+                },
+                {
+                    "name": "Demote Admin to User",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/{{user_id}}/demote",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                "{{user_id}}",
+                                "demote"
+                            ]
+                        },
+                        "description": "Demote an ADMIN down to USER role"
+                    }
+                },
+                {
                     "name": "List All Orders",
                     "request": {
                         "auth": {

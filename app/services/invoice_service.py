@@ -6,6 +6,7 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from app.models.order import Order
 from app.models.user import User
+from app.utils.currency import get_currency_from_phone_code, get_currency_symbol
 
 class InvoiceService:
     @staticmethod
@@ -69,6 +70,10 @@ class InvoiceService:
         elements.append(Paragraph("<br/>".join(customer_info[1:]), normal_style))
         elements.append(Spacer(1, 0.3 * inch))
 
+        # Determine currency
+        currency_code = getattr(user, "context_currency", None) or get_currency_from_phone_code(user.phone_number)
+        currency_symbol = get_currency_symbol(currency_code)
+
         # --- Items Table ---
         data = [["Item Description", "Qty", "Price", "Total"]]
         
@@ -85,12 +90,12 @@ class InvoiceService:
             data.append([
                 desc,
                 str(item.quantity),
-                f"${item.price:.2f}",
-                f"${line_total:.2f}"
+                f"{currency_symbol}{item.price:.2f}",
+                f"{currency_symbol}{line_total:.2f}"
             ])
 
         # Add total row
-        data.append(["", "", "Total", f"${order.total_amount:.2f}"])
+        data.append(["", "", "Total", f"{currency_symbol}{order.total_amount:.2f}"])
 
         # Table Style
         table = Table(data, colWidths=[4 * inch, 0.8 * inch, 1.0 * inch, 1.2 * inch])
