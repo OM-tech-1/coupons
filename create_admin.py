@@ -12,16 +12,23 @@ from app.utils.security import get_password_hash
 
 
 import os
+import argparse
 
 def create_admin():
     db = SessionLocal()
     
+    # Parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--manual", action="store_true", help="Force manual interactive mode")
+    args = parser.parse_args()
+    
     # Check for environment variables (Non-interactive mode)
+    # Skip env check if --manual is passed
     env_phone = os.getenv("ADMIN_PHONE")
     env_password = os.getenv("ADMIN_PASSWORD")
     env_name = os.getenv("ADMIN_NAME", "Admin User")
     
-    if env_phone and env_password:
+    if env_phone and env_password and not args.manual:
         phone_number = env_phone.strip()
         password = env_password.strip()
         full_name = env_name.strip()

@@ -49,7 +49,7 @@ clean-db:
 
 create-admin:
 	@echo "👤 Creating Admin User..."
-	docker exec -it coupon-api-container python create_admin.py
+	docker exec -it coupon-api-container python create_admin.py --manual
 
 test:
 	pytest
