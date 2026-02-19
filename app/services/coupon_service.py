@@ -416,3 +416,43 @@ class CouponService:
             return False, "Coupon usage limit reached"
         
         return True, "Coupon is valid"
+
+    @staticmethod
+    def increment_usage(db: Session, coupon_id: UUID, quantity: int = 1) -> bool:
+        """
+        Atomically increment usage count and decrement stock.
+        Returns True if successful, False if limits reached (race condition).
+        """
+        # We use a direct UPDATE statement with WHERE clause to ensure atomicity
+        # and prevent race conditions (DB-level locking)
+        
+        # 1. Update current_uses (Check max_uses)
+        # 2. Update stock (Check stock > 0)
+        
+        # Note: We need to handle them carefully.
+        # If stock is None, it's unlimited stock.
+        # If max_uses is None, it's unlimited uses.
+        
+        # Let's fetch the coupon first to check structure, but update via query
+        coupon = db.query(Coupon).filter(Coupon.id == coupon_id).with_for_update().first()
+        if not coupon:
+            return False
+            
+        # Check limits
+        if coupon.max_uses is not None and (coupon.current_uses + quantity) > coupon.max_uses:
+            return False
+            
+        if coupon.stock is not None:
+             if coupon.stock < quantity:
+                 return False
+             coupon.stock -= quantity
+             
+        coupon.current_uses += quantity
+        
+        db.commit()
+        
+        # Invalidate cache
+        invalidate_cache(f"coupons:id:{coupon_id}")
+        invalidate_cache("coupons:list:*")
+        
+        return True

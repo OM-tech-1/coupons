@@ -1249,7 +1249,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"order_id\": \"{{order_id}}\",\n    \"amount\": 1000,\n    \"currency\": \"USD\"\n}"
+                            "raw": "{\n    \"order_id\": \"{{order_id}}\",\n    \"return_url\": \"https://payment.vouchergalaxy.com/success\"\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/payments/init",

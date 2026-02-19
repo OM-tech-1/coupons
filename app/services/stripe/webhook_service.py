@@ -105,10 +105,28 @@ class StripeWebhookService:
         payment.payment_metadata["stripe_event_id"] = event_id
         
         # Update order
-        order = self.db.query(Order).filter(Order.id == payment.order_id).first()
         if order:
             order.status = "paid"
             order.payment_state = "payment_completed"
+            
+            # Decrement Stock / Increment Usage
+            from app.services.coupon_service import CouponService
+            # We need to loop through items
+            # Ensure items are loaded
+            if not order.items:
+                from sqlalchemy.orm import joinedload
+                # re-fetch or assume lazy load works if session active
+                # Safe to just use order.items if it's attached to session
+                pass
+                
+            for item in order.items:
+                if item.coupon_id:
+                     success = CouponService.increment_usage(self.db, item.coupon_id, item.quantity)
+                     if not success:
+                         logger.error(f"Failed to increment usage for coupon {item.coupon_id} on order {order.id} - Possible overselling")
+                         # Note: Payment already succeeded, so we can't rollback payment easily here.
+                         # We just log it. The user gets the coupon anyway. 
+                         # The pre-check in /init should prevent this 99% of time.
         
         self.db.commit()
         

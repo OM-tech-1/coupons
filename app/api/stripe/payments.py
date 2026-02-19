@@ -8,8 +8,10 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 import os
 import logging
+import stripe
 
 from app.database import get_db
+from app.utils.security import get_current_user
 from app.schemas.stripe.payment import (
     PaymentInitRequest,
     PaymentInitResponse,
@@ -31,7 +33,8 @@ PAYMENT_UI_DOMAIN = os.getenv("PAYMENT_UI_DOMAIN", "https://payment.vouchergalax
 @router.post("/init", response_model=PaymentInitResponse)
 async def initialize_payment(
     request: PaymentInitRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Initialize a payment for an order.
@@ -43,11 +46,95 @@ async def initialize_payment(
         payment_service = StripePaymentService(db)
         token_service = PaymentTokenService(db)
         
+        # Verify order exists and get amount from SOURCE OF TRUTH
+        from app.models.order import Order
+        order = db.query(Order).filter(Order.id == request.order_id).first()
+        if not order:
+             raise HTTPException(status_code=404, detail="Order not found")
+        
+        # Security: Allow Admins OR the Order Owner
+        # We need to import UserRole properly, but for now strict ownership check is safer
+        if order.user_id != current_user.id:
+            # Check if admin (optional, but for now strict)
+            # if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Not authorized to pay for this order")
+             
+        # Convert float total_amount to integer cents using Decimal for precision
+        from decimal import Decimal, ROUND_HALF_UP
+        from app.services.coupon_service import CouponService
+        
+        # Determine currency from User's phone number checks
+        from app.utils.currency import get_currency_from_phone_code
+        currency = get_currency_from_phone_code(current_user.phone_number)
+        
+        final_amount_cents = 0
+        
+        # We need to fetch order items with coupon details
+        if not order.items:
+             # Reload with items if missing
+             from sqlalchemy.orm import joinedload
+             from app.models.order import OrderItem
+             from app.models.coupon import Coupon
+             order = db.query(Order).options(
+                 joinedload(Order.items).joinedload(OrderItem.coupon)
+             ).filter(Order.id == request.order_id).first()
+
+        for item in order.items:
+            coupon = item.coupon
+            if not coupon:
+                continue
+
+            # 1. Pre-check Validity (Stock & Expiry)
+            # We check if (current + quantity) <= max
+            # This is a "soft" check to prevent starting payment if we know it will fail.
+            # Real atomic check happens at webhook, but this improves UX.
+            is_valid, reason = CouponService.is_valid(coupon)
+            if not is_valid:
+                 raise HTTPException(status_code=400, detail=f"Coupon '{coupon.code}' is not available: {reason}")
+            
+            # Check specific stock level if set
+            if coupon.stock is not None and coupon.stock < item.quantity:
+                 raise HTTPException(status_code=400, detail=f"Coupon '{coupon.code}' is out of stock (Requested: {item.quantity}, Available: {coupon.stock})")
+
+            # 2. Get price for this currency (Using Decimal)
+            item_price = Decimal(0)
+            
+            if coupon.pricing and isinstance(coupon.pricing, dict):
+                # Try exact match first
+                if currency in coupon.pricing:
+                     # pricing values might be float or int in JSON, convert to str first then Decimal
+                     price_val = coupon.pricing[currency]
+                     if isinstance(price_val, dict):
+                         price_val = price_val.get("price", coupon.price)
+                     
+                     item_price = Decimal(str(price_val))
+                else:
+                     # Fallback to base price
+                     item_price = Decimal(str(coupon.price))
+            else:
+                 item_price = Decimal(str(coupon.price))
+            
+            # Add to total: price * quantity * 100 (to cents)
+            # quantize to 0 decimal places (integer cents)
+            item_total_cents = (item_price * Decimal(100)).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+            final_amount_cents += int(item_total_cents) * int(item.quantity)
+            
+        real_amount_cents = final_amount_cents
+
+        if real_amount_cents < 50: # approx $0.50 check
+             # If exact amount is 0 (free), we should handle it? 
+             # Stripe requires > $0.50 usually.
+             if real_amount_cents == 0:
+                  # Free order? Should be handled by create_order, not here?
+                  pass
+             else:
+                  raise HTTPException(status_code=400, detail="Order amount too small for payment processing (min $0.50)")
+        
         # Create PaymentIntent
         payment = payment_service.create_payment_intent(
             order_id=request.order_id,
-            amount=request.amount,
-            currency=request.currency,
+            amount=real_amount_cents,
+            currency=currency,
             metadata=request.metadata,
         )
         
@@ -76,6 +163,16 @@ async def initialize_payment(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+    except HTTPException:
+        # Re-raise HTTP exceptions (400, 403, 404) as is
+        raise
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe API error: {e}")
+        # Return Stripe's user-friendly error message (e.g., "Amount must be at least...")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.user_message or str(e)
         )
     except Exception as e:
         logger.error(f"Unexpected error during payment init: {e}")

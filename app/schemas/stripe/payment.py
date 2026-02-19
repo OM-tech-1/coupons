@@ -12,16 +12,16 @@ from uuid import UUID
 class PaymentInitRequest(BaseModel):
     """Request to initialize a payment"""
     order_id: UUID = Field(..., description="UUID of the order to pay for")
-    amount: int = Field(..., gt=0, description="Amount in smallest currency unit (cents)")
-    currency: str = Field(default="USD", max_length=3, description="3-letter currency code")
+    # Amount and Currency are now ignored (server-side calculation) but kept optional for backward compat
+    amount: Optional[int] = Field(None, description="Deprecated: Amount is calculated on server")
+    currency: Optional[str] = Field(None, description="Deprecated: Currency is derived from order")
     metadata: Optional[dict] = Field(default=None, description="Optional metadata")
     return_url: Optional[str] = Field(default=None, description="URL to return after payment")
 
     model_config = ConfigDict(json_schema_extra={
         "example": {
             "order_id": "550e8400-e29b-41d4-a716-446655440000",
-            "amount": 1999,
-            "currency": "USD",
+            "return_url": "https://vouchergalaxy.com/orders/success"
         }
     })
 
