@@ -27,6 +27,11 @@ def create_admin():
         full_name = env_name.strip()
         print(f"🔧 Running in non-interactive mode for {phone_number}...")
     else:
+        # Check if running interactively (TTY)
+        if not sys.stdin.isatty():
+            print("⚠️  Skipping admin creation: No environment variables (ADMIN_PHONE, ADMIN_PASSWORD) and no interactive TTY.")
+            return
+
         # Interactive mode
         print("🔧 Running in interactive mode (env vars not set)...")
         phone_number = input("Enter phone number (e.g. +971501234567): ").strip()
@@ -66,4 +71,9 @@ def create_admin():
 
 
 if __name__ == "__main__":
-    create_admin()
+    try:
+        create_admin()
+    except Exception as e:
+        print(f"⚠️  Admin creation skipped/failed: {str(e)}")
+        # Exit with 0 to ensure the container continues to start the app
+        sys.exit(0)
