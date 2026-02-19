@@ -4,7 +4,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from app.database import get_db
-from app.schemas.coupon import CouponCreate, CouponUpdate, CouponResponse
+from app.schemas.coupon import CouponCreate, CouponUpdate, CouponResponse, CouponPublicResponse
 from app.services.coupon_service import CouponService
 from app.utils.security import get_current_user, get_current_user_optional
 from app.utils.currency import get_currency_from_phone_code
@@ -37,7 +37,7 @@ def create_coupon(
     return CouponService.create(db, coupon)
 
 
-@router.get("/", response_model=List[CouponResponse])
+@router.get("/", response_model=List[CouponPublicResponse])
 def list_coupons(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
@@ -74,7 +74,7 @@ def list_coupons(
     )
 
 
-@router.get("/trending")
+@router.get("/trending", response_model=List[CouponPublicResponse])
 def get_trending_coupons(
     period: str = Query("24h", pattern="^(24h|7d)$", description="Trending period: 24h or 7d"),
     limit: int = Query(10, ge=1, le=50),
@@ -85,7 +85,7 @@ def get_trending_coupons(
     return RedisService.get_trending_coupons(db, period=period, limit=limit)
 
 
-@router.get("/recently-viewed")
+@router.get("/recently-viewed", response_model=List[CouponPublicResponse])
 def get_recently_viewed(
     session_id: str = Query(..., description="Session or user ID"),
     limit: int = Query(20, ge=1, le=50),
@@ -96,7 +96,7 @@ def get_recently_viewed(
     return RedisService.get_recently_viewed(db, session_id=session_id, limit=limit)
 
 
-@router.get("/featured")
+@router.get("/featured", response_model=List[CouponPublicResponse])
 def get_featured_coupons(
     limit: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db)
@@ -106,7 +106,7 @@ def get_featured_coupons(
     return RedisService.get_featured_coupons(db, limit=limit)
 
 
-@router.get("/{coupon_id}", response_model=CouponResponse)
+@router.get("/{coupon_id}", response_model=CouponPublicResponse)
 def get_coupon(
     coupon_id: UUID, 
     db: Session = Depends(get_db),

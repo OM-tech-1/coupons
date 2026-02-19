@@ -4,9 +4,7 @@ from typing import Optional, List, Any, Dict
 from uuid import UUID
 
 
-class CouponBase(BaseModel):
-    code: str = Field(..., min_length=3, max_length=50)
-    redeem_code: Optional[str] = Field(default=None, max_length=100, description="Actual code revealed after purchase")
+class CouponBasePublic(BaseModel):
     brand: Optional[str] = Field(default=None, max_length=100, description="Brand/company name")
     title: str = Field(..., min_length=3, max_length=100)
     description: Optional[str] = None
@@ -26,6 +24,11 @@ class CouponBase(BaseModel):
     availability_type: str = Field(default="online", pattern="^(online|local|both)$")
     country_ids: List[UUID] = Field(default_factory=list)
     pricing: Optional[Dict[str, Dict[str, float]]] = Field(default=None, description="Multi-currency pricing e.g. {'INR': {'price': 100, 'discount_amount': 50}}")
+
+
+class CouponBase(CouponBasePublic):
+    code: str = Field(..., min_length=3, max_length=50)
+    redeem_code: Optional[str] = Field(default=None, max_length=100, description="Actual code revealed after purchase")
 
 
 class CouponCreate(CouponBase):
@@ -56,7 +59,7 @@ class CouponUpdate(BaseModel):
     pricing: Optional[Dict[str, Dict[str, float]]] = None
 
 
-class CouponResponse(CouponBase):
+class CouponResponseCommon(CouponBasePublic):
     id: UUID
     price: float = 0.0
     current_uses: int = 0
@@ -74,18 +77,36 @@ class CouponResponse(CouponBase):
 
     @model_validator(mode='before')
     @classmethod
-    def compute_stock_sold(cls, data: Any) -> Any:
-        """Set stock_sold to current_uses value"""
+    def compute_stock_sold_and_currency(cls, data: Any) -> Any:
+        """Set stock_sold and ensure currency is preserved from object"""
         if hasattr(data, '__dict__'):
             # SQLAlchemy model object
             data_dict = {k: v for k, v in data.__dict__.items() if not k.startswith('_')}
             data_dict['stock_sold'] = data_dict.get('current_uses', 0)
+            
+            # Explicitly capture currency fields if they exist dynamically
+            if hasattr(data, 'currency'):
+                data_dict['currency'] = data.currency
+            if hasattr(data, 'currency_symbol'):
+                data_dict['currency_symbol'] = data.currency_symbol
+                
             return data_dict
         elif isinstance(data, dict):
             data['stock_sold'] = data.get('current_uses', 0)
         return data
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CouponPublicResponse(CouponResponseCommon):
+    """Public response without secret codes"""
+    pass
+
+
+class CouponResponse(CouponResponseCommon):
+    """Admin/Full response with codes"""
+    code: str
+    redeem_code: Optional[str] = None
 
 
 # Nested schemas for relationships (to avoid circular imports)
@@ -109,7 +130,9 @@ class CountryInCoupon(BaseModel):
 
 
 # Update forward references
+# Update forward references
 CouponResponse.model_rebuild()
+CouponPublicResponse.model_rebuild()
 
 
 class CouponValidateRequest(BaseModel):

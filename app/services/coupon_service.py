@@ -127,6 +127,8 @@ class CouponService:
                 CouponService._apply_currency(c_obj, currency_code)
                 
                 # Restore relationship structures for schema
+                
+                # Restore relationship structures for schema
                 if c_data.get('category'):
                     from app.models.category import Category
                     c_obj.category = Category(**c_data['category'])
