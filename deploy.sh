@@ -44,15 +44,11 @@ echo "🗄️ Applying database indexes..."
 # Using the app container to run psql might be tricky if psql isn't installed in the slim image.
 # We'll try to run it using the DATABASE_URL from .env if psql is available on host.
 
-if command -v psql &> /dev/null; then
-    # Extract DB URL from .env
-    DB_URL=$(grep DATABASE_URL .env | cut -d '=' -f2)
-    psql "$DB_URL" -f migrations/add_indexes.sql
-    echo "✅ Indexes applied!"
-else
-    echo "⚠️ 'psql' not found on host. Skipping index application."
-    echo "👉 Please run 'migrations/add_indexes.sql' manually on your database."
-fi
+# Run Python script inside container to apply indexes
+# This avoids needing psql on the host machine
+echo "🚀 Running add_indexes.py inside container..."
+docker exec coupon-api-container python scripts/add_indexes.py || echo "⚠️ Index application failed (check logs)"
+echo "✅ Index check complete!"
 
 # 6. Verify Health
 echo "🏥 Verifying deployment..."
