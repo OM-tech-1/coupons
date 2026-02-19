@@ -88,7 +88,59 @@ def toggle_user_status(
     db.commit()
     return {"message": f"User {'activated' if is_active else 'deactivated'} successfully"}
 
+    user.is_active = is_active
+    db.commit()
+    return {"message": f"User {'activated' if is_active else 'deactivated'} successfully"}
 
+
+@router.post("/users/{user_id}/promote", status_code=status.HTTP_200_OK)
+def promote_user_to_admin(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Promote a user to ADMIN role"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    if user.role == "ADMIN":
+        return {"message": "User is already an admin"}
+        
+    user.role = "ADMIN"
+    db.commit()
+    return {"message": "User promoted to ADMIN successfully"}
+
+
+@router.post("/users/{user_id}/demote", status_code=status.HTTP_200_OK)
+def demote_admin_to_user(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Demote an ADMIN to USER role"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    if user.id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot demote yourself"
+        )
+        
+    if user.role != "ADMIN":
+        return {"message": "User is not an admin"}
+        
+    user.role = "USER"
+    db.commit()
+    return {"message": "Admin demoted to USER successfully"}
 # ============== Order Management ==============
 
 @router.get("/orders", response_model=PaginatedOrdersResponse)

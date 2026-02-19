@@ -13,8 +13,11 @@ RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 COPY ./app /app/app
 COPY ./gunicorn.conf.py /app/gunicorn.conf.py
 
+COPY ./create_admin.py /app/create_admin.py
+
 # Expose port 8000
 EXPOSE 8000
 
 # Use Gunicorn with multiple workers for production
-CMD ["gunicorn", "app.main:app", "-c", "gunicorn.conf.py"]
+# Verify/Create admin on startup if env vars are present
+CMD ["sh", "-c", "python create_admin.py && gunicorn app.main:app -c gunicorn.conf.py"]

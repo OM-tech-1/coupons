@@ -47,11 +47,29 @@ def get_cart(
         currency_code = getattr(current_user, "context_currency", None) or get_currency_from_phone_code(current_user.phone_number)
     
     # Apply currency to each item's coupon
+    final_currency = currency_code
+    
+    # Check if conversion actually happened
+    # If we requested non-USD but items are still USD, it means conversion failed (no pricing)
+    # We should fallback top-level currency to USD to match items
+    has_conversion_failure = False
+    
     for item in items:
         if item.coupon:
             CouponService._apply_currency(item.coupon, currency_code)
+            # If we wanted non-USD but got USD, conversion failed for this item
+            if currency_code != "USD" and item.coupon.currency == "USD":
+                has_conversion_failure = True
 
-    # Compute total from fetched items instead of a second DB query
+    # If any item failed to convert, fallback entire cart to USD to avoid mixed currency confusion
+    if has_conversion_failure:
+        final_currency = "USD"
+        # Re-apply USD to all items to ensure consistency (though likely already USD or mixed)
+        for item in items:
+            if item.coupon:
+                CouponService._apply_currency(item.coupon, "USD")
+
+    # Compute total from fetched items
     total = sum(
         (item.coupon.price or 0) * item.quantity
         for item in items
@@ -62,8 +80,8 @@ def get_cart(
         "items": items,
         "total_items": sum(i.quantity for i in items),
         "total_amount": total,
-        "currency": currency_code,
-        "currency_symbol": get_currency_symbol(currency_code)
+        "currency": final_currency,
+        "currency_symbol": get_currency_symbol(final_currency)
     }
 
 

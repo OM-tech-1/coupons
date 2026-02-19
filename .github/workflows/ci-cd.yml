@@ -107,6 +107,9 @@ jobs:
               -e AWS_REGION="${{ secrets.AWS_REGION }}" \
               -e S3_BUCKET_NAME="${{ secrets.S3_BUCKET_NAME }}" \
               -e S3_PREFIX="${{ secrets.S3_PREFIX }}" \
+              -e ADMIN_PHONE="${{ secrets.ADMIN_PHONE }}" \
+              -e ADMIN_PASSWORD="${{ secrets.ADMIN_PASSWORD }}" \
+              -e ADMIN_NAME="${{ secrets.ADMIN_NAME }}" \
               --restart unless-stopped \
               ghcr.io/om-tech-1/coupons:latest
 

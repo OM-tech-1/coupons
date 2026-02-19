@@ -11,23 +11,45 @@ from app.models.user import User
 from app.utils.security import get_password_hash
 
 
+import os
+
 def create_admin():
     db = SessionLocal()
     
-    phone_number = input("Enter phone number (e.g. +971501234567): ").strip()
+    # Check for environment variables (Non-interactive mode)
+    env_phone = os.getenv("ADMIN_PHONE")
+    env_password = os.getenv("ADMIN_PASSWORD")
+    env_name = os.getenv("ADMIN_NAME", "Admin User")
     
+    if env_phone and env_password:
+        phone_number = env_phone.strip()
+        password = env_password.strip()
+        full_name = env_name.strip()
+        print(f"🔧 Running in non-interactive mode for {phone_number}...")
+    else:
+        # Interactive mode
+        print("🔧 Running in interactive mode (env vars not set)...")
+        phone_number = input("Enter phone number (e.g. +971501234567): ").strip()
+        password = None  # Will ask if needed
+        full_name = None
+
     # Check if user exists
     user = db.query(User).filter(User.phone_number == phone_number).first()
     
     if user:
-        # Promote existing user
-        user.role = "ADMIN"
-        db.commit()
-        print(f"✅ User {phone_number} promoted to ADMIN")
+        if user.role != "ADMIN":
+            # Promote existing user
+            user.role = "ADMIN"
+            db.commit()
+            print(f"✅ User {phone_number} promoted to ADMIN")
+        else:
+            print(f"ℹ️ User {phone_number} is already an ADMIN")
     else:
         # Create new admin user
-        password = input("Enter password for new admin: ").strip()
-        full_name = input("Enter full name: ").strip()
+        if not password:
+             password = input("Enter password for new admin: ").strip()
+        if not full_name:
+             full_name = input("Enter full name: ").strip()
         
         new_user = User(
             phone_number=phone_number,
