@@ -25,6 +25,10 @@ def register(request: Request, user_data: UserCreate, db: Session = Depends(get_
 @router.post("/login", response_model=Token)
 @limiter.limit("10/minute")
 def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Login attempt for phone: {payload.phone_number} (from {payload.country_code} {payload.number})")
+    
     user = authenticate_user(db, payload.phone_number, payload.password)
     if not user:
         raise HTTPException(
