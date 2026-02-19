@@ -103,7 +103,10 @@ class CouponService:
                            availability_type or "all",
                            search or "none",
                            str(is_featured) if is_featured is not None else "none",
-                           str(min_discount) if min_discount is not None else "none")
+                           search or "none",
+                           str(is_featured) if is_featured is not None else "none",
+                           str(min_discount) if min_discount is not None else "none",
+                           currency_code)
         cached = get_cache(cache_k)
         cached = get_cache(cache_k)
         if cached is not None:
@@ -249,7 +252,7 @@ class CouponService:
         from sqlalchemy.orm import joinedload
         from app.models.coupon_country import CouponCountry
         
-        cache_k = cache_key("coupons", "id", str(coupon_id))
+        cache_k = cache_key("coupons", "id", str(coupon_id), currency_code)
         cached = get_cache(cache_k)
         cached = get_cache(cache_k)
         if cached is not None:
@@ -313,7 +316,7 @@ class CouponService:
             return val
 
         upper_code = code.upper()
-        cache_k = cache_key("coupons", "code", upper_code)
+        cache_k = cache_key("coupons", "code", upper_code, currency_code)
         cached = get_cache(cache_k)
         if cached is not None:
              # Reconstruct
