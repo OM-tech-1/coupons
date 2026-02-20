@@ -130,6 +130,10 @@ class PackageService:
             setattr(pkg, field, value)
 
         if coupon_ids is not None:
+            # Get old coupon IDs before removing
+            old_ids = [a.coupon_id for a in db.query(PackageCoupon).filter(PackageCoupon.package_id == package_id).all()]
+            removed_ids = [cid for cid in old_ids if cid not in coupon_ids]
+
             # Remove old associations
             db.query(PackageCoupon).filter(PackageCoupon.package_id == package_id).delete()
             # Add new ones
@@ -139,6 +143,9 @@ class PackageService:
             db.query(Coupon).filter(Coupon.id.in_(coupon_ids)).update(
                 {Coupon.is_package_coupon: True}, synchronize_session="fetch"
             )
+            # Reset flag on removed coupons not in any other package
+            if removed_ids:
+                PackageService._reset_orphaned_flags(db, removed_ids)
 
         db.commit()
         db.refresh(pkg)
@@ -150,7 +157,13 @@ class PackageService:
         pkg = db.query(Package).filter(Package.id == package_id).first()
         if not pkg:
             return False
+        # Get coupon IDs before deleting
+        coupon_ids = [a.coupon_id for a in db.query(PackageCoupon).filter(PackageCoupon.package_id == package_id).all()]
         db.delete(pkg)
+        db.flush()
+        # Reset flag on coupons no longer in any package
+        if coupon_ids:
+            PackageService._reset_orphaned_flags(db, coupon_ids)
         db.commit()
         invalidate_cache("packages:*")
         return True
@@ -193,9 +206,22 @@ class PackageService:
         if not deleted:
             return None
 
+        # Reset flag if coupon is no longer in any package
+        PackageService._reset_orphaned_flags(db, [coupon_id])
+
         db.commit()
         invalidate_cache("packages:*")
         return PackageService._load_full(db, package_id)
+
+    @staticmethod
+    def _reset_orphaned_flags(db: Session, coupon_ids: List[UUID]):
+        """Reset is_package_coupon=False for coupons not in any other package."""
+        for cid in coupon_ids:
+            still_in_package = db.query(PackageCoupon).filter(PackageCoupon.coupon_id == cid).first()
+            if not still_in_package:
+                db.query(Coupon).filter(Coupon.id == cid).update(
+                    {Coupon.is_package_coupon: False}, synchronize_session="fetch"
+                )
 
     @staticmethod
     def _compute_pricing(db: Session, coupon_ids: List[UUID]) -> dict:
