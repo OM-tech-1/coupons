@@ -29,6 +29,7 @@ class Coupon(Base):
     stock = Column(Integer, nullable=True, default=None)
     pricing = Column(JSON, nullable=True)
     is_featured = Column(Boolean, default=False, index=True)
+    is_package_coupon = Column(Boolean, default=False)
     
     category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=True, index=True)
     availability_type = Column(String(20), default="online", index=True)

@@ -63,9 +63,8 @@ async def initialize_payment(
         from decimal import Decimal, ROUND_HALF_UP
         from app.services.coupon_service import CouponService
         
-        # Determine currency from User's phone number checks
-        from app.utils.currency import get_currency_from_phone_code
-        currency = get_currency_from_phone_code(current_user.phone_number)
+        # Use currency provided by frontend (the currency the user is viewing in)
+        currency = request.currency.upper()
         
         final_amount_cents = 0
         

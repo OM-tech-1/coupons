@@ -10,15 +10,41 @@ This document covers the complete internal purchase flow: **Login → Add to Car
 
 ```
 1. Login          → Get access token
-2. List Coupons   → Find coupon to purchase
+2. List Coupons   → Find coupon to purchase (all currency prices returned)
 3. Add to Cart    → Add coupon to cart
 4. Checkout       → Create a pending order
-5. Payment Init   → Get Stripe payment URL
+5. Payment Init   → Frontend sends chosen currency, backend charges in that currency
 6. Redirect       → User completes payment on Stripe
 7. Webhook        → Backend updates order to "paid"
 ```
 
 ---
+
+## How Currency Works
+
+The backend returns **all available currency prices** for every coupon. The **frontend decides** which currency to display and charge in.
+
+**Step by step:**
+
+1. **User opens the app** — the frontend picks a currency to display (e.g. from a dropdown, browser locale, or user preference).
+
+2. **User browses coupons** — `GET /coupons/` returns a `pricing` field with every currency. The frontend shows the price in the user's chosen currency.
+   ```
+   pricing: { "USD": { "price": 20.0 }, "AED": { "price": 73.0 }, "INR": { "price": 1699.0 } }
+   → Frontend shows "73.00 AED" if user chose AED
+   ```
+
+3. **User adds to cart & checks out** — no currency needed at this step. `POST /orders/checkout` just creates a pending order.
+
+4. **User clicks "Pay"** — the frontend calls `POST /payments/init` with the **currency the user was viewing in**:
+   ```json
+   { "order_id": "...", "currency": "AED" }
+   ```
+   This is the moment the currency is locked in. The backend looks up each coupon's price for `AED`, calculates the total, and creates a Stripe charge in AED.
+
+5. **After payment** — the currency and amount are stored on the Payment record. You can always check what currency was used via `GET /payments/status/{order_id}`.
+
+> **The backend never auto-detects currency.** It's always the frontend's job to pass the currency at payment init time.
 
 ## Step 1: Login
 
@@ -64,10 +90,17 @@ curl -X GET https://api.vouchergalaxy.com/coupons/
     "price": 20.0,
     "discount_type": "percentage",
     "discount_amount": 60.0,
-    "is_active": true
+    "is_active": true,
+    "pricing": {
+      "USD": { "price": 20.0 },
+      "AED": { "price": 73.0 },
+      "INR": { "price": 1699.0 }
+    }
   }
 ]
 ```
+
+> **Currency selection:** The `pricing` field contains all available currencies. The frontend displays the price in the user's chosen currency. When purchasing, the frontend sends this currency code to `POST /payments/init`.
 
 > **Note:** Use the `id` field (UUID) of the coupon you want to purchase. Only coupons with `price > 0` will trigger the Stripe payment flow.
 
@@ -159,7 +192,6 @@ curl -X POST https://api.vouchergalaxy.com/payments/init \
   -H 'Authorization: Bearer <ACCESS_TOKEN>' \
   -d '{
     "order_id": "62a17be8-ec26-45ab-a70d-504d849bcfee",
-    "amount": 2000,
     "currency": "AED",
     "return_url": "https://yourapp.com/checkout/success"
   }'
@@ -170,18 +202,10 @@ curl -X POST https://api.vouchergalaxy.com/payments/init \
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `order_id` | UUID | ✅ | Order ID from checkout response |
-| `amount` | integer | ✅ | Amount in **smallest currency unit** (cents/fils). `20.00 AED` = `2000` |
-| `currency` | string | ❌ | 3-letter currency code (default: `"USD"`) |
+| `currency` | string | ✅ | 3-letter currency code the user is viewing in (e.g. `USD`, `AED`, `INR`) |
 | `return_url` | string | ❌ | URL to redirect user after payment completion |
 
-### Amount Conversion
-
-| Actual Amount | Currency | Value to Send |
-|---|---|---|
-| 20.00 | AED/USD/EUR/GBP | `2000` |
-| 10.50 | AED/USD/EUR/GBP | `1050` |
-| 100.00 | AED/USD/EUR/GBP | `10000` |
-| 500 | JPY (zero-decimal) | `500` |
+> **Amount is computed server-side.** The backend looks up each coupon's price for the given currency from `coupon.pricing[currency]` and calculates the total automatically. You don't send it.
 
 **Response:**
 ```json

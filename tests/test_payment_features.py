@@ -43,7 +43,7 @@ def test_payment_init_security_wrong_user(mock_db):
         
         response = client.post(
             "/payments/init",
-            json={"order_id": MOCK_ORDER_ID, "return_url": "http://test.com"}
+            json={"order_id": MOCK_ORDER_ID, "currency": "USD", "return_url": "http://test.com"}
         )
         
         # Expect 403 Forbidden
@@ -90,7 +90,7 @@ def test_payment_init_explicit_pricing_aed(mock_db):
     
             response = client.post(
                 "/payments/init",
-                json={"order_id": MOCK_ORDER_ID, "return_url": "http://test.com"}
+                json={"order_id": MOCK_ORDER_ID, "currency": "AED", "return_url": "http://test.com"}
             )
             
             # Validation

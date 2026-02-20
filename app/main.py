@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from app.api import auth, coupons, users, cart, orders, categories, regions, countries, admin
+from app.api import auth, coupons, users, cart, orders, categories, regions, countries, admin, packages
 from app.api.stripe import payments_router, webhooks_router
 from app.api.external.payment import router as external_payment_router
 from app.database import Base, engine, SessionLocal
@@ -13,7 +13,7 @@ import os
 # This is critical for SQLAlchemy to properly resolve relationships
 from app.models import (
     User, Coupon, UserCoupon, CartItem, Order, Payment, PaymentToken,
-    Category, Region, Country, CouponCountry
+    Category, Region, Country, CouponCountry, Package, PackageCoupon
 )
 
 # Create tables
@@ -41,7 +41,8 @@ def run_migrations():
         ('brand', 'VARCHAR(100)'),
         ('category_id', 'UUID'),
         ('availability_type', "VARCHAR(20) DEFAULT 'online'"),
-        ('picture_url', 'VARCHAR(500)')
+        ('picture_url', 'VARCHAR(500)'),
+        ('is_package_coupon', 'BOOLEAN DEFAULT FALSE')
     ]
 
     # Order columns
@@ -139,6 +140,7 @@ app.include_router(categories.router, prefix="/categories", tags=["Categories"])
 app.include_router(regions.router, prefix="/regions", tags=["Regions"])
 app.include_router(countries.router, prefix="/countries", tags=["Countries"])
 app.include_router(admin.router, prefix="/admin", tags=["Admin"])
+app.include_router(packages.router, prefix="/packages", tags=["Packages"])
 
 from app.api import upload
 app.include_router(upload.router, prefix="", tags=["Upload"])

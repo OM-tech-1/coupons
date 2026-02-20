@@ -12,9 +12,7 @@ from uuid import UUID
 class PaymentInitRequest(BaseModel):
     """Request to initialize a payment"""
     order_id: UUID = Field(..., description="UUID of the order to pay for")
-    # Amount and Currency are now ignored (server-side calculation) but kept optional for backward compat
-    amount: Optional[int] = Field(None, description="Deprecated: Amount is calculated on server")
-    currency: Optional[str] = Field(None, description="Deprecated: Currency is derived from order")
+    currency: str = Field(..., description="3-letter currency code the user is viewing in (e.g. USD, INR, AED)")
     metadata: Optional[dict] = Field(default=None, description="Optional metadata")
     return_url: Optional[str] = Field(default=None, description="URL to return after payment")
 

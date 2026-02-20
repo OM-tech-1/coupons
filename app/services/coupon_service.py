@@ -116,6 +116,9 @@ class CouponService:
         if active_only:
             query = query.filter(Coupon.is_active == True)
         
+        # Exclude package coupons from regular listings
+        query = query.filter(Coupon.is_package_coupon == False)
+        
         if category_id:
             query = query.filter(Coupon.category_id == category_id)
         

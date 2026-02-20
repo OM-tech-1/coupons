@@ -11,6 +11,8 @@ from app.models.region import Region
 from app.models.country import Country
 from app.models.coupon_country import CouponCountry
 from app.models.coupon_view import CouponView
+from app.models.package import Package
+from app.models.package_coupon import PackageCoupon
 
 __all__ = [
     "User",
@@ -27,5 +29,7 @@ __all__ = [
     "Country",
     "CouponCountry",
     "CouponView",
+    "Package",
+    "PackageCoupon",
 ]
 

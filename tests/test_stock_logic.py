@@ -52,7 +52,7 @@ def test_payment_init_out_of_stock(mock_db):
 
         response = client.post(
             "/payments/init",
-            json={"order_id": MOCK_ORDER_ID, "return_url": "http://test.com"}
+            json={"order_id": MOCK_ORDER_ID, "currency": "USD", "return_url": "http://test.com"}
         )
         
         # Expect 400 Bad Request
@@ -104,7 +104,7 @@ def test_payment_init_stock_available(mock_db):
 
         response = client.post(
             "/payments/init",
-            json={"order_id": MOCK_ORDER_ID, "return_url": "http://test.com"}
+            json={"order_id": MOCK_ORDER_ID, "currency": "USD", "return_url": "http://test.com"}
         )
         
         # Expect 200 OK

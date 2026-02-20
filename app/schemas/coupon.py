@@ -24,6 +24,7 @@ class CouponBasePublic(BaseModel):
     availability_type: str = Field(default="online", pattern="^(online|local|both)$")
     country_ids: List[UUID] = Field(default_factory=list)
     pricing: Optional[Dict[str, Dict[str, float]]] = Field(default=None, description="Multi-currency pricing e.g. {'INR': {'price': 100, 'discount_amount': 50}}")
+    is_package_coupon: bool = Field(default=False, description="Whether this coupon belongs to a package")
 
 
 class CouponBase(CouponBasePublic):
@@ -57,6 +58,7 @@ class CouponUpdate(BaseModel):
     availability_type: Optional[str] = Field(default=None, pattern="^(online|local|both)$")
     country_ids: Optional[List[UUID]] = None
     pricing: Optional[Dict[str, Dict[str, float]]] = None
+    is_package_coupon: Optional[bool] = None
 
 
 class CouponResponseCommon(CouponBasePublic):
