@@ -41,5 +41,3 @@ class CartResponse(BaseModel):
     items: List[CartItemResponse]
     total_items: int
     total_amount: float
-    currency: str = "USD"
-    currency_symbol: str = "$"

@@ -67,29 +67,18 @@ class CouponResponseCommon(CouponBasePublic):
     created_at: datetime
     stock: Optional[int] = None
     is_featured: bool = False
-    # Computed field for stock_sold (= current_uses)
     stock_sold: int = 0
-    currency_symbol: str = "$"
-    currency: str = "USD"
     # Nested relationships (populated from joins)
     category: Optional['CategoryInCoupon'] = None
     countries: List['CountryInCoupon'] = Field(default_factory=list)
 
     @model_validator(mode='before')
     @classmethod
-    def compute_stock_sold_and_currency(cls, data: Any) -> Any:
-        """Set stock_sold and ensure currency is preserved from object"""
+    def compute_stock_sold(cls, data: Any) -> Any:
+        """Set stock_sold to current_uses value"""
         if hasattr(data, '__dict__'):
-            # SQLAlchemy model object
             data_dict = {k: v for k, v in data.__dict__.items() if not k.startswith('_')}
             data_dict['stock_sold'] = data_dict.get('current_uses', 0)
-            
-            # Explicitly capture currency fields if they exist dynamically
-            if hasattr(data, 'currency'):
-                data_dict['currency'] = data.currency
-            if hasattr(data, 'currency_symbol'):
-                data_dict['currency_symbol'] = data.currency_symbol
-                
             return data_dict
         elif isinstance(data, dict):
             data['stock_sold'] = data.get('current_uses', 0)

@@ -69,37 +69,38 @@ def test_multi_currency_flow(client, admin_token, inr_user_token, aed_user_token
     assert response.status_code == 201
     created_coupon = response.json()
     coupon_id = created_coupon["id"]
-    
-    # 2. Anonymous User (Expect USD Default)
+
+    # 2. Anonymous User — should get pricing dict with all currencies
     response = client.get(f"/coupons/{coupon_id}")
     assert response.status_code == 200
     data = response.json()
     assert data["price"] == 100.0
     assert data["discount_amount"] == 10.0
-    assert data["currency_symbol"] == "$"
-    
-    # 3. INR User (Expect INR values)
+    assert "pricing" in data
+    assert "INR" in data["pricing"]
+    assert data["pricing"]["INR"]["price"] == 8000.0
+    assert data["pricing"]["INR"]["discount_amount"] == 800.0
+
+    # 3. INR User — same response, frontend can read pricing["INR"]
     response = client.get(
         f"/coupons/{coupon_id}",
         headers={"Authorization": f"Bearer {inr_user_token}"}
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["price"] == 8000.0
-    assert data["discount_amount"] == 800.0
-    # Note: Symbol might be unicode, check if correct
-    assert data["currency_symbol"] == "₹"
-    
-    # 4. AED User (Expect AED values)
+    assert "pricing" in data
+    assert data["pricing"]["INR"]["price"] == 8000.0
+
+    # 4. AED User — same response, frontend can read pricing["AED"]
     response = client.get(
         f"/coupons/{coupon_id}",
         headers={"Authorization": f"Bearer {aed_user_token}"}
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["price"] == 367.0
-    assert data["discount_amount"] == 36.7
-    assert data["currency_symbol"] == "AED"
-    
+    assert "pricing" in data
+    assert data["pricing"]["AED"]["price"] == 367.0
+    assert data["pricing"]["AED"]["discount_amount"] == 36.7
+
     # Clean up
     client.delete(f"/coupons/{coupon_id}", headers={"Authorization": f"Bearer {admin_token}"})
