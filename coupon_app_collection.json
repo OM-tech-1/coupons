@@ -2081,6 +2081,260 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "Packages",
+            "description": "Package CRUD endpoints. Packages are curated bundles of coupons. Admin-only for create/update/delete. Public for list and get.",
+            "item": [
+                {
+                    "name": "Create Package (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Summer Travel Bundle\",\n    \"slug\": \"summer-travel-bundle\",\n    \"description\": \"Best deals for your summer vacation\",\n    \"picture_url\": \"https://example.com/package-image.jpg\",\n    \"category_id\": \"{{category_id}}\",\n    \"is_active\": true,\n    \"is_featured\": false,\n    \"coupon_ids\": []\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/packages/",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "packages",
+                                ""
+                            ]
+                        },
+                        "description": "Create a new coupon package. Admin only.\n\n**coupon_ids**: Optional list of coupon UUIDs to include. Coupons will be marked as `is_package_coupon=true`.\n\n**slug**: Must be lowercase letters, numbers, and hyphens only."
+                    }
+                },
+                {
+                    "name": "List Packages",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/packages/?skip=0&limit=100",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "packages",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                },
+                                {
+                                    "key": "category_id",
+                                    "value": "{{category_id}}",
+                                    "disabled": true,
+                                    "description": "Filter by category UUID"
+                                },
+                                {
+                                    "key": "is_active",
+                                    "value": "true",
+                                    "disabled": true,
+                                    "description": "Filter by active status"
+                                },
+                                {
+                                    "key": "is_featured",
+                                    "value": "true",
+                                    "disabled": true,
+                                    "description": "Filter by featured status"
+                                }
+                            ]
+                        },
+                        "description": "List all packages with optional filters. Returns lightweight response with coupon_count instead of full coupon details. Public endpoint."
+                    }
+                },
+                {
+                    "name": "Get Package by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/packages/{{package_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "packages",
+                                "{{package_id}}"
+                            ]
+                        },
+                        "description": "Get full package details including nested coupons and computed pricing. Public endpoint."
+                    }
+                },
+                {
+                    "name": "Get Package Coupons",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/packages/{{package_id}}/coupons",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "packages",
+                                "{{package_id}}",
+                                "coupons"
+                            ]
+                        },
+                        "description": "Get all coupons belonging to a package. Returns full CouponPublicResponse for each coupon."
+                    }
+                },
+                {
+                    "name": "Update Package (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Summer Travel Bundle - Updated\",\n    \"description\": \"Updated description\",\n    \"is_featured\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/packages/{{package_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "packages",
+                                "{{package_id}}"
+                            ]
+                        },
+                        "description": "Update a package. Admin only. All fields are optional.\n\n**coupon_ids**: If provided, REPLACES the entire coupon list. Old coupons are removed, new ones are added. The `is_package_coupon` flag is managed automatically."
+                    }
+                },
+                {
+                    "name": "Delete Package (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{base_url}}/packages/{{package_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "packages",
+                                "{{package_id}}"
+                            ]
+                        },
+                        "description": "Delete a package. Admin only. Coupons inside the package are NOT deleted but their `is_package_coupon` flag is reset if they don't belong to any other package."
+                    }
+                },
+                {
+                    "name": "Add Coupons to Package (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "[\n    \"{{coupon_id}}\"\n]"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/packages/{{package_id}}/coupons",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "packages",
+                                "{{package_id}}",
+                                "coupons"
+                            ]
+                        },
+                        "description": "Add one or more coupons to an existing package. Duplicates are silently ignored. Coupons are marked as `is_package_coupon=true`."
+                    }
+                },
+                {
+                    "name": "Remove Coupon from Package (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{base_url}}/packages/{{package_id}}/coupons/{{coupon_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "packages",
+                                "{{package_id}}",
+                                "coupons",
+                                "{{coupon_id}}"
+                            ]
+                        },
+                        "description": "Remove a single coupon from a package. The coupon is NOT deleted, only the association. If the coupon no longer belongs to any package, `is_package_coupon` is reset to false."
+                    }
+                }
+            ]
         }
     ],
     "variable": [
@@ -2127,6 +2381,11 @@
         {
             "key": "external_api_key",
             "value": "YOUR_EXTERNAL_API_KEY",
+            "type": "string"
+        },
+        {
+            "key": "package_id",
+            "value": "",
             "type": "string"
         },
         {

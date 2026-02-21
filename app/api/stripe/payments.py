@@ -225,14 +225,30 @@ async def validate_token(
 @router.get("/status/{order_id}", response_model=PaymentStatusResponse)
 async def get_payment_status(
     order_id: UUID,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Get the payment status for an order.
     
     Used by the main site to check payment completion.
+    Requires authentication — only the order owner or an admin can check.
     """
     try:
+        # Verify ownership
+        from app.models.order import Order
+        order = db.query(Order).filter(Order.id == order_id).first()
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Order not found"
+            )
+        if order.user_id != current_user.id and current_user.role != "ADMIN":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view this payment"
+            )
+
         payment_service = StripePaymentService(db)
         
         payment = payment_service.get_payment_by_order(order_id)

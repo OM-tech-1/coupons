@@ -12,11 +12,11 @@ echo "🚀 Starting Deployment..."
 echo "📥 Pulling latest code from GitHub..."
 git pull origin main
 
-# 2. Update .env with Redis URL if not exists
+# 2. Verify REDIS_URL is configured
 if ! grep -q "REDIS_URL" .env; then
-    echo "⚙️ Configuring Redis in .env..."
-    # Note: %40 is the URL-encoded '@' symbol
-    echo "REDIS_URL=redis://:backend%402026@193.203.160.61:6379/0" >> .env
+    echo "⚠️  REDIS_URL not found in .env. Please add it before deploying."
+    echo "   Example: REDIS_URL=redis://:yourpassword@host:6379/0"
+    exit 1
 fi
 
 # 3. Rebuild Docker container
