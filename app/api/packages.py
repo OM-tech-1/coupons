@@ -22,6 +22,11 @@ def create_package(
     if current_user.role != "ADMIN":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can create packages")
 
+    from app.models.package import Package
+    existing = db.query(Package).filter(Package.slug == data.slug).first()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Package with slug '{data.slug}' already exists")
+
     return PackageService.create(db, data)
 
 
