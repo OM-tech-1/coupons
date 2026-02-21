@@ -275,7 +275,10 @@ class PackageService:
                     "brand": c.brand,
                     "discount_type": c.discount_type,
                     "discount_amount": c.discount_amount,
+                    "price": c.price or 0.0,
                     "picture_url": c.picture_url,
+                    "pricing": c.pricing,
+                    "is_active": c.is_active,
                 }
                 for c in coupon_objs
             ]

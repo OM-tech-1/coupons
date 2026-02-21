@@ -52,7 +52,10 @@ class CouponInPackage(BaseModel):
     brand: Optional[str] = None
     discount_type: str
     discount_amount: float
+    price: float = 0.0
     picture_url: Optional[str] = None
+    pricing: Optional[Dict[str, Dict[str, float]]] = None
+    is_active: bool = True
 
     model_config = ConfigDict(from_attributes=True)
 
