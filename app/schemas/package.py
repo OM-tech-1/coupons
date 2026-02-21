@@ -10,6 +10,8 @@ class PackageBase(BaseModel):
     slug: str = Field(..., min_length=2, max_length=220)
     description: Optional[str] = None
     picture_url: Optional[str] = None
+    brand: Optional[str] = Field(default=None, max_length=100, description="Brand name for the package")
+    discount: Optional[float] = Field(default=None, ge=0, description="Discount percentage on the package")
     category_id: Optional[UUID] = None
     is_active: bool = Field(default=True)
     is_featured: bool = Field(default=False)
@@ -30,6 +32,8 @@ class PackageUpdate(BaseModel):
     slug: Optional[str] = Field(default=None, min_length=2, max_length=220)
     description: Optional[str] = None
     picture_url: Optional[str] = None
+    brand: Optional[str] = Field(default=None, max_length=100)
+    discount: Optional[float] = Field(default=None, ge=0)
     category_id: Optional[UUID] = None
     is_active: Optional[bool] = None
     is_featured: Optional[bool] = None
@@ -67,6 +71,9 @@ class PackageResponse(PackageBase):
     pricing: Optional[Dict[str, Dict[str, float]]] = Field(
         default=None, description="Auto-computed sum of coupon prices per currency"
     )
+    total_price: Optional[Dict[str, float]] = Field(
+        default=None, description="Total price per currency (sum of all coupon prices)"
+    )
     category: Optional[CategoryInPackage] = None
     coupons: List[CouponInPackage] = Field(default_factory=list)
 
@@ -79,6 +86,9 @@ class PackageListResponse(PackageBase):
     created_at: datetime
     pricing: Optional[Dict[str, Dict[str, float]]] = Field(
         default=None, description="Auto-computed sum of coupon prices per currency"
+    )
+    total_price: Optional[Dict[str, float]] = Field(
+        default=None, description="Total price per currency (sum of all coupon prices)"
     )
     category: Optional[CategoryInPackage] = None
     coupon_count: int = 0

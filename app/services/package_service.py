@@ -19,6 +19,8 @@ class PackageService:
             slug=data.slug,
             description=data.description,
             picture_url=data.picture_url,
+            brand=data.brand,
+            discount=data.discount,
             category_id=data.category_id,
             is_active=data.is_active,
             is_featured=data.is_featured,
@@ -80,13 +82,17 @@ class PackageService:
             # Compute pricing from associated coupons
             pkg_coupon_ids = [a.coupon_id for a in db.query(PackageCoupon).filter(PackageCoupon.package_id == pkg.id).all()]
             pricing = PackageService._compute_pricing(db, pkg_coupon_ids)
+            total_price = PackageService._compute_total_price(pricing)
             result.append({
                 "id": pkg.id,
                 "name": pkg.name,
                 "slug": pkg.slug,
                 "description": pkg.description,
                 "picture_url": pkg.picture_url,
+                "brand": pkg.brand,
+                "discount": pkg.discount,
                 "pricing": pricing,
+                "total_price": total_price,
                 "category_id": pkg.category_id,
                 "is_active": pkg.is_active,
                 "is_featured": pkg.is_featured,
@@ -275,6 +281,7 @@ class PackageService:
             ]
 
         pricing = PackageService._compute_pricing(db, coupon_ids)
+        total_price = PackageService._compute_total_price(pricing)
 
         return {
             "id": pkg.id,
@@ -282,7 +289,10 @@ class PackageService:
             "slug": pkg.slug,
             "description": pkg.description,
             "picture_url": pkg.picture_url,
+            "brand": pkg.brand,
+            "discount": pkg.discount,
             "pricing": pricing,
+            "total_price": total_price,
             "category_id": pkg.category_id,
             "is_active": pkg.is_active,
             "is_featured": pkg.is_featured,
@@ -290,3 +300,10 @@ class PackageService:
             "category": cat,
             "coupons": coupons,
         }
+
+    @staticmethod
+    def _compute_total_price(pricing: dict) -> dict:
+        """Flatten pricing into a simple {currency: total_price} map."""
+        if not pricing:
+            return {}
+        return {currency: values.get("price", 0.0) for currency, values in pricing.items()}
