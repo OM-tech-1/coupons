@@ -187,7 +187,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"name\": \"Sports & Fitness\",\n    \"slug\": \"sports-fitness\",\n    \"description\": \"Sports equipment and fitness products\",\n    \"icon\": \"⚽\",\n    \"display_order\": 11\n}"
+                            "raw": "{\n    \"name\": \"Sports & Fitness\",\n    \"slug\": \"sports-fitness\",\n    \"description\": \"Sports equipment and fitness products\",\n    \"icon\": \"\u26bd\",\n    \"display_order\": 11\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/categories/",
@@ -972,7 +972,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"coupon_id\": \"{{coupon_id}}\",\n    \"quantity\": 1\n}"
+                            "raw": "{\n    \"package_id\": \"uuid\",\n    \"quantity\": 1\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/cart/add",
@@ -2087,6 +2087,98 @@
             "description": "Package CRUD endpoints. Packages are curated bundles of coupons. Admin-only for create/update/delete. Public for list and get.",
             "item": [
                 {
+                    "name": "List Packages (Bundle Sold)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/packages?filter=bundle_sold",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "packages"
+                            ],
+                            "query": [
+                                {
+                                    "key": "filter",
+                                    "value": "bundle_sold",
+                                    "description": "highest_saving, newest, avg_rating, bundle_sold"
+                                }
+                            ]
+                        },
+                        "description": "List all packages with optional filters. Returns lightweight response with coupon_count instead of full coupon details. Public endpoint."
+                    }
+                },
+                {
+                    "name": "List Packages (Average Rating)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/packages?filter=avg_rating",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "packages"
+                            ],
+                            "query": [
+                                {
+                                    "key": "filter",
+                                    "value": "avg_rating",
+                                    "description": "highest_saving, newest, avg_rating, bundle_sold"
+                                }
+                            ]
+                        },
+                        "description": "List all packages with optional filters. Returns lightweight response with coupon_count instead of full coupon details. Public endpoint."
+                    }
+                },
+                {
+                    "name": "List Packages (Newest)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/packages?filter=newest",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "packages"
+                            ],
+                            "query": [
+                                {
+                                    "key": "filter",
+                                    "value": "newest",
+                                    "description": "highest_saving, newest, avg_rating, bundle_sold"
+                                }
+                            ]
+                        },
+                        "description": "List all packages with optional filters. Returns lightweight response with coupon_count instead of full coupon details. Public endpoint."
+                    }
+                },
+                {
+                    "name": "List Packages (Highest Saving)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/packages?filter=highest_saving",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "packages"
+                            ],
+                            "query": [
+                                {
+                                    "key": "filter",
+                                    "value": "highest_saving",
+                                    "description": "highest_saving, newest, avg_rating, bundle_sold"
+                                }
+                            ]
+                        },
+                        "description": "List all packages with optional filters. Returns lightweight response with coupon_count instead of full coupon details. Public endpoint."
+                    }
+                },
+                {
                     "name": "Create Package (Admin)",
                     "request": {
                         "auth": {
@@ -2121,51 +2213,6 @@
                             ]
                         },
                         "description": "Create a new coupon package. Admin only.\n\n**coupon_ids**: Optional list of coupon UUIDs to include. Coupons will be marked as `is_package_coupon=true`.\n\n**slug**: Must be lowercase letters, numbers, and hyphens only."
-                    }
-                },
-                {
-                    "name": "List Packages",
-                    "request": {
-                        "method": "GET",
-                        "url": {
-                            "raw": "{{base_url}}/packages/?skip=0&limit=100",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "packages",
-                                ""
-                            ],
-                            "query": [
-                                {
-                                    "key": "skip",
-                                    "value": "0"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "100"
-                                },
-                                {
-                                    "key": "category_id",
-                                    "value": "{{category_id}}",
-                                    "disabled": true,
-                                    "description": "Filter by category UUID"
-                                },
-                                {
-                                    "key": "is_active",
-                                    "value": "true",
-                                    "disabled": true,
-                                    "description": "Filter by active status"
-                                },
-                                {
-                                    "key": "is_featured",
-                                    "value": "true",
-                                    "disabled": true,
-                                    "description": "Filter by featured status"
-                                }
-                            ]
-                        },
-                        "description": "List all packages with optional filters. Returns lightweight response with coupon_count instead of full coupon details. Public endpoint."
                     }
                 },
                 {
