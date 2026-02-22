@@ -6,26 +6,25 @@ from typing import List, Optional, Tuple
 
 from app.models.cart import CartItem
 from app.models.coupon import Coupon
+from app.models.package import Package
 
 
 class CartService:
-    
+
     @staticmethod
     def add_to_cart(db: Session, user_id: UUID, coupon_id: UUID, quantity: int = 1) -> Tuple[Optional[CartItem], str]:
-        """Add a coupon to user's cart"""
         coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
         if not coupon:
             return None, "Coupon not found"
-        
+
         if not coupon.is_active:
             return None, "Coupon is not active"
-        
-        # Check if already in cart
+
         existing = db.query(CartItem).filter(
             CartItem.user_id == user_id,
             CartItem.coupon_id == coupon_id
         ).first()
-        
+
         if existing:
             existing.quantity += quantity
             try:
@@ -33,11 +32,9 @@ class CartService:
                 db.refresh(existing)
                 return existing, "Quantity updated"
             except StaleDataError:
-                # Row was deleted by a concurrent checkout, create fresh
                 db.rollback()
                 existing = None
-        
-        # Add new item
+
         cart_item = CartItem(
             user_id=user_id,
             coupon_id=coupon_id,
@@ -49,7 +46,6 @@ class CartService:
             db.refresh(cart_item)
             return cart_item, "Added to cart"
         except IntegrityError:
-            # Duplicate from race condition — reload and update quantity
             db.rollback()
             existing = db.query(CartItem).filter(
                 CartItem.user_id == user_id,
@@ -63,15 +59,61 @@ class CartService:
             return None, "Failed to add to cart"
 
     @staticmethod
+    def add_package_to_cart(db: Session, user_id: UUID, package_id: UUID, quantity: int = 1) -> Tuple[Optional[CartItem], str]:
+        package = db.query(Package).filter(Package.id == package_id).first()
+        if not package:
+            return None, "Package not found"
+
+        if not package.is_active:
+            return None, "Package is not active"
+
+        existing = db.query(CartItem).filter(
+            CartItem.user_id == user_id,
+            CartItem.package_id == package_id
+        ).first()
+
+        if existing:
+            existing.quantity += quantity
+            try:
+                db.commit()
+                db.refresh(existing)
+                return existing, "Quantity updated"
+            except StaleDataError:
+                db.rollback()
+                existing = None
+
+        cart_item = CartItem(
+            user_id=user_id,
+            package_id=package_id,
+            quantity=quantity
+        )
+        db.add(cart_item)
+        try:
+            db.commit()
+            db.refresh(cart_item)
+            return cart_item, "Added to cart"
+        except IntegrityError:
+            db.rollback()
+            existing = db.query(CartItem).filter(
+                CartItem.user_id == user_id,
+                CartItem.package_id == package_id
+            ).first()
+            if existing:
+                existing.quantity += quantity
+                db.commit()
+                db.refresh(existing)
+                return existing, "Quantity updated"
+            return None, "Failed to add to cart"
+
+    @staticmethod
     def get_cart(db: Session, user_id: UUID) -> List[CartItem]:
-        """Get all items in user's cart (with coupon details eagerly loaded)"""
         return db.query(CartItem).options(
-            joinedload(CartItem.coupon)
+            joinedload(CartItem.coupon),
+            joinedload(CartItem.package),
         ).filter(CartItem.user_id == user_id).all()
 
     @staticmethod
     def get_cart_total(db: Session, user_id: UUID) -> float:
-        """Calculate cart total"""
         items = db.query(CartItem).filter(CartItem.user_id == user_id).all()
         total = 0.0
         for item in items:
@@ -81,7 +123,6 @@ class CartService:
 
     @staticmethod
     def remove_from_cart(db: Session, user_id: UUID, coupon_id: UUID) -> bool:
-        """Remove a coupon from cart"""
         item = db.query(CartItem).filter(
             CartItem.user_id == user_id,
             CartItem.coupon_id == coupon_id
@@ -94,7 +135,6 @@ class CartService:
 
     @staticmethod
     def clear_cart(db: Session, user_id: UUID) -> int:
-        """Clear all items from cart"""
         deleted = db.query(CartItem).filter(CartItem.user_id == user_id).delete()
         db.commit()
         return deleted

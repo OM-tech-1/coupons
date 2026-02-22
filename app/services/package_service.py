@@ -21,6 +21,8 @@ class PackageService:
             picture_url=data.picture_url,
             brand=data.brand,
             discount=data.discount,
+            avg_rating=data.avg_rating,
+            total_sold=data.total_sold,
             category_id=data.category_id,
             is_active=data.is_active,
             is_featured=data.is_featured,
@@ -48,8 +50,9 @@ class PackageService:
         category_id: Optional[UUID] = None,
         is_active: Optional[bool] = None,
         is_featured: Optional[bool] = None,
+        filter_by: Optional[str] = None,
     ) -> List[dict]:
-        cache_k = cache_key("packages", "list", skip, limit, category_id, is_active, is_featured)
+        cache_k = cache_key("packages", "list", skip, limit, category_id, is_active, is_featured, filter_by)
         cached = get_cache(cache_k)
         if cached is not None:
             return cached
@@ -68,7 +71,18 @@ class PackageService:
         if category_id is not None:
             query = query.filter(Package.category_id == category_id)
 
-        query = query.order_by(Package.created_at.desc()).offset(skip).limit(limit)
+        # Apply filter-based ordering
+        if filter_by == "highest_saving":
+            query = query.order_by(Package.discount.desc().nullslast(), Package.created_at.desc())
+        elif filter_by == "avg_rating":
+            query = query.order_by(Package.avg_rating.desc(), Package.created_at.desc())
+        elif filter_by == "bundle_sold":
+            query = query.order_by(Package.total_sold.desc(), Package.created_at.desc())
+        else:
+            # Default and "newest" both sort by created_at desc
+            query = query.order_by(Package.created_at.desc())
+
+        query = query.offset(skip).limit(limit)
         rows = query.all()
 
         result = []
@@ -79,7 +93,6 @@ class PackageService:
                 cat_obj = db.query(Category).get(pkg.category_id)
                 if cat_obj:
                     cat = {"id": cat_obj.id, "name": cat_obj.name, "slug": cat_obj.slug}
-            # Compute pricing from associated coupons
             pkg_coupon_ids = [a.coupon_id for a in db.query(PackageCoupon).filter(PackageCoupon.package_id == pkg.id).all()]
             pricing = PackageService._compute_pricing(db, pkg_coupon_ids)
             total_price = PackageService._compute_total_price(pricing)
@@ -91,6 +104,9 @@ class PackageService:
                 "picture_url": pkg.picture_url,
                 "brand": pkg.brand,
                 "discount": pkg.discount,
+                "avg_rating": pkg.avg_rating or 0.0,
+                "total_sold": pkg.total_sold or 0,
+                "max_saving": pkg.discount or 0.0,
                 "pricing": pricing,
                 "total_price": total_price,
                 "category_id": pkg.category_id,
@@ -294,6 +310,9 @@ class PackageService:
             "picture_url": pkg.picture_url,
             "brand": pkg.brand,
             "discount": pkg.discount,
+            "avg_rating": pkg.avg_rating or 0.0,
+            "total_sold": pkg.total_sold or 0,
+            "max_saving": pkg.discount or 0.0,
             "pricing": pricing,
             "total_price": total_price,
             "category_id": pkg.category_id,

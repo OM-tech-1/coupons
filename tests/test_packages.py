@@ -166,3 +166,82 @@ class TestPackageCRUD:
         assert "pricing" in coupon_in_pkg
         assert coupon_in_pkg["pricing"]["INR"]["price"] == 80.0
         assert coupon_in_pkg["price"] == 8.0
+
+    def test_list_packages_active_only_by_default(self, client, admin_user):
+        """GET /packages/ should only return active packages by default."""
+        client.post("/packages/", json={
+            "name": "Active Pack", "slug": "active-pack", "is_active": True,
+        }, headers=admin_user["headers"])
+        client.post("/packages/", json={
+            "name": "Inactive Pack", "slug": "inactive-pack", "is_active": False,
+        }, headers=admin_user["headers"])
+        resp = client.get("/packages/")
+        assert resp.status_code == 200
+        names = [p["name"] for p in resp.json()]
+        assert "Active Pack" in names
+        assert "Inactive Pack" not in names
+
+    def test_filter_by_highest_saving(self, client, admin_user):
+        """Filter by highest_saving should order by discount DESC."""
+        client.post("/packages/", json={
+            "name": "Low Save", "slug": "low-save", "discount": 5.0,
+        }, headers=admin_user["headers"])
+        client.post("/packages/", json={
+            "name": "High Save", "slug": "high-save", "discount": 50.0,
+        }, headers=admin_user["headers"])
+        resp = client.get("/packages/?filter=highest_saving")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) >= 2
+        assert data[0]["name"] == "High Save"
+
+    def test_filter_by_avg_rating(self, client, admin_user):
+        """Filter by avg_rating should order by avg_rating DESC."""
+        client.post("/packages/", json={
+            "name": "Low Rated", "slug": "low-rated", "avg_rating": 1.0,
+        }, headers=admin_user["headers"])
+        client.post("/packages/", json={
+            "name": "Top Rated", "slug": "top-rated", "avg_rating": 4.8,
+        }, headers=admin_user["headers"])
+        resp = client.get("/packages/?filter=avg_rating")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data[0]["name"] == "Top Rated"
+
+    def test_filter_by_bundle_sold(self, client, admin_user):
+        """Filter by bundle_sold should order by total_sold DESC."""
+        client.post("/packages/", json={
+            "name": "Few Sold", "slug": "few-sold", "total_sold": 10,
+        }, headers=admin_user["headers"])
+        client.post("/packages/", json={
+            "name": "Best Seller", "slug": "best-seller", "total_sold": 500,
+        }, headers=admin_user["headers"])
+        resp = client.get("/packages/?filter=bundle_sold")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data[0]["name"] == "Best Seller"
+
+    def test_package_response_includes_stats(self, client, admin_user):
+        """Package response should include avg_rating, total_sold, max_saving."""
+        resp = client.post("/packages/", json={
+            "name": "Stats Pack", "slug": "stats-pack",
+            "discount": 20.0, "avg_rating": 3.5, "total_sold": 100,
+        }, headers=admin_user["headers"])
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["avg_rating"] == 3.5
+        assert data["total_sold"] == 100
+        assert data["max_saving"] == 20.0
+
+    def test_add_package_to_cart(self, client, admin_user, regular_user):
+        """POST /cart/add with package_id should add a package to cart."""
+        pkg = client.post("/packages/", json={
+            "name": "Cart Pack", "slug": "cart-pack",
+        }, headers=admin_user["headers"]).json()
+        resp = client.post("/cart/add", json={
+            "package_id": pkg["id"], "quantity": 1,
+        }, headers=regular_user["headers"])
+        assert resp.status_code == 201
+        assert resp.json()["message"] == "Added to cart"
+        assert resp.json()["package_id"] == pkg["id"]
+

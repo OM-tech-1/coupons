@@ -35,13 +35,15 @@ def list_packages(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     category_id: Optional[UUID] = Query(None, description="Filter by category ID"),
-    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    is_active: Optional[bool] = Query(True, description="Filter by active status (defaults to True)"),
     is_featured: Optional[bool] = Query(None, description="Filter by featured status"),
+    filter: Optional[str] = Query(None, description="Sort filter: highest_saving, newest, avg_rating, bundle_sold"),
     db: Session = Depends(get_db),
 ):
     return PackageService.get_all(
         db, skip=skip, limit=limit,
         category_id=category_id, is_active=is_active, is_featured=is_featured,
+        filter_by=filter,
     )
 
 

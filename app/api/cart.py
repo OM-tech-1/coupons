@@ -18,16 +18,26 @@ def add_to_cart(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Add a coupon to cart"""
-    cart_item, message = CartService.add_to_cart(
-        db, current_user.id, item.coupon_id, item.quantity
-    )
-    if not cart_item:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=message
+    if item.package_id:
+        cart_item, message = CartService.add_package_to_cart(
+            db, current_user.id, item.package_id, item.quantity
         )
-    return {"message": message, "coupon_id": str(item.coupon_id)}
+        if not cart_item:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=message
+            )
+        return {"message": message, "package_id": str(item.package_id)}
+    else:
+        cart_item, message = CartService.add_to_cart(
+            db, current_user.id, item.coupon_id, item.quantity
+        )
+        if not cart_item:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=message
+            )
+        return {"message": message, "coupon_id": str(item.coupon_id)}
 
 
 @router.get("/", response_model=CartResponse)
@@ -35,7 +45,6 @@ def get_cart(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get current user's cart — coupons include full pricing dict for frontend currency selection"""
     items = CartService.get_cart(db, current_user.id)
 
     total = sum(
@@ -57,7 +66,6 @@ def remove_from_cart(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Remove a coupon from cart"""
     success = CartService.remove_from_cart(db, current_user.id, coupon_id)
     if not success:
         raise HTTPException(
@@ -72,6 +80,5 @@ def clear_cart(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Clear all items from cart"""
     CartService.clear_cart(db, current_user.id)
     return None

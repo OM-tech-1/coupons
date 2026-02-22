@@ -68,7 +68,24 @@ def run_migrations():
                 conn.execute(text(f'ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
             except Exception:
                 pass
-        
+
+        # Package columns
+        package_columns = [
+            ('avg_rating', 'FLOAT DEFAULT 0.0'),
+            ('total_sold', 'INTEGER DEFAULT 0'),
+        ]
+        for col_name, col_type in package_columns:
+            try:
+                conn.execute(text(f'ALTER TABLE packages ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
+            except Exception:
+                pass
+
+        # Cart columns
+        try:
+            conn.execute(text('ALTER TABLE cart_items ADD COLUMN IF NOT EXISTS package_id UUID REFERENCES packages(id)'))
+        except Exception:
+            pass
+
         conn.commit()
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")

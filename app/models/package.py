@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey, Index, Float
+from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey, Index, Float, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -16,6 +16,8 @@ class Package(Base):
     picture_url = Column(String(500), nullable=True)
     brand = Column(String(100), nullable=True)
     discount = Column(Float, nullable=True)
+    avg_rating = Column(Float, default=0.0)
+    total_sold = Column(Integer, default=0)
     is_active = Column(Boolean, default=True, index=True)
     is_featured = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)

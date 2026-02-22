@@ -12,6 +12,8 @@ class PackageBase(BaseModel):
     picture_url: Optional[str] = None
     brand: Optional[str] = Field(default=None, max_length=100, description="Brand name for the package")
     discount: Optional[float] = Field(default=None, ge=0, description="Discount percentage on the package")
+    avg_rating: float = Field(default=0.0, ge=0, le=5, description="Average rating for the bundle")
+    total_sold: int = Field(default=0, ge=0, description="Total bundles sold")
     category_id: Optional[UUID] = None
     is_active: bool = Field(default=True)
     is_featured: bool = Field(default=False)
@@ -34,6 +36,8 @@ class PackageUpdate(BaseModel):
     picture_url: Optional[str] = None
     brand: Optional[str] = Field(default=None, max_length=100)
     discount: Optional[float] = Field(default=None, ge=0)
+    avg_rating: Optional[float] = Field(default=None, ge=0, le=5)
+    total_sold: Optional[int] = Field(default=None, ge=0)
     category_id: Optional[UUID] = None
     is_active: Optional[bool] = None
     is_featured: Optional[bool] = None
@@ -71,6 +75,7 @@ class CategoryInPackage(BaseModel):
 class PackageResponse(PackageBase):
     id: UUID
     created_at: datetime
+    max_saving: float = Field(default=0.0, description="Maximum saving (discount percentage)")
     pricing: Optional[Dict[str, Dict[str, float]]] = Field(
         default=None, description="Auto-computed sum of coupon prices per currency"
     )
@@ -87,6 +92,7 @@ class PackageListResponse(PackageBase):
     """Lighter response for list endpoints (no nested coupons)."""
     id: UUID
     created_at: datetime
+    max_saving: float = Field(default=0.0, description="Maximum saving (discount percentage)")
     pricing: Optional[Dict[str, Dict[str, float]]] = Field(
         default=None, description="Auto-computed sum of coupon prices per currency"
     )
