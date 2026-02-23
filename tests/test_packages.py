@@ -256,12 +256,13 @@ class TestPackageCRUD:
             "package_id": pkg["id"], "quantity": 1,
         }, headers=regular_user["headers"])
         
-        # Verify in cart
+        # Verify in cart and get cart item ID
         cart_resp = client.get("/cart/", headers=regular_user["headers"])
         assert len(cart_resp.json()["items"]) == 1
+        cart_item_id = cart_resp.json()["items"][0]["id"]
         
-        # Remove from cart
-        del_resp = client.delete(f"/cart/{pkg['id']}", headers=regular_user["headers"])
+        # Remove from cart using cart item ID (not package ID)
+        del_resp = client.delete(f"/cart/{cart_item_id}", headers=regular_user["headers"])
         assert del_resp.status_code == 204
         
         # Verify empty

@@ -18,9 +18,12 @@ def test_cart_workflow(client, regular_user, sample_coupon):
     data = resp.json()
     assert len(data["items"]) == 1
     assert data["items"][0]["coupon_id"] == coupon_id
+    
+    # Get the cart item ID (not the coupon ID)
+    cart_item_id = data["items"][0]["id"]
 
-    # 3. Remove item
-    resp = client.delete(f"/cart/{coupon_id}", headers=headers)
+    # 3. Remove item using cart item ID
+    resp = client.delete(f"/cart/{cart_item_id}", headers=headers)
     assert resp.status_code == 204
 
     # 4. View cart (empty)
