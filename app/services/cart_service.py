@@ -129,10 +129,14 @@ class CartService:
 
     @staticmethod
     def remove_from_cart(db: Session, user_id: UUID, item_id: UUID) -> bool:
-        from sqlalchemy import or_
+        """
+        Remove a cart item by its ID.
+        The item_id is the CartItem's primary key (id field).
+        This works for both coupons and packages.
+        """
         item = db.query(CartItem).filter(
             CartItem.user_id == user_id,
-            or_(CartItem.coupon_id == item_id, CartItem.package_id == item_id)
+            CartItem.id == item_id
         ).first()
         if item:
             db.delete(item)
