@@ -32,7 +32,7 @@ jobs:
           PAYMENT_TOKEN_SECRET: ci-test-payment-token-secret
           STRIPE_SECRET_KEY: sk_test_fake_key_for_ci
           PYTHONPATH: .
-        run: pytest tests/ -v
+        run: pytest tests/ -v -m "not integration"
 
   build-and-push:
     needs: test

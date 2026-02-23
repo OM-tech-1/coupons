@@ -1,6 +1,9 @@
 """
 Test webhook endpoint to diagnose issues
 This simulates what Stripe sends to your webhook
+
+Note: These are integration tests that make real HTTP requests.
+Skip in CI with: pytest -m "not integration"
 """
 import pytest
 import requests
@@ -17,6 +20,7 @@ WEBHOOK_URL = "https://api.vouchergalaxy.com/webhooks/stripe"
 WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(
     not WEBHOOK_SECRET or WEBHOOK_SECRET == "whsec_YOUR_WEBHOOK_SECRET",
     reason="STRIPE_WEBHOOK_SECRET not configured in .env"
@@ -74,6 +78,7 @@ def test_webhook_endpoint_with_signature():
         assert data.get("received") == True
 
 
+@pytest.mark.integration
 def test_webhook_endpoint_without_signature():
     """Test webhook endpoint without signature (should fail)"""
     
@@ -94,6 +99,7 @@ def test_webhook_endpoint_without_signature():
     assert "Stripe-Signature" in response.text or "Missing" in response.text
 
 
+@pytest.mark.integration
 def test_webhook_endpoint_exists():
     """Test that webhook endpoint exists and responds"""
     
