@@ -74,3 +74,54 @@ def test_full_purchase_flow(client, regular_user, sample_coupon, db, monkeypatch
     assert payment_data["payment_intent_id"] == "pi_mock_flow_123"
     assert "token" in payment_data
     assert "redirect_url" in payment_data
+
+def test_package_checkout(client, regular_user, sample_coupon, db):
+    """
+    Test checking out a package.
+    """
+    from app.models.package import Package
+    from app.models.package_coupon import PackageCoupon
+    import uuid
+    
+    # Create a package with the sample coupon
+    pkg = Package(
+        name="Test Package For Checkout",
+        slug=f"test-checkout-pkg-{uuid.uuid4().hex[:6]}",
+        discount=10.0,
+        is_active=True
+    )
+    db.add(pkg)
+    db.commit()
+    
+    pkg_coupon = PackageCoupon(package_id=pkg.id, coupon_id=sample_coupon["id"])
+    db.add(pkg_coupon)
+    db.commit()
+
+    headers = regular_user["headers"]
+    
+    # Add package to cart
+    resp = client.post("/cart/add", json={"package_id": str(pkg.id), "quantity": 1}, headers=headers)
+    assert resp.status_code in [200, 201], f"Add to cart failed: {resp.text}"
+    
+    # Checkout
+    resp = client.post("/orders/checkout", json={"payment_method": "stripe"}, headers=headers)
+    assert resp.status_code == 200, f"Checkout failed: {resp.text}"
+    order_data = resp.json()
+    
+    assert len(order_data["items"]) == 1
+    assert order_data["items"][0]["package_id"] == str(pkg.id)
+    assert order_data["items"][0]["coupon_id"] is None
+    
+    # Assert price calculation: coupon price is 15.0 (default sample coupon), discount 10% = 13.5
+    assert float(order_data["items"][0]["price"]) > 0
+    assert order_data["items"][0]["package"]["name"] == "Test Package For Checkout"
+
+    # Verify user received the coupon
+    from app.models.user import User
+    user = db.query(User).filter(User.phone_number == "+12025559876").first()
+    user_id = user.id
+
+    from app.models.user_coupon import UserCoupon
+    claims = db.query(UserCoupon).filter(UserCoupon.user_id == user_id).all()
+    assert len(claims) >= 1
+    assert any(str(c.coupon_id) == sample_coupon["id"] for c in claims)

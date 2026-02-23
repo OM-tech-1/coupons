@@ -85,6 +85,13 @@ def run_migrations():
             conn.execute(text('ALTER TABLE cart_items ADD COLUMN IF NOT EXISTS package_id UUID REFERENCES packages(id)'))
         except Exception:
             pass
+            
+        # Order Items columns
+        try:
+            conn.execute(text('ALTER TABLE order_items ALTER COLUMN coupon_id DROP NOT NULL'))
+            conn.execute(text('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS package_id UUID REFERENCES packages(id)'))
+        except Exception:
+            pass
 
         conn.commit()
 

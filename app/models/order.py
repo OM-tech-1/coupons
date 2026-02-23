@@ -37,10 +37,12 @@ class OrderItem(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id"), nullable=False, index=True)
-    coupon_id = Column(UUID(as_uuid=True), ForeignKey("coupons.id"), nullable=False, index=True)
+    coupon_id = Column(UUID(as_uuid=True), ForeignKey("coupons.id"), nullable=True, index=True)
+    package_id = Column(UUID(as_uuid=True), ForeignKey("packages.id"), nullable=True, index=True)
     quantity = Column(Float, default=1)
     price = Column(Float, nullable=False)
 
     # Relationships
     order = relationship("Order", back_populates="items")
     coupon = relationship("Coupon")
+    package = relationship("Package")

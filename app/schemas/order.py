@@ -29,17 +29,35 @@ class CouponInOrder(BaseModel):
         from_attributes = True
 
 
+class PackageInOrder(BaseModel):
+    """Package details embedded in order item responses"""
+    id: UUID
+    name: str
+    slug: str
+    picture_url: Optional[str] = None
+    brand: Optional[str] = None
+    discount: Optional[float] = None
+    
+    class Config:
+        from_attributes = True
+
+
 class OrderItemResponse(BaseModel):
     id: UUID
-    coupon_id: UUID
+    coupon_id: Optional[UUID] = None
+    package_id: Optional[UUID] = None
     quantity: float
     price: float
     coupon: Optional[CouponInOrder] = None
+    package: Optional[PackageInOrder] = None
     
     # Flattened fields for convenience
     coupon_title: Optional[str] = None
     coupon_description: Optional[str] = None
     coupon_type: Optional[str] = None
+    
+    package_name: Optional[str] = None
+    package_brand: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -50,6 +68,9 @@ class OrderItemResponse(BaseModel):
             self.coupon_title = self.coupon.title
             self.coupon_description = self.coupon.description
             self.coupon_type = self.coupon.discount_type
+        if self.package:
+            self.package_name = self.package.name
+            self.package_brand = self.package.brand
         return self
 
 

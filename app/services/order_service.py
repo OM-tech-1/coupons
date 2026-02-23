@@ -59,26 +59,39 @@ class OrderService:
         
         # Create order items and user coupons
         for cart_item in cart_items:
-            # Add to order
+            # Figure out price and coupons to grant
             order_item = OrderItem(
                 order_id=order.id,
                 coupon_id=cart_item.coupon_id,
+                package_id=cart_item.package_id,
                 quantity=cart_item.quantity,
-                price=cart_item.coupon.price if cart_item.coupon else 0
+                price=0.0
             )
+            
+            coupons_to_grant = []
+            if cart_item.coupon:
+                order_item.price = cart_item.coupon.price or 0.0
+                coupons_to_grant.append(cart_item.coupon_id)
+            elif cart_item.package:
+                base_sum = sum(c.coupon.price for c in cart_item.package.coupon_associations if c.coupon and c.coupon.price)
+                discount = cart_item.package.discount or 0.0
+                order_item.price = base_sum * (1.0 - discount / 100.0)
+                coupons_to_grant.extend([c.coupon_id for c in cart_item.package.coupon_associations])
+
             db.add(order_item)
             
-            # Add coupon to user's claimed list (one entry per unique coupon)
-            existing_claim = db.query(UserCoupon).filter(
-                UserCoupon.user_id == user_id,
-                UserCoupon.coupon_id == cart_item.coupon_id
-            ).first()
-            if not existing_claim:
-                user_coupon = UserCoupon(
-                    user_id=user_id,
-                    coupon_id=cart_item.coupon_id
-                )
-                db.add(user_coupon)
+            # Add coupons to user's claimed list (one entry per unique coupon)
+            for c_id in coupons_to_grant:
+                existing_claim = db.query(UserCoupon).filter(
+                    UserCoupon.user_id == user_id,
+                    UserCoupon.coupon_id == c_id
+                ).first()
+                if not existing_claim:
+                    user_coupon = UserCoupon(
+                        user_id=user_id,
+                        coupon_id=c_id
+                    )
+                    db.add(user_coupon)
         
         # Clear cart
         CartService.clear_cart(db, user_id)
@@ -93,9 +106,8 @@ class OrderService:
         return db.query(Order).filter(
             Order.user_id == user_id
         ).options(
-            joinedload(Order.items)
-            .joinedload(OrderItem.coupon)
-            .joinedload(Coupon.category)
+            joinedload(Order.items).joinedload(OrderItem.coupon).joinedload(Coupon.category),
+            joinedload(Order.items).joinedload(OrderItem.package)
         ).order_by(Order.created_at.desc()).all()
 
     @staticmethod
@@ -105,7 +117,6 @@ class OrderService:
             Order.id == order_id,
             Order.user_id == user_id
         ).options(
-            joinedload(Order.items)
-            .joinedload(OrderItem.coupon)
-            .joinedload(Coupon.category)
+            joinedload(Order.items).joinedload(OrderItem.coupon).joinedload(Coupon.category),
+            joinedload(Order.items).joinedload(OrderItem.package)
         ).first()
