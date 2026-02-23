@@ -17,6 +17,7 @@ class StripeConfig:
         self.publishable_key = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
         self.webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "")
         self.api_version = "2023-10-16"  # Stripe API version
+        self.environment = os.getenv("ENVIRONMENT", "test")
         
     def is_configured(self) -> bool:
         """Check if Stripe is properly configured"""
