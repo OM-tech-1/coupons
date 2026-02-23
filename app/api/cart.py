@@ -74,13 +74,13 @@ def get_cart(
     }
 
 
-@router.delete("/{coupon_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_from_cart(
-    coupon_id: UUID,
+    item_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    success = CartService.remove_from_cart(db, current_user.id, coupon_id)
+    success = CartService.remove_from_cart(db, current_user.id, item_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

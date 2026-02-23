@@ -245,3 +245,26 @@ class TestPackageCRUD:
         assert resp.json()["message"] == "Added to cart"
         assert resp.json()["package_id"] == pkg["id"]
 
+    def test_remove_package_from_cart(self, client, admin_user, regular_user):
+        """DELETE /cart/{item_id} should remove a package from the cart."""
+        pkg = client.post("/packages/", json={
+            "name": "Remove Pack", "slug": "remove-pack",
+        }, headers=admin_user["headers"]).json()
+        
+        # Add to cart
+        client.post("/cart/add", json={
+            "package_id": pkg["id"], "quantity": 1,
+        }, headers=regular_user["headers"])
+        
+        # Verify in cart
+        cart_resp = client.get("/cart/", headers=regular_user["headers"])
+        assert len(cart_resp.json()["items"]) == 1
+        
+        # Remove from cart
+        del_resp = client.delete(f"/cart/{pkg['id']}", headers=regular_user["headers"])
+        assert del_resp.status_code == 204
+        
+        # Verify empty
+        cart_resp2 = client.get("/cart/", headers=regular_user["headers"])
+        assert len(cart_resp2.json()["items"]) == 0
+

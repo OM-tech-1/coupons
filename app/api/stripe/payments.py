@@ -74,47 +74,69 @@ async def initialize_payment(
              from sqlalchemy.orm import joinedload
              from app.models.order import OrderItem
              from app.models.coupon import Coupon
+             from app.models.package import Package
              order = db.query(Order).options(
-                 joinedload(Order.items).joinedload(OrderItem.coupon)
+                 joinedload(Order.items).joinedload(OrderItem.coupon),
+                 joinedload(Order.items).joinedload(OrderItem.package).joinedload(Package.coupon_associations)
              ).filter(Order.id == request.order_id).first()
 
         for item in order.items:
             coupon = item.coupon
-            if not coupon:
+            package = item.package
+            
+            if not coupon and not package:
                 continue
 
-            # 1. Pre-check Validity (Stock & Expiry)
-            # We check if (current + quantity) <= max
-            # This is a "soft" check to prevent starting payment if we know it will fail.
-            # Real atomic check happens at webhook, but this improves UX.
-            is_valid, reason = CouponService.is_valid(coupon)
-            if not is_valid:
-                 raise HTTPException(status_code=400, detail=f"Coupon '{coupon.code}' is not available: {reason}")
-            
-            # Check specific stock level if set
-            if coupon.stock is not None and coupon.stock < item.quantity:
-                 raise HTTPException(status_code=400, detail=f"Coupon '{coupon.code}' is out of stock (Requested: {item.quantity}, Available: {coupon.stock})")
-
-            # 2. Get price for this currency (Using Decimal)
             item_price = Decimal(0)
-            
-            if coupon.pricing and isinstance(coupon.pricing, dict):
-                # Try exact match first
-                if currency in coupon.pricing:
-                     # pricing values might be float or int in JSON, convert to str first then Decimal
-                     price_val = coupon.pricing[currency]
-                     if isinstance(price_val, dict):
-                         price_val = price_val.get("price", coupon.price)
-                     
-                     item_price = Decimal(str(price_val))
+
+            if coupon:
+                # 1. Pre-check Validity (Stock & Expiry)
+                is_valid, reason = CouponService.is_valid(coupon)
+                if not is_valid:
+                     raise HTTPException(status_code=400, detail=f"Coupon '{coupon.code}' is not available: {reason}")
+                
+                if coupon.stock is not None and coupon.stock < item.quantity:
+                     raise HTTPException(status_code=400, detail=f"Coupon '{coupon.code}' is out of stock (Requested: {item.quantity}, Available: {coupon.stock})")
+
+                # 2. Get price for this currency (Using Decimal)
+                if coupon.pricing and isinstance(coupon.pricing, dict):
+                    if currency in coupon.pricing:
+                         price_val = coupon.pricing[currency]
+                         if isinstance(price_val, dict):
+                             price_val = price_val.get("price", coupon.price)
+                         item_price = Decimal(str(price_val))
+                    else:
+                         item_price = Decimal(str(coupon.price))
                 else:
-                     # Fallback to base price
                      item_price = Decimal(str(coupon.price))
-            else:
-                 item_price = Decimal(str(coupon.price))
             
+            elif package:
+                # Package pricing: sum up all base prices of coupons inside the package for the given Currency
+                base_sum = Decimal(0)
+                for assoc in package.coupon_associations:
+                    c = assoc.coupon
+                    if not c: continue
+                    
+                    c_price = Decimal(0)
+                    if c.pricing and isinstance(c.pricing, dict):
+                        if currency in c.pricing:
+                            pval = c.pricing[currency]
+                            if isinstance(pval, dict):
+                                pval = pval.get("price", c.price)
+                            c_price = Decimal(str(pval))
+                        else:
+                            c_price = Decimal(str(c.price))
+                    else:
+                        c_price = Decimal(str(c.price))
+                        
+                    base_sum += c_price
+                
+                # Apply package discount
+                discount = Decimal(str(package.discount or 0.0))
+                multiplier = Decimal(1) - (discount / Decimal(100))
+                item_price = base_sum * multiplier
+
             # Add to total: price * quantity * 100 (to cents)
-            # quantize to 0 decimal places (integer cents)
             item_total_cents = (item_price * Decimal(100)).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
             final_amount_cents += int(item_total_cents) * int(item.quantity)
             

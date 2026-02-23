@@ -93,7 +93,7 @@ jobs:
               -e JWT_ALGORITHM="${{ secrets.JWT_ALGORITHM }}" \
               -e JWT_EXPIRE_MINUTES="${{ secrets.JWT_EXPIRE_MINUTES }}" \
               -e REDIS_URL="${{ secrets.REDIS_URL }}" \
-              -e STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+              -e STRIPE_WEBHOOK_SECRET=$( [ "${{ secrets.ENVIRONMENT }}" = "production" ] && echo "${{ secrets.STRIPE_WEBHOOK_SECRET }}" || echo "${{ secrets.STRIPE_WEBHOOK_SECRET_TEST }}" ) \
               -e PAYMENT_TOKEN_SECRET="${{ secrets.PAYMENT_TOKEN_SECRET }}" \
               -e PAYMENT_TOKEN_TTL_MINUTES="${{ secrets.PAYMENT_TOKEN_TTL_MINUTES }}" \
               -e PAYMENT_UI_DOMAIN="${{ secrets.PAYMENT_UI_DOMAIN }}" \

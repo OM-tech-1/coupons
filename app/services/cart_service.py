@@ -128,10 +128,11 @@ class CartService:
         return total
 
     @staticmethod
-    def remove_from_cart(db: Session, user_id: UUID, coupon_id: UUID) -> bool:
+    def remove_from_cart(db: Session, user_id: UUID, item_id: UUID) -> bool:
+        from sqlalchemy import or_
         item = db.query(CartItem).filter(
             CartItem.user_id == user_id,
-            CartItem.coupon_id == coupon_id
+            or_(CartItem.coupon_id == item_id, CartItem.package_id == item_id)
         ).first()
         if item:
             db.delete(item)
