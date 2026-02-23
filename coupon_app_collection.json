@@ -2200,7 +2200,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"name\": \"Summer Travel Bundle\",\n    \"slug\": \"summer-travel-bundle\",\n    \"description\": \"Best deals for your summer vacation\",\n    \"picture_url\": \"https://example.com/package-image.jpg\",\n    \"category_id\": \"{{category_id}}\",\n    \"is_active\": true,\n    \"is_featured\": false,\n    \"coupon_ids\": []\n}"
+                            "raw": "{\n    \"name\": \"Summer Travel Bundle\",\n    \"slug\": \"summer-travel-bundle\",\n    \"description\": \"Best deals for your summer vacation\",\n    \"picture_url\": \"https://example.com/package-image.jpg\",\n    \"brand\": \"SummerBrand\",\n    \"discount\": 15.5,\n    \"avg_rating\": 4.8,\n    \"total_sold\": 150,\n    \"category_id\": \"{{category_id}}\",\n    \"is_active\": true,\n    \"is_featured\": false,\n    \"coupon_ids\": [\n        \"{{coupon_id}}\"\n    ]\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/packages/",

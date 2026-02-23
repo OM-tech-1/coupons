@@ -105,6 +105,7 @@ class StripeWebhookService:
         payment.payment_metadata["stripe_event_id"] = event_id
         
         # Update order
+        order = self.db.query(Order).filter(Order.id == payment.order_id).first()
         if order:
             order.status = "paid"
             order.payment_state = "payment_completed"
