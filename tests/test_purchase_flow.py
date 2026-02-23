@@ -103,8 +103,8 @@ def test_package_checkout(client, regular_user, sample_coupon, db):
     resp = client.post("/cart/add", json={"package_id": str(pkg.id), "quantity": 1}, headers=headers)
     assert resp.status_code in [200, 201], f"Add to cart failed: {resp.text}"
     
-    # Checkout
-    resp = client.post("/orders/checkout", json={"payment_method": "stripe"}, headers=headers)
+    # Checkout with mock payment (not Stripe) so coupons are added immediately
+    resp = client.post("/orders/checkout", json={"payment_method": "mock"}, headers=headers)
     assert resp.status_code == 200, f"Checkout failed: {resp.text}"
     order_data = resp.json()
     
@@ -116,7 +116,7 @@ def test_package_checkout(client, regular_user, sample_coupon, db):
     assert float(order_data["items"][0]["price"]) > 0
     assert order_data["items"][0]["package"]["name"] == "Test Package For Checkout"
 
-    # Verify user received the coupon
+    # Verify user received the coupon (only works with non-Stripe payment methods)
     from app.models.user import User
     user = db.query(User).filter(User.phone_number == "+12025559876").first()
     user_id = user.id

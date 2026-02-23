@@ -57,7 +57,7 @@ class OrderService:
         db.add(order)
         db.flush()  # Get order ID
         
-        # Create order items and user coupons
+        # Create order items
         for cart_item in cart_items:
             # Figure out price and coupons to grant
             order_item = OrderItem(
@@ -80,18 +80,20 @@ class OrderService:
 
             db.add(order_item)
             
-            # Add coupons to user's claimed list (one entry per unique coupon)
-            for c_id in coupons_to_grant:
-                existing_claim = db.query(UserCoupon).filter(
-                    UserCoupon.user_id == user_id,
-                    UserCoupon.coupon_id == c_id
-                ).first()
-                if not existing_claim:
-                    user_coupon = UserCoupon(
-                        user_id=user_id,
-                        coupon_id=c_id
-                    )
-                    db.add(user_coupon)
+            # Only add coupons to wallet if payment is already completed (free or non-Stripe)
+            # For Stripe payments, coupons will be added via webhook when payment succeeds
+            if order.status == "paid":
+                for c_id in coupons_to_grant:
+                    existing_claim = db.query(UserCoupon).filter(
+                        UserCoupon.user_id == user_id,
+                        UserCoupon.coupon_id == c_id
+                    ).first()
+                    if not existing_claim:
+                        user_coupon = UserCoupon(
+                            user_id=user_id,
+                            coupon_id=c_id
+                        )
+                        db.add(user_coupon)
         
         # Clear cart
         CartService.clear_cart(db, user_id)

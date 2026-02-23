@@ -73,17 +73,54 @@ class CouponResponseCommon(CouponBasePublic):
     # Nested relationships (populated from joins)
     category: Optional['CategoryInCoupon'] = None
     countries: List['CountryInCoupon'] = Field(default_factory=list)
+    # Multi-currency pricing for frontend
+    prices: Dict[str, float] = Field(default_factory=dict, description="Prices in all supported currencies")
+    discounts: Dict[str, float] = Field(default_factory=dict, description="Discount amounts in all supported currencies")
 
     @model_validator(mode='before')
     @classmethod
     def compute_stock_sold(cls, data: Any) -> Any:
-        """Set stock_sold to current_uses value"""
+        """Set stock_sold to current_uses value and extract multi-currency pricing"""
         if hasattr(data, '__dict__'):
             data_dict = {k: v for k, v in data.__dict__.items() if not k.startswith('_')}
             data_dict['stock_sold'] = data_dict.get('current_uses', 0)
+            
+            # Extract multi-currency pricing from pricing JSON field
+            pricing = data_dict.get('pricing', {})
+            if pricing and isinstance(pricing, dict):
+                prices = {}
+                discounts = {}
+                for currency, values in pricing.items():
+                    if isinstance(values, dict):
+                        prices[currency] = values.get('price', 0.0)
+                        discounts[currency] = values.get('discount_amount', 0.0)
+                data_dict['prices'] = prices
+                data_dict['discounts'] = discounts
+            else:
+                # Fallback to default USD pricing if no pricing JSON
+                data_dict['prices'] = {'USD': data_dict.get('price', 0.0)}
+                data_dict['discounts'] = {'USD': data_dict.get('discount_amount', 0.0)}
+            
             return data_dict
         elif isinstance(data, dict):
             data['stock_sold'] = data.get('current_uses', 0)
+            
+            # Extract multi-currency pricing from pricing JSON field
+            pricing = data.get('pricing', {})
+            if pricing and isinstance(pricing, dict):
+                prices = {}
+                discounts = {}
+                for currency, values in pricing.items():
+                    if isinstance(values, dict):
+                        prices[currency] = values.get('price', 0.0)
+                        discounts[currency] = values.get('discount_amount', 0.0)
+                data['prices'] = prices
+                data['discounts'] = discounts
+            else:
+                # Fallback to default USD pricing if no pricing JSON
+                data['prices'] = {'USD': data.get('price', 0.0)}
+                data['discounts'] = {'USD': data.get('discount_amount', 0.0)}
+        
         return data
 
     model_config = ConfigDict(from_attributes=True)

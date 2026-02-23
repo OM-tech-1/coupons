@@ -60,6 +60,40 @@ class CouponInPackage(BaseModel):
     picture_url: Optional[str] = None
     pricing: Optional[Dict[str, Dict[str, float]]] = None
     is_active: bool = True
+    # Multi-currency pricing for frontend
+    prices: Dict[str, float] = Field(default_factory=dict, description="Prices in all supported currencies")
+    discounts: Dict[str, float] = Field(default_factory=dict, description="Discount amounts in all supported currencies")
+
+    @classmethod
+    def from_orm(cls, obj):
+        """Custom from_orm to extract multi-currency pricing"""
+        data = {
+            'id': obj.id,
+            'title': obj.title,
+            'brand': obj.brand,
+            'discount_type': obj.discount_type,
+            'discount_amount': obj.discount_amount,
+            'price': obj.price,
+            'picture_url': obj.picture_url,
+            'pricing': obj.pricing,
+            'is_active': obj.is_active,
+        }
+        
+        # Extract multi-currency pricing
+        if obj.pricing and isinstance(obj.pricing, dict):
+            prices = {}
+            discounts = {}
+            for currency, values in obj.pricing.items():
+                if isinstance(values, dict):
+                    prices[currency] = values.get('price', 0.0)
+                    discounts[currency] = values.get('discount_amount', 0.0)
+            data['prices'] = prices
+            data['discounts'] = discounts
+        else:
+            data['prices'] = {'USD': obj.price or 0.0}
+            data['discounts'] = {'USD': obj.discount_amount or 0.0}
+        
+        return cls(**data)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -82,8 +116,64 @@ class PackageResponse(PackageBase):
     total_price: Optional[Dict[str, float]] = Field(
         default=None, description="Total price per currency (sum of all coupon prices)"
     )
+    # Flattened multi-currency fields for easier frontend access
+    prices: Dict[str, float] = Field(default_factory=dict, description="Package prices in all supported currencies")
+    final_prices: Dict[str, float] = Field(default_factory=dict, description="Final prices after discount in all currencies")
+    
     category: Optional[CategoryInPackage] = None
     coupons: List[CouponInPackage] = Field(default_factory=list)
+
+    @classmethod
+    def from_orm(cls, obj):
+        """Custom from_orm to compute multi-currency pricing"""
+        data = {
+            'id': obj.id,
+            'name': obj.name,
+            'slug': obj.slug,
+            'description': obj.description,
+            'picture_url': obj.picture_url,
+            'brand': obj.brand,
+            'discount': obj.discount,
+            'avg_rating': obj.avg_rating,
+            'total_sold': obj.total_sold,
+            'category_id': obj.category_id,
+            'is_active': obj.is_active,
+            'is_featured': obj.is_featured,
+            'created_at': obj.created_at,
+            'max_saving': obj.discount or 0.0,
+            'pricing': obj.pricing if hasattr(obj, 'pricing') else None,
+            'total_price': obj.total_price if hasattr(obj, 'total_price') else None,
+            'category': obj.category,
+            'coupons': [CouponInPackage.from_orm(assoc.coupon) for assoc in obj.coupon_associations if assoc.coupon] if hasattr(obj, 'coupon_associations') else [],
+        }
+        
+        # Compute multi-currency pricing from pricing field
+        prices = {}
+        final_prices = {}
+        
+        if hasattr(obj, 'pricing') and obj.pricing and isinstance(obj.pricing, dict):
+            for currency, values in obj.pricing.items():
+                if isinstance(values, dict):
+                    base_price = values.get('price', 0.0)
+                    prices[currency] = base_price
+                    # Apply discount if available
+                    if obj.discount:
+                        final_prices[currency] = base_price * (1.0 - obj.discount / 100.0)
+                    else:
+                        final_prices[currency] = base_price
+        elif hasattr(obj, 'total_price') and obj.total_price and isinstance(obj.total_price, dict):
+            # Fallback to total_price if pricing not available
+            for currency, price in obj.total_price.items():
+                prices[currency] = price
+                if obj.discount:
+                    final_prices[currency] = price * (1.0 - obj.discount / 100.0)
+                else:
+                    final_prices[currency] = price
+        
+        data['prices'] = prices
+        data['final_prices'] = final_prices
+        
+        return cls(**data)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -99,7 +189,63 @@ class PackageListResponse(PackageBase):
     total_price: Optional[Dict[str, float]] = Field(
         default=None, description="Total price per currency (sum of all coupon prices)"
     )
+    # Flattened multi-currency fields for easier frontend access
+    prices: Dict[str, float] = Field(default_factory=dict, description="Package prices in all supported currencies")
+    final_prices: Dict[str, float] = Field(default_factory=dict, description="Final prices after discount in all currencies")
+    
     category: Optional[CategoryInPackage] = None
     coupon_count: int = 0
+
+    @classmethod
+    def from_orm(cls, obj):
+        """Custom from_orm to compute multi-currency pricing"""
+        data = {
+            'id': obj.id,
+            'name': obj.name,
+            'slug': obj.slug,
+            'description': obj.description,
+            'picture_url': obj.picture_url,
+            'brand': obj.brand,
+            'discount': obj.discount,
+            'avg_rating': obj.avg_rating,
+            'total_sold': obj.total_sold,
+            'category_id': obj.category_id,
+            'is_active': obj.is_active,
+            'is_featured': obj.is_featured,
+            'created_at': obj.created_at,
+            'max_saving': obj.discount or 0.0,
+            'pricing': obj.pricing if hasattr(obj, 'pricing') else None,
+            'total_price': obj.total_price if hasattr(obj, 'total_price') else None,
+            'category': obj.category,
+            'coupon_count': len(obj.coupon_associations) if hasattr(obj, 'coupon_associations') else 0,
+        }
+        
+        # Compute multi-currency pricing from pricing field
+        prices = {}
+        final_prices = {}
+        
+        if hasattr(obj, 'pricing') and obj.pricing and isinstance(obj.pricing, dict):
+            for currency, values in obj.pricing.items():
+                if isinstance(values, dict):
+                    base_price = values.get('price', 0.0)
+                    prices[currency] = base_price
+                    # Apply discount if available
+                    if obj.discount:
+                        final_prices[currency] = base_price * (1.0 - obj.discount / 100.0)
+                    else:
+                        final_prices[currency] = base_price
+        elif hasattr(obj, 'total_price') and obj.total_price and isinstance(obj.total_price, dict):
+            # Fallback to total_price if pricing not available
+            for currency, price in obj.total_price.items():
+                prices[currency] = price
+                if obj.discount:
+                    final_prices[currency] = price * (1.0 - obj.discount / 100.0)
+                else:
+                    final_prices[currency] = price
+        
+        data['prices'] = prices
+        data['final_prices'] = final_prices
+        
+        return cls(**data)
 
     model_config = ConfigDict(from_attributes=True)

@@ -110,6 +110,35 @@ class StripeWebhookService:
             order.status = "paid"
             order.payment_state = "payment_completed"
             
+            # Add coupons to user's wallet now that payment succeeded
+            from app.models.user_coupon import UserCoupon
+            from app.models.order import OrderItem
+            
+            # Get all order items with their coupons/packages
+            for item in order.items:
+                coupons_to_grant = []
+                
+                if item.coupon_id:
+                    coupons_to_grant.append(item.coupon_id)
+                elif item.package_id and item.package:
+                    # Grant all coupons in the package
+                    coupons_to_grant.extend([c.coupon_id for c in item.package.coupon_associations])
+                
+                # Add each coupon to user's wallet
+                for coupon_id in coupons_to_grant:
+                    existing_claim = self.db.query(UserCoupon).filter(
+                        UserCoupon.user_id == order.user_id,
+                        UserCoupon.coupon_id == coupon_id
+                    ).first()
+                    
+                    if not existing_claim:
+                        user_coupon = UserCoupon(
+                            user_id=order.user_id,
+                            coupon_id=coupon_id
+                        )
+                        self.db.add(user_coupon)
+                        logger.info(f"Added coupon {coupon_id} to user {order.user_id} wallet")
+            
             # Decrement Stock / Increment Usage
             from app.services.coupon_service import CouponService
             # We need to loop through items
