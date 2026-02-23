@@ -67,11 +67,15 @@ def get_cart(
             
             total += pkg_price * item.quantity
 
-    return {
-        "items": items,
-        "total_items": sum(i.quantity for i in items),
-        "total_amount": total,
-    }
+    # Convert items using from_orm to get multi-currency pricing
+    cart_items = [CartItemResponse.from_orm(item) for item in items]
+    
+    # Use factory method to compute totals
+    return CartResponse.create(
+        items=cart_items,
+        total_items=sum(i.quantity for i in items),
+        total_amount=total
+    )
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)

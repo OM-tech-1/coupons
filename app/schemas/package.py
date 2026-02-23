@@ -125,7 +125,10 @@ class PackageResponse(PackageBase):
 
     @classmethod
     def from_orm(cls, obj):
-        """Custom from_orm to compute multi-currency pricing"""
+        """Custom from_orm to compute multi-currency pricing by summing coupon prices"""
+        # First, convert coupons
+        coupons = [CouponInPackage.from_orm(assoc.coupon) for assoc in obj.coupon_associations if assoc.coupon] if hasattr(obj, 'coupon_associations') else []
+        
         data = {
             'id': obj.id,
             'name': obj.name,
@@ -144,33 +147,33 @@ class PackageResponse(PackageBase):
             'pricing': obj.pricing if hasattr(obj, 'pricing') else None,
             'total_price': obj.total_price if hasattr(obj, 'total_price') else None,
             'category': obj.category,
-            'coupons': [CouponInPackage.from_orm(assoc.coupon) for assoc in obj.coupon_associations if assoc.coupon] if hasattr(obj, 'coupon_associations') else [],
+            'coupons': coupons,
         }
         
-        # Compute multi-currency pricing from pricing field
+        # Compute multi-currency pricing by summing individual coupon prices
         prices = {}
+        discounts = {}
         final_prices = {}
         
-        if hasattr(obj, 'pricing') and obj.pricing and isinstance(obj.pricing, dict):
-            for currency, values in obj.pricing.items():
-                if isinstance(values, dict):
-                    base_price = values.get('price', 0.0)
-                    prices[currency] = base_price
-                    # Apply discount if available
-                    if obj.discount:
-                        final_prices[currency] = base_price * (1.0 - obj.discount / 100.0)
-                    else:
-                        final_prices[currency] = base_price
-        elif hasattr(obj, 'total_price') and obj.total_price and isinstance(obj.total_price, dict):
-            # Fallback to total_price if pricing not available
-            for currency, price in obj.total_price.items():
-                prices[currency] = price
-                if obj.discount:
-                    final_prices[currency] = price * (1.0 - obj.discount / 100.0)
-                else:
-                    final_prices[currency] = price
+        # Sum up prices and discounts from all coupons in the package
+        for coupon in coupons:
+            # Sum prices for each currency
+            for currency, price in coupon.prices.items():
+                prices[currency] = prices.get(currency, 0.0) + price
+            
+            # Sum discounts for each currency
+            for currency, discount in coupon.discounts.items():
+                discounts[currency] = discounts.get(currency, 0.0) + discount
+        
+        # Calculate final prices after package discount
+        if obj.discount:
+            for currency, base_price in prices.items():
+                final_prices[currency] = base_price * (1.0 - obj.discount / 100.0)
+        else:
+            final_prices = prices.copy()
         
         data['prices'] = prices
+        data['discounts'] = discounts
         data['final_prices'] = final_prices
         
         return cls(**data)
