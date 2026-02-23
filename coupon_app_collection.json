@@ -1027,13 +1027,13 @@
                         },
                         "method": "DELETE",
                         "url": {
-                            "raw": "{{base_url}}/cart/{{coupon_id}}",
+                            "raw": "{{base_url}}/cart/{{item_id}}",
                             "host": [
                                 "{{base_url}}"
                             ],
                             "path": [
                                 "cart",
-                                "{{coupon_id}}"
+                                "{{item_id}}"
                             ]
                         }
                     }
