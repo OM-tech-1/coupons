@@ -8,6 +8,7 @@ from app.utils.security import get_current_user
 from app.models.user import User
 from app.schemas.cart import CartItemCreate, CartItemResponse, CartResponse
 from app.services.cart_service import CartService
+from app.services.package_service import PackageService
 
 router = APIRouter()
 
@@ -47,11 +48,24 @@ def get_cart(
 ):
     items = CartService.get_cart(db, current_user.id)
 
-    total = sum(
-        (item.coupon.price or 0) * item.quantity
-        for item in items
-        if item.coupon
-    )
+    total = 0.0
+    for item in items:
+        if item.coupon:
+            total += (item.coupon.price or 0.0) * item.quantity
+        elif item.package:
+            coupon_ids = [c.coupon_id for c in item.package.coupon_associations]
+            pricing = PackageService._compute_pricing(db, coupon_ids)
+            total_price_map = PackageService._compute_total_price(pricing)
+            
+            base_sum = sum(c.coupon.price for c in item.package.coupon_associations if c.coupon and c.coupon.price)
+            discount = item.package.discount or 0.0
+            pkg_price = base_sum * (1.0 - discount / 100.0)
+            
+            item.package.price = pkg_price
+            item.package.pricing = pricing
+            item.package.total_price = total_price_map
+            
+            total += pkg_price * item.quantity
 
     return {
         "items": items,

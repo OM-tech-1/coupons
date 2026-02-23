@@ -1,6 +1,6 @@
 from pydantic import BaseModel, model_validator, ConfigDict
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 from uuid import UUID
 
 
@@ -39,6 +39,9 @@ class PackageInCart(BaseModel):
     slug: str
     discount: Optional[float] = None
     picture_url: Optional[str] = None
+    price: Optional[float] = None
+    pricing: Optional[Dict[str, Dict[str, float]]] = None
+    total_price: Optional[Dict[str, float]] = None
 
     class Config:
         from_attributes = True

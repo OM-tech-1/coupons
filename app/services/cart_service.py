@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 from app.models.cart import CartItem
 from app.models.coupon import Coupon
 from app.models.package import Package
+from app.models.package_coupon import PackageCoupon
 
 
 class CartService:
@@ -109,16 +110,21 @@ class CartService:
     def get_cart(db: Session, user_id: UUID) -> List[CartItem]:
         return db.query(CartItem).options(
             joinedload(CartItem.coupon),
-            joinedload(CartItem.package),
+            joinedload(CartItem.package).joinedload(Package.coupon_associations).joinedload(PackageCoupon.coupon),
         ).filter(CartItem.user_id == user_id).all()
 
     @staticmethod
     def get_cart_total(db: Session, user_id: UUID) -> float:
-        items = db.query(CartItem).filter(CartItem.user_id == user_id).all()
+        items = CartService.get_cart(db, user_id)
         total = 0.0
         for item in items:
             if item.coupon:
                 total += (item.coupon.price or 0) * item.quantity
+            elif item.package:
+                base_sum = sum(c.coupon.price for c in item.package.coupon_associations if c.coupon and c.coupon.price)
+                discount = item.package.discount or 0.0
+                pkg_price = base_sum * (1.0 - discount / 100.0)
+                total += pkg_price * item.quantity
         return total
 
     @staticmethod
