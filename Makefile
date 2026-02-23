@@ -1,6 +1,6 @@
 # Makefile for Coupon API
 
-.PHONY: help deploy redeploy logs shell stop restart status clean-db create-admin test install run-local
+.PHONY: help deploy redeploy logs shell stop restart status clean-db create-admin seed-data test install run-local
 
 help:
 	@echo "Coupon API Management"
@@ -13,6 +13,7 @@ help:
 	@echo "make restart      - Restart the container"
 	@echo "make clean-db     - Reset database (Drop & Create tables) - Interactive"
 	@echo "make create-admin - Create/Promote admin user (inside container)"
+	@echo "make seed-data    - Seed regions and countries into database"
 	@echo "make test         - Run tests locally"
 	@echo "make install      - Install local dependencies"
 	@echo "make run-local    - Run app locally with hot reload"
@@ -50,6 +51,10 @@ clean-db:
 create-admin:
 	@echo "👤 Creating Admin User..."
 	docker exec -it coupon-api-container python create_admin.py --manual
+
+seed-data:
+	@echo "🌱 Seeding regions and countries..."
+	docker exec -it coupon-api-container python scripts/seed_regions_countries.py
 
 test:
 	pytest

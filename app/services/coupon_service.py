@@ -15,6 +15,10 @@ class CouponService:
     def create(db: Session, coupon_data: CouponCreate) -> Coupon:
         """Create a new coupon"""
         from app.models.coupon_country import CouponCountry
+        from app.models.country import Country
+        import logging
+        
+        logger = logging.getLogger(__name__)
         
         # Extract country_ids before creating coupon
         country_ids = coupon_data.country_ids
@@ -41,10 +45,22 @@ class CouponService:
         db.add(db_coupon)
         db.flush()  # Flush to get the coupon ID
         
-        # Create country associations
-        for country_id in country_ids:
-            association = CouponCountry(coupon_id=db_coupon.id, country_id=country_id)
-            db.add(association)
+        # Create country associations (validate country IDs first)
+        if country_ids:
+            # Get valid country IDs from database
+            valid_countries = db.query(Country.id).filter(Country.id.in_(country_ids)).all()
+            valid_country_ids = {str(c.id) for c in valid_countries}
+            
+            # Log warning for invalid country IDs
+            invalid_ids = [str(cid) for cid in country_ids if str(cid) not in valid_country_ids]
+            if invalid_ids:
+                logger.warning(f"Skipping invalid country IDs for coupon '{db_coupon.code}': {invalid_ids}")
+            
+            # Create associations only for valid countries
+            for country_id in country_ids:
+                if str(country_id) in valid_country_ids:
+                    association = CouponCountry(coupon_id=db_coupon.id, country_id=country_id)
+                    db.add(association)
         
         db.commit()
         db.refresh(db_coupon)
@@ -297,6 +313,10 @@ class CouponService:
     def update(db: Session, coupon_id: UUID, coupon_data: CouponUpdate) -> Optional[Coupon]:
         """Update a coupon"""
         from app.models.coupon_country import CouponCountry
+        from app.models.country import Country
+        import logging
+        
+        logger = logging.getLogger(__name__)
         
         db_coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
         if not db_coupon:
@@ -317,10 +337,23 @@ class CouponService:
         if country_ids is not None:
             # Remove existing associations
             db.query(CouponCountry).filter(CouponCountry.coupon_id == coupon_id).delete()
-            # Add new associations
-            for country_id in country_ids:
-                association = CouponCountry(coupon_id=coupon_id, country_id=country_id)
-                db.add(association)
+            
+            # Add new associations (validate country IDs first)
+            if country_ids:
+                # Get valid country IDs from database
+                valid_countries = db.query(Country.id).filter(Country.id.in_(country_ids)).all()
+                valid_country_ids = {str(c.id) for c in valid_countries}
+                
+                # Log warning for invalid country IDs
+                invalid_ids = [str(cid) for cid in country_ids if str(cid) not in valid_country_ids]
+                if invalid_ids:
+                    logger.warning(f"Skipping invalid country IDs for coupon '{db_coupon.code}': {invalid_ids}")
+                
+                # Create associations only for valid countries
+                for country_id in country_ids:
+                    if str(country_id) in valid_country_ids:
+                        association = CouponCountry(coupon_id=coupon_id, country_id=country_id)
+                        db.add(association)
         
         db.commit()
         db.refresh(db_coupon)
