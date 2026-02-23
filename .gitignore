@@ -5,11 +5,27 @@ __pycache__/
 .pytest_cache/
 *.log
 
+# Environment
 .env
 .venv
 env/
 venv/
+
+# IDE
 .DS_Store
 .idea/
 .vscode/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Documentation archives
 bugs&fixes/
+docs/bugs_and_fixes/
+
+# Temporary files
+debug_output.txt
+*.tmp
+*.bak

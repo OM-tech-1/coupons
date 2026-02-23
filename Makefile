@@ -1,22 +1,24 @@
 # Makefile for Coupon API
 
-.PHONY: help deploy redeploy logs shell stop restart status clean-db create-admin seed-data test install run-local
+.PHONY: help deploy redeploy logs logs-webhook logs-errors shell stop restart status clean-db create-admin seed-data test install run-local
 
 help:
 	@echo "Coupon API Management"
 	@echo "---------------------"
-	@echo "make deploy       - Pull latest code and redeploy container (PROD)"
-	@echo "make logs         - View live logs from container"
-	@echo "make shell        - Open bash shell inside running container"
-	@echo "make status       - Check container status"
-	@echo "make stop         - Stop the container"
-	@echo "make restart      - Restart the container"
-	@echo "make clean-db     - Reset database (Drop & Create tables) - Interactive"
-	@echo "make create-admin - Create/Promote admin user (inside container)"
-	@echo "make seed-data    - Seed regions and countries into database"
-	@echo "make test         - Run tests locally"
-	@echo "make install      - Install local dependencies"
-	@echo "make run-local    - Run app locally with hot reload"
+	@echo "make deploy         - Pull latest code and redeploy container (PROD)"
+	@echo "make logs           - View live logs from container"
+	@echo "make logs-webhook   - View webhook logs only"
+	@echo "make logs-errors    - View error logs only"
+	@echo "make shell          - Open bash shell inside running container"
+	@echo "make status         - Check container status"
+	@echo "make stop           - Stop the container"
+	@echo "make restart        - Restart the container"
+	@echo "make clean-db       - Reset database (Drop & Create tables) - Interactive"
+	@echo "make create-admin   - Create/Promote admin user (inside container)"
+	@echo "make seed-data      - Seed regions and countries into database"
+	@echo "make test           - Run tests locally"
+	@echo "make install        - Install local dependencies"
+	@echo "make run-local      - Run app locally with hot reload"
 
 deploy:
 	@echo "🚀 Redeploying..."
@@ -25,8 +27,16 @@ deploy:
 redeploy: deploy
 
 logs:
-	@echo "Combine logs..."
+	@echo "📋 Viewing all logs..."
 	docker logs -f coupon-api-container
+
+logs-webhook:
+	@echo "🔔 Viewing webhook logs..."
+	docker logs -f coupon-api-container 2>&1 | grep --line-buffered WEBHOOK
+
+logs-errors:
+	@echo "❌ Viewing error logs..."
+	docker logs -f coupon-api-container 2>&1 | grep --line-buffered -i error
 
 shell:
 	@echo "🐚 Entering container..."
