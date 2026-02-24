@@ -13,7 +13,7 @@ from app.services.payment_service import process_payment, PaymentResult
 class OrderService:
     
     @staticmethod
-    def create_order_from_cart(db: Session, user_id: UUID, payment_method: str = "mock") -> Tuple[Optional[Order], str]:
+    def create_order_from_cart(db: Session, user_id: UUID, payment_method: str = "mock", currency: str = "USD") -> Tuple[Optional[Order], str]:
         """Create an order from user's cart and process payment"""
         # Get cart items
         cart_items = CartService.get_cart(db, user_id)
@@ -27,6 +27,7 @@ class OrderService:
             order = Order(
                 user_id=user_id,
                 total_amount=0,
+                currency=currency,
                 status="paid",
                 payment_method="free"
             )
@@ -36,6 +37,7 @@ class OrderService:
                 order = Order(
                     user_id=user_id,
                     total_amount=total,
+                    currency=currency,
                     status="pending_payment",
                     payment_method="stripe"
                 )
@@ -49,6 +51,7 @@ class OrderService:
                 order = Order(
                     user_id=user_id,
                     total_amount=total,
+                    currency=currency,
                     status="paid",
                     payment_id=payment_result.payment_id,
                     payment_method=payment_result.gateway

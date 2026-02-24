@@ -83,7 +83,6 @@ class OrderResponse(BaseModel):
     payment_method: Optional[str] = None
     created_at: datetime
     currency: str = "USD"
-    currency_symbol: str = "$"
     items: List[OrderItemResponse] = []
     
     class Config:

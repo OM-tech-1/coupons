@@ -375,15 +375,19 @@ class CouponService:
         if not db_coupon:
             return False
         
-        # Check if coupon has been purchased
+        # Check if coupon is referenced in orders or carts
         has_orders = db.query(OrderItem).filter(OrderItem.coupon_id == coupon_id).first()
         
-        if has_orders:
-            # Soft-delete: deactivate instead of removing (preserves order history)
+        from app.models.cart import CartItem
+        in_cart = db.query(CartItem).filter(CartItem.coupon_id == coupon_id).first()
+        
+        if has_orders or in_cart:
+            # Soft-delete: deactivate instead of removing (preserves order history and cart references)
             db_coupon.is_active = False
+            db_coupon.is_featured = False
             db.commit()
         else:
-            # Hard-delete: no orders reference this coupon
+            # Hard-delete: no orders or carts reference this coupon
             db.query(UserCoupon).filter(UserCoupon.coupon_id == coupon_id).delete()
             db.query(CouponView).filter(CouponView.coupon_id == coupon_id).delete()
             db.delete(db_coupon)

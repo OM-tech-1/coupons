@@ -86,8 +86,8 @@ class InvoiceService:
         elements.append(Paragraph("<br/>".join(customer_info), normal_style))
         elements.append(Spacer(1, 0.3 * inch))
 
-        # Determine currency - use code instead of symbol
-        currency_code = getattr(user, "context_currency", None) or get_currency_from_phone_code(user.phone_number)
+        # Determine currency from order (if available) or fallback to user's phone
+        currency_code = getattr(order, "currency", None) or getattr(user, "context_currency", None) or get_currency_from_phone_code(user.phone_number)
 
         # --- Items Table ---
         data = [["Item Description", "Qty", "Price", "Total"]]
@@ -112,8 +112,8 @@ class InvoiceService:
                 f"{line_total:.2f} {currency_code}"
             ])
 
-        # Add total row
-        data.append(["", "", "<b>Total</b>", f"<b>{order.total_amount:.2f} {currency_code}</b>"])
+        # Add total row (without HTML tags - use table styling instead)
+        data.append(["", "", "Total", f"{order.total_amount:.2f} {currency_code}"])
 
         # Table Style
         table = Table(data, colWidths=[4 * inch, 0.8 * inch, 1.0 * inch, 1.2 * inch])
