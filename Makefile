@@ -1,6 +1,6 @@
 # Makefile for Coupon API
 
-.PHONY: help deploy redeploy logs logs-webhook logs-errors shell stop restart status clean-db create-admin seed-data test install run-local setup-load-test load-test load-test-headless benchmark benchmark-simple
+.PHONY: help deploy redeploy logs logs-webhook logs-errors shell stop restart status clean-db create-admin seed-data migrate test install run-local setup-load-test load-test load-test-headless benchmark benchmark-simple
 
 help:
 	@echo "Coupon API Management"
@@ -16,6 +16,7 @@ help:
 	@echo "make clean-db         - Reset database (Drop & Create tables) - Interactive"
 	@echo "make create-admin     - Create/Promote admin user (inside container)"
 	@echo "make seed-data        - Seed regions and countries into database"
+	@echo "make migrate          - Run pending database migrations"
 	@echo "make test             - Run tests locally"
 	@echo "make install          - Install local dependencies"
 	@echo "make run-local        - Run app locally with hot reload"
@@ -72,6 +73,15 @@ create-admin:
 seed-data:
 	@echo "🌱 Seeding regions and countries..."
 	docker exec -it coupon-api-container python scripts/seed_regions_countries.py
+
+migrate:
+	@echo "🔄 Running database migrations..."
+	@echo "Note: Run 'make deploy' first to ensure latest code is on server"
+	@echo ""
+	@echo "Running migration: 015_add_currency_to_orders.sql"
+	@cat migrations/015_add_currency_to_orders.sql | docker exec -i coupon-api-container psql $$DATABASE_URL
+	@echo ""
+	@echo "✅ Migration complete - Run 'make restart' to apply changes"
 
 test:
 	pytest
