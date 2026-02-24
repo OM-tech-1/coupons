@@ -26,6 +26,7 @@ class PackageService:
             category_id=data.category_id,
             is_active=data.is_active,
             is_featured=data.is_featured,
+            expiration_date=data.expiration_date,
         )
         db.add(pkg)
         db.flush()
@@ -112,6 +113,7 @@ class PackageService:
                 "category_id": pkg.category_id,
                 "is_active": pkg.is_active,
                 "is_featured": pkg.is_featured,
+                "expiration_date": pkg.expiration_date,
                 "created_at": pkg.created_at,
                 "category": cat,
                 "coupon_count": count,
@@ -122,14 +124,39 @@ class PackageService:
 
     @staticmethod
     def get_by_id(db: Session, package_id: UUID) -> Optional[dict]:
-        return PackageService._load_full(db, package_id)
+        # Try cache first
+        cache_k = cache_key("packages", "id", str(package_id))
+        cached = get_cache(cache_k)
+        if cached is not None:
+            return cached
+        
+        result = PackageService._load_full(db, package_id)
+        
+        # Cache the result
+        if result:
+            set_cache(cache_k, result, CACHE_TTL_MEDIUM)
+        
+        return result
 
     @staticmethod
     def get_by_slug(db: Session, slug: str) -> Optional[dict]:
+        # Try cache first
+        cache_k = cache_key("packages", "slug", slug)
+        cached = get_cache(cache_k)
+        if cached is not None:
+            return cached
+        
         pkg = db.query(Package).filter(Package.slug == slug).first()
         if not pkg:
             return None
-        return PackageService._load_full(db, pkg.id)
+        
+        result = PackageService._load_full(db, pkg.id)
+        
+        # Cache the result
+        if result:
+            set_cache(cache_k, result, CACHE_TTL_MEDIUM)
+        
+        return result
 
     @staticmethod
     def get_coupons(db: Session, package_id: UUID) -> List[Coupon]:
@@ -172,6 +199,8 @@ class PackageService:
         db.commit()
         db.refresh(pkg)
         invalidate_cache("packages:*")
+        invalidate_cache(f"packages:id:{package_id}")
+        invalidate_cache(f"packages:slug:*")
         return PackageService._load_full(db, package_id)
 
     @staticmethod
@@ -188,6 +217,8 @@ class PackageService:
             PackageService._reset_orphaned_flags(db, coupon_ids)
         db.commit()
         invalidate_cache("packages:*")
+        invalidate_cache(f"packages:id:{package_id}")
+        invalidate_cache(f"packages:slug:*")
         return True
 
     @staticmethod
@@ -212,6 +243,8 @@ class PackageService:
 
         db.commit()
         invalidate_cache("packages:*")
+        invalidate_cache(f"packages:id:{package_id}")
+        invalidate_cache(f"packages:slug:*")
         return PackageService._load_full(db, package_id)
 
     @staticmethod
@@ -233,6 +266,8 @@ class PackageService:
 
         db.commit()
         invalidate_cache("packages:*")
+        invalidate_cache(f"packages:id:{package_id}")
+        invalidate_cache(f"packages:slug:*")
         return PackageService._load_full(db, package_id)
 
     @staticmethod
@@ -318,6 +353,7 @@ class PackageService:
             "category_id": pkg.category_id,
             "is_active": pkg.is_active,
             "is_featured": pkg.is_featured,
+            "expiration_date": pkg.expiration_date,
             "created_at": pkg.created_at,
             "category": cat,
             "coupons": coupons,

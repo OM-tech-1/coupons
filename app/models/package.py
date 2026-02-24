@@ -20,6 +20,7 @@ class Package(Base):
     total_sold = Column(Integer, default=0)
     is_active = Column(Boolean, default=True, index=True)
     is_featured = Column(Boolean, default=False, index=True)
+    expiration_date = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=True, index=True)

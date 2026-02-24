@@ -1,6 +1,6 @@
 # Makefile for Coupon API
 
-.PHONY: help deploy redeploy logs logs-webhook logs-errors shell stop restart status clean-db create-admin seed-data test install run-local load-test load-test-headless benchmark
+.PHONY: help deploy redeploy logs logs-webhook logs-errors shell stop restart status clean-db create-admin seed-data test install run-local setup-load-test load-test load-test-headless benchmark benchmark-simple
 
 help:
 	@echo "Coupon API Management"
@@ -21,6 +21,8 @@ help:
 	@echo "make run-local        - Run app locally with hot reload"
 	@echo ""
 	@echo "Load Testing:"
+	@echo "make setup-load-test  - Install locust for load testing"
+	@echo "make benchmark-simple - Simple benchmark (curl only, no install)"
 	@echo "make load-test        - Run load test (interactive web UI)"
 	@echo "make load-test-headless - Run load test (headless, 2000 users)"
 	@echo "make benchmark        - Quick benchmark (100 users, 1 min)"
@@ -79,6 +81,14 @@ install:
 
 run-local:
 	uvicorn app.main:app --reload --port 8000
+
+setup-load-test:
+	@echo "📦 Installing load testing tools..."
+	pip install locust requests
+
+benchmark-simple:
+	@echo "⚡ Running simple benchmark (curl only)..."
+	@bash scripts/simple_benchmark.sh https://api.vouchergalaxy.com /health
 
 load-test:
 	@echo "🔥 Starting Load Test (Web UI)..."

@@ -17,6 +17,7 @@ class PackageBase(BaseModel):
     category_id: Optional[UUID] = None
     is_active: bool = Field(default=True)
     is_featured: bool = Field(default=False)
+    expiration_date: Optional[datetime] = Field(default=None, description="Package expiration date")
 
     @validator('slug')
     def validate_slug(cls, v):
@@ -41,6 +42,7 @@ class PackageUpdate(BaseModel):
     category_id: Optional[UUID] = None
     is_active: Optional[bool] = None
     is_featured: Optional[bool] = None
+    expiration_date: Optional[datetime] = Field(default=None, description="Package expiration date")
     coupon_ids: Optional[List[UUID]] = Field(default=None, description="Replace package coupons with this list")
 
     @validator('slug')
@@ -142,6 +144,7 @@ class PackageResponse(PackageBase):
             'category_id': obj.category_id,
             'is_active': obj.is_active,
             'is_featured': obj.is_featured,
+            'expiration_date': obj.expiration_date,
             'created_at': obj.created_at,
             'max_saving': obj.discount or 0.0,
             'pricing': obj.pricing if hasattr(obj, 'pricing') else None,
@@ -215,6 +218,7 @@ class PackageListResponse(PackageBase):
             'category_id': obj.category_id,
             'is_active': obj.is_active,
             'is_featured': obj.is_featured,
+            'expiration_date': obj.expiration_date,
             'created_at': obj.created_at,
             'max_saving': obj.discount or 0.0,
             'pricing': obj.pricing if hasattr(obj, 'pricing') else None,

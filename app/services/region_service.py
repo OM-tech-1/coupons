@@ -68,16 +68,46 @@ class RegionService:
 
     @staticmethod
     def get_by_id(db: Session, region_id: UUID) -> Optional[Region]:
-        """Get a region by its ID"""
-        return db.query(Region).filter(Region.id == region_id).first()
+        """Get a region by its ID (cached)"""
+        cache_k = cache_key("regions", "id", str(region_id))
+        cached = get_cache(cache_k)
+        if cached is not None:
+            return cached
+        
+        region = db.query(Region).filter(Region.id == region_id).first()
+        if region:
+            cache_data = {
+                "id": str(region.id), "name": region.name, "slug": region.slug,
+                "description": region.description, "display_order": region.display_order,
+                "is_active": region.is_active,
+                "created_at": str(region.created_at) if region.created_at else None,
+            }
+            set_cache(cache_k, cache_data, CACHE_TTL_MEDIUM)
+        return region
 
     @staticmethod
     def get_by_slug(db: Session, slug: str, with_countries: bool = False) -> Optional[Region]:
-        """Get a region by its slug"""
+        """Get a region by its slug (cached)"""
+        cache_k = cache_key("regions", "slug", slug, with_countries)
+        cached = get_cache(cache_k)
+        if cached is not None and not with_countries:
+            return cached
+        
         query = db.query(Region)
         if with_countries:
             query = query.options(joinedload(Region.countries))
-        return query.filter(Region.slug == slug).first()
+        region = query.filter(Region.slug == slug).first()
+        
+        if region and not with_countries:
+            cache_data = {
+                "id": str(region.id), "name": region.name, "slug": region.slug,
+                "description": region.description, "display_order": region.display_order,
+                "is_active": region.is_active,
+                "created_at": str(region.created_at) if region.created_at else None,
+            }
+            set_cache(cache_k, cache_data, CACHE_TTL_MEDIUM)
+        
+        return region
 
     @staticmethod
     def update(db: Session, region_id: UUID, region_data: RegionUpdate) -> Optional[Region]:

@@ -28,6 +28,7 @@ class CategoryService:
         
         # Invalidate category list cache
         invalidate_cache("categories:list:*")
+        invalidate_cache("categories:with-counts:*")
         
         return db_category
 
@@ -64,8 +65,23 @@ class CategoryService:
 
     @staticmethod
     def get_by_id(db: Session, category_id: UUID) -> Optional[Category]:
-        """Get a category by its ID"""
-        return db.query(Category).filter(Category.id == category_id).first()
+        """Get a category by its ID (cached)"""
+        cache_k = cache_key("categories", "id", str(category_id))
+        cached = get_cache(cache_k)
+        if cached is not None:
+            # Return cached dict as-is (API will handle serialization)
+            return cached
+        
+        category = db.query(Category).filter(Category.id == category_id).first()
+        if category:
+            cache_data = {
+                "id": str(category.id), "name": category.name, "slug": category.slug,
+                "description": category.description, "icon": category.icon,
+                "display_order": category.display_order, "is_active": category.is_active,
+                "created_at": str(category.created_at) if category.created_at else None,
+            }
+            set_cache(cache_k, cache_data, CACHE_TTL_MEDIUM)
+        return category
 
     @staticmethod
     def get_by_slug(db: Session, slug: str) -> Optional[Category]:
@@ -143,6 +159,7 @@ class CategoryService:
         
         # Invalidate category caches
         invalidate_cache("categories:list:*")
+        invalidate_cache("categories:with-counts:*")
         invalidate_cache(f"categories:id:{category_id}")
         invalidate_cache(f"categories:slug:*")
         
@@ -160,6 +177,7 @@ class CategoryService:
         
         # Invalidate category caches
         invalidate_cache("categories:list:*")
+        invalidate_cache("categories:with-counts:*")
         invalidate_cache(f"categories:id:{category_id}")
         
         return True
