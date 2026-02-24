@@ -98,7 +98,7 @@ class InvoiceService:
             if item.coupon:
                 desc = f"{item.coupon.title} ({item.coupon.code})"
             elif item.package:
-                desc = f"{item.package.title} (Package)"
+                desc = f"{item.package.name} (Package)"
             else:
                 desc = "Unknown Item"
             
