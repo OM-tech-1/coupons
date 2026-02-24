@@ -40,7 +40,7 @@ def create_coupon(
 def list_coupons(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
-    active_only: bool = Query(False),
+    active_only: bool = Query(True, description="Show only active coupons (default: true)"),
     category_id: Optional[UUID] = Query(None, description="Filter by category ID"),
     region_id: Optional[UUID] = Query(None, description="Filter by region ID"),
     country_id: Optional[UUID] = Query(None, description="Filter by country ID"),
