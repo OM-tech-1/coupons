@@ -13,9 +13,9 @@ class StripeConfig:
     """Stripe configuration settings"""
     
     def __init__(self):
-        self.secret_key = os.getenv("STRIPE_SECRET_KEY", "")
-        self.publishable_key = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
-        self.webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+        self.secret_key = os.getenv("STRIPE_SECRET_KEY", "").strip()
+        self.publishable_key = os.getenv("STRIPE_PUBLISHABLE_KEY", "").strip()
+        self.webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
         self.api_version = "2023-10-16"  # Stripe API version
         self.environment = os.getenv("ENVIRONMENT", "test")
         
