@@ -28,12 +28,34 @@ def create_coupon(
     # Check if code already exists
     existing = CouponService.get_by_code(db, coupon.code)
     if existing:
-        # If coupon exists but is soft-deleted, restore it
+        # If coupon exists but is soft-deleted, restore it with new data
         if not existing.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Coupon code '{coupon.code}' exists but is inactive. Please restore it instead of creating a new one, or use a different code."
+            # Restore the soft-deleted coupon with new data
+            from app.schemas.coupon import CouponUpdate
+            update_data = CouponUpdate(
+                title=coupon.title,
+                description=coupon.description,
+                discount_type=coupon.discount_type,
+                discount_amount=coupon.discount_amount,
+                price=coupon.price,
+                redeem_code=coupon.redeem_code,
+                brand=coupon.brand,
+                category_id=coupon.category_id,
+                availability_type=coupon.availability_type,
+                picture_url=coupon.picture_url,
+                expiration_date=coupon.expiration_date,
+                is_active=True,  # Restore it
+                is_featured=coupon.is_featured,
+                pricing=coupon.pricing
             )
+            
+            restored = CouponService.update(db, existing.id, update_data)
+            
+            # Invalidate cache
+            from app.cache import invalidate_cache
+            invalidate_cache("coupons:*")
+            
+            return restored
         else:
             # Coupon exists and is active
             raise HTTPException(
