@@ -20,7 +20,7 @@ def test_external_payment_status_flow(client, monkeypatch, db):
     def mock_create_intent(self, order_id, amount, currency, metadata):
         from app.models.payment import Payment, PaymentStatus, PaymentGateway
         
-        o = self.db.query(Order).get(order_id)
+        o = self.db.get(Order, order_id)
         if o:
             o.stripe_payment_intent_id = "pi_status_test_123"
             

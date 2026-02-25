@@ -42,7 +42,7 @@ def test_full_purchase_flow(client, regular_user, sample_coupon, db, monkeypatch
     # Mock Stripe Service
     def mock_create_intent(self, order_id, amount, currency, metadata):
         # Verify order exists in DB
-        o = self.db.query(Order).get(order_id)
+        o = self.db.get(Order, order_id)
         assert o is not None
         o.stripe_payment_intent_id = "pi_mock_flow_123"
         self.db.commit()

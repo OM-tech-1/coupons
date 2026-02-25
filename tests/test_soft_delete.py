@@ -17,8 +17,59 @@ from app.models.package import Package
 from app.models.order import Order, OrderItem
 from app.models.cart import CartItem
 from app.models.user_coupon import UserCoupon
+from app.models.user import User
 from app.services.coupon_service import CouponService
 from app.services.package_service import PackageService
+from app.utils.security import get_password_hash
+
+
+# Fixtures
+@pytest.fixture
+def test_user(db):
+    """Create a test user"""
+    user = User(
+        phone_number="+1234567890",
+        hashed_password=get_password_hash("testpass123"),
+        full_name="Test User",
+        role="USER",
+        is_active=True
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@pytest.fixture
+def test_coupon(db):
+    """Create a test coupon"""
+    coupon = Coupon(
+        code=f"TEST{uuid4().hex[:8].upper()}",
+        title="Test Coupon",
+        discount_type="percentage",
+        discount_amount=10.0,
+        price=5.0,
+        is_active=True
+    )
+    db.add(coupon)
+    db.commit()
+    db.refresh(coupon)
+    return coupon
+
+
+@pytest.fixture
+def test_package(db):
+    """Create a test package"""
+    package = Package(
+        name="Test Package",
+        slug=f"test-package-{uuid4().hex[:8]}",
+        description="Test package description",
+        is_active=True
+    )
+    db.add(package)
+    db.commit()
+    db.refresh(package)
+    return package
 
 
 class TestCouponSoftDelete:
@@ -315,35 +366,3 @@ class TestRestoreSoftDeletedItems:
         package = db.query(Package).filter(Package.id == test_package.id).first()
         assert package.is_active is True
 
-
-# Fixtures
-@pytest.fixture
-def test_coupon(db):
-    """Create a test coupon"""
-    coupon = Coupon(
-        code=f"TEST{uuid4().hex[:8].upper()}",
-        title="Test Coupon",
-        discount_type="percentage",
-        discount_amount=10.0,
-        price=5.0,
-        is_active=True
-    )
-    db.add(coupon)
-    db.commit()
-    db.refresh(coupon)
-    return coupon
-
-
-@pytest.fixture
-def test_package(db):
-    """Create a test package"""
-    package = Package(
-        name="Test Package",
-        slug=f"test-package-{uuid4().hex[:8]}",
-        description="Test package description",
-        is_active=True
-    )
-    db.add(package)
-    db.commit()
-    db.refresh(package)
-    return package

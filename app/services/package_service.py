@@ -91,7 +91,7 @@ class PackageService:
             cat = None
             if pkg.category_id:
                 from app.models.category import Category
-                cat_obj = db.query(Category).get(pkg.category_id)
+                cat_obj = db.get(Category, pkg.category_id)
                 if cat_obj:
                     cat = {"id": cat_obj.id, "name": cat_obj.name, "slug": cat_obj.slug}
             pkg_coupon_ids = [a.coupon_id for a in db.query(PackageCoupon).filter(PackageCoupon.package_id == pkg.id).all()]
@@ -326,7 +326,7 @@ class PackageService:
         cat = None
         if pkg.category_id:
             from app.models.category import Category
-            cat_obj = db.query(Category).get(pkg.category_id)
+            cat_obj = db.get(Category, pkg.category_id)
             if cat_obj:
                 cat = {"id": cat_obj.id, "name": cat_obj.name, "slug": cat_obj.slug}
 
