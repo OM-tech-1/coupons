@@ -28,10 +28,18 @@ def create_coupon(
     # Check if code already exists
     existing = CouponService.get_by_code(db, coupon.code)
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Coupon code already exists"
-        )
+        # If coupon exists but is soft-deleted, restore it
+        if not existing.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Coupon code '{coupon.code}' exists but is inactive. Please restore it instead of creating a new one, or use a different code."
+            )
+        else:
+            # Coupon exists and is active
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Coupon code already exists"
+            )
     
     return CouponService.create(db, coupon)
 
@@ -131,7 +139,8 @@ def update_coupon(
     # If updating code, check for duplicates
     if coupon_data.code:
         existing = CouponService.get_by_code(db, coupon_data.code)
-        if existing and existing.id != coupon_id:
+        # Only check active coupons for code conflicts
+        if existing and existing.id != coupon_id and existing.is_active:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Coupon code already exists"

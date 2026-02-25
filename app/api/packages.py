@@ -24,8 +24,46 @@ def create_package(
 
     from app.models.package import Package
     existing = db.query(Package).filter(Package.slug == data.slug).first()
+    
     if existing:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Package with slug '{data.slug}' already exists")
+        # If package exists but is soft-deleted, restore it instead of creating new one
+        if not existing.is_active:
+            # Restore the soft-deleted package with new data
+            existing.name = data.name
+            existing.description = data.description
+            existing.picture_url = data.picture_url
+            existing.brand = data.brand
+            existing.discount = data.discount
+            existing.category_id = data.category_id
+            existing.is_active = data.is_active
+            existing.is_featured = data.is_featured
+            existing.expiration_date = data.expiration_date
+            
+            # Update coupon associations if provided
+            if data.coupon_ids:
+                # Clear existing associations
+                from app.models.package import PackageCoupon
+                db.query(PackageCoupon).filter(PackageCoupon.package_id == existing.id).delete()
+                
+                # Add new associations
+                for coupon_id in data.coupon_ids:
+                    assoc = PackageCoupon(package_id=existing.id, coupon_id=coupon_id)
+                    db.add(assoc)
+            
+            db.commit()
+            db.refresh(existing)
+            
+            # Invalidate cache
+            from app.cache import invalidate_cache
+            invalidate_cache("packages:*")
+            
+            return existing
+        else:
+            # Package exists and is active - can't create duplicate
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail=f"Package with slug '{data.slug}' already exists and is active"
+            )
 
     return PackageService.create(db, data)
 
@@ -77,8 +115,12 @@ def update_package(
     if data.slug:
         from app.models.package import Package
         existing = db.query(Package).filter(Package.slug == data.slug).first()
-        if existing and existing.id != package_id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Package with slug '{data.slug}' already exists")
+        # Only check active packages for slug conflicts (allow reusing soft-deleted slugs)
+        if existing and existing.id != package_id and existing.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail=f"Package with slug '{data.slug}' already exists"
+            )
 
     pkg = PackageService.update(db, package_id, data)
     if not pkg:
