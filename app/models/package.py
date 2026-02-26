@@ -11,7 +11,7 @@ class Package(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(200), nullable=False)
-    slug = Column(String(220), unique=True, nullable=False, index=True)
+    slug = Column(String(220), nullable=False, index=True)  # Non-unique, allows duplicate package names
     description = Column(Text, nullable=True)
     picture_url = Column(String(500), nullable=True)
     brand = Column(String(100), nullable=True)

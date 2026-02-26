@@ -29,3 +29,7 @@ docs/bugs_and_fixes/
 debug_output.txt
 *.tmp
 *.bak
+
+# Bulk import folder (contains sensitive data - Excel files, scripts)
+add-coupon/
+!add-coupon/.gitignore
