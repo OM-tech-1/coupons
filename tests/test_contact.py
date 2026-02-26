@@ -20,11 +20,20 @@ def admin_token(db):
     from app.models.user import User
     from passlib.context import CryptContext
     from app.utils.jwt import create_access_token
+    import uuid
     
     pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
     
+    # Check if admin already exists
+    existing_admin = db.query(User).filter(User.phone_number == "+918943657095").first()
+    
+    if existing_admin:
+        return create_access_token({"sub": str(existing_admin.id)})
+    
+    # Create new admin with unique phone number
+    unique_phone = f"+91894365709{uuid.uuid4().hex[:1]}"
     admin = User(
-        phone_number="+918943657095",
+        phone_number=unique_phone,
         hashed_password=pwd_context.hash("8943657095"),
         role="ADMIN",
         is_active=True
