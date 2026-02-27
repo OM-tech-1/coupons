@@ -1,7 +1,7 @@
 {
     "info": {
         "_postman_id": "coupon-app-collection",
-        "name": "Coupon App API v2.3 (Admin + Stripe + Wallet)",
+        "name": "Coupon App API v2.4 (Admin + Stripe + Wallet + Contact)",
         "description": "Complete API collection for the Coupon E-commerce application with Admin Dashboard, Categories, Geography & Stripe Payments",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
@@ -767,6 +767,268 @@
                             ]
                         },
                         "description": "Track when a user views coupon details. No auth required. Frontend should call this on coupon detail page load."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Contact / Help",
+            "description": "Contact and support message endpoints. Public submission, admin management.",
+            "item": [
+                {
+                    "name": "Submit Contact Message (Public)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"subject\": \"Need help with coupon redemption\",\n    \"message\": \"I purchased a coupon but cannot redeem it. Please help.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/contact/",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "contact",
+                                ""
+                            ]
+                        },
+                        "description": "Submit a new contact/support message. Public endpoint - no authentication required. Email must be valid format. Message must be at least 10 characters."
+                    }
+                },
+                {
+                    "name": "List Contact Messages (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/contact/admin?skip=0&limit=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "contact",
+                                "admin"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0",
+                                    "description": "Pagination offset"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20",
+                                    "description": "Items per page (1-100)"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "pending",
+                                    "description": "Filter by status: pending or resolved",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "",
+                                    "description": "Search by name, email, or subject",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "List all contact messages with pagination and filtering. Admin only. Returns total count and paginated items."
+                    }
+                },
+                {
+                    "name": "Get Contact Message by ID (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/contact/admin/{{message_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "contact",
+                                "admin",
+                                "{{message_id}}"
+                            ]
+                        },
+                        "description": "Get a specific contact message by ID. Admin only."
+                    }
+                },
+                {
+                    "name": "Update Message Status (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"resolved\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/contact/admin/{{message_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "contact",
+                                "admin",
+                                "{{message_id}}"
+                            ]
+                        },
+                        "description": "Update contact message status. Admin only. Status can be 'pending' or 'resolved'."
+                    }
+                },
+                {
+                    "name": "Filter by Status - Pending (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/contact/admin?status=pending&limit=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "contact",
+                                "admin"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "pending"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Get all pending contact messages. Admin only."
+                    }
+                },
+                {
+                    "name": "Filter by Status - Resolved (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/contact/admin?status=resolved&limit=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "contact",
+                                "admin"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "resolved"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Get all resolved contact messages. Admin only."
+                    }
+                },
+                {
+                    "name": "Search Messages (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/contact/admin?search=coupon&limit=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "contact",
+                                "admin"
+                            ],
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "coupon",
+                                    "description": "Search in name, email, or subject"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Search contact messages by name, email, or subject. Admin only. Case-insensitive search."
                     }
                 }
             ]

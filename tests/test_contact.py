@@ -15,7 +15,7 @@ def db():
     db.close()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def admin_token(db):
     from app.models.user import User
     from passlib.context import CryptContext
@@ -24,22 +24,17 @@ def admin_token(db):
     
     pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
     
-    # Check if admin already exists
-    existing_admin = db.query(User).filter(User.phone_number == "+918943657095").first()
-    
-    if existing_admin:
-        return create_access_token({"sub": str(existing_admin.id)})
-    
-    # Create new admin with unique phone number
-    unique_phone = f"+91894365709{uuid.uuid4().hex[:1]}"
+    # Create admin with unique phone number for each test
+    unique_phone = f"+919{uuid.uuid4().hex[:9]}"
     admin = User(
         phone_number=unique_phone,
-        hashed_password=pwd_context.hash("8943657095"),
+        hashed_password=pwd_context.hash("testpassword"),
         role="ADMIN",
         is_active=True
     )
     db.add(admin)
     db.commit()
+    db.refresh(admin)
     
     return create_access_token({"sub": str(admin.id)})
 
