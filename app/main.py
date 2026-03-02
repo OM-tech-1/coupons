@@ -132,19 +132,32 @@ PUBLIC_CACHEABLE_PREFIXES = ("/coupons", "/categories", "/countries", "/regions"
 
 @app.middleware("http")
 async def cache_control_middleware(request, call_next):
-    response = await call_next(request)
-    path = request.url.path
+    try:
+        response = await call_next(request)
+        path = request.url.path
 
-    if (
-        request.method == "GET"
-        and any(path.startswith(p) for p in PUBLIC_CACHEABLE_PREFIXES)
-        and "authorization" not in request.headers
-    ):
-        response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=30"
-    else:
-        response.headers["Cache-Control"] = "no-cache, no-store"
+        # Safely check for authorization header
+        has_auth = False
+        try:
+            has_auth = "authorization" in request.headers
+        except Exception:
+            pass
 
-    return response
+        if (
+            request.method == "GET"
+            and any(path.startswith(p) for p in PUBLIC_CACHEABLE_PREFIXES)
+            and not has_auth
+        ):
+            response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=30"
+        else:
+            response.headers["Cache-Control"] = "no-cache, no-store"
+
+        return response
+    except Exception as e:
+        # In case of any middleware error, let it propagate but log it
+        import logging
+        logging.getLogger(__name__).error(f"Cache control middleware error: {e}")
+        raise
 
 # CORS must be the last middleware added so it's the outermost wrapper
 # This ensures CORS headers are added even to 429/500 responses from other middleware

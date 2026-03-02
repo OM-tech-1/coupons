@@ -63,7 +63,7 @@ class CouponService:
                     db.add(association)
         
         db.commit()
-        # Removed unnecessary db.refresh - we have all the data we need
+        db.refresh(db_coupon)  # Refresh to get database-generated fields (created_at, etc.)
         
         # Invalidate coupon list cache
         invalidate_cache("coupons:list:*")
@@ -85,34 +85,10 @@ class CouponService:
         is_featured: Optional[bool] = None,
         min_discount: Optional[float] = None,
     ) -> List[Coupon]:
-        """Get all coupons with optional filtering (optimized caching)"""
+        """Get all coupons with optional filtering"""
         from sqlalchemy.orm import joinedload
         from app.models.coupon_country import CouponCountry
         from app.models.country import Country
-        
-        # Simplified cache key - use broader keys for better hit rates
-        # Only cache common queries (active, no search, first page)
-        use_cache = (active_only and not search and skip == 0 and 
-                    not region_id and not min_discount)
-        
-        cache_k = None
-        if use_cache:
-            cache_k = cache_key("coupons", "list", 
-                               str(category_id) if category_id else "all",
-                               str(country_id) if country_id else "all",
-                               availability_type or "all",
-                               str(is_featured) if is_featured is not None else "all",
-                               limit)
-            cached = get_cache(cache_k)
-            if cached is not None:
-                # Return cached IDs and fetch from DB (ensures fresh data)
-                coupon_ids = [UUID(c_id) for c_id in cached]
-                if coupon_ids:
-                    return db.query(Coupon).options(
-                        joinedload(Coupon.category),
-                        joinedload(Coupon.country_associations).joinedload(CouponCountry.country)
-                    ).filter(Coupon.id.in_(coupon_ids)).all()
-                return []
         
         # Query database with eager loading for relationships (avoid N+1)
         query = db.query(Coupon).options(
@@ -159,11 +135,6 @@ class CouponService:
             )
         
         coupons = query.offset(skip).limit(limit).all()
-        
-        # Cache only common queries (store IDs only for smaller cache footprint)
-        if use_cache and cache_k:
-            coupon_ids = [str(c.id) for c in coupons]
-            set_cache(cache_k, coupon_ids, ttl=CACHE_TTL_MEDIUM)
         
         return coupons
 
@@ -310,7 +281,7 @@ class CouponService:
                         db.add(association)
         
         db.commit()
-        # Removed unnecessary db.refresh - coupon data is already updated
+        db.refresh(db_coupon)  # Refresh to get updated relationships
         
         # Invalidate coupon caches
         invalidate_cache("coupons:list:*")

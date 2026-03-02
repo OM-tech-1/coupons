@@ -81,7 +81,7 @@ class PaymentTokenService:
         
         self.db.add(token)
         self.db.commit()
-        # Removed unnecessary db.refresh - we have all the data we need
+        self.db.refresh(token)  # Refresh to get database-generated fields
         
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f"Generated payment token for order {order_id}, expires at {expires_at}")

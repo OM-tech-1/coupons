@@ -32,7 +32,7 @@ class CartService:
             existing.quantity += quantity
             try:
                 db.commit()
-                # Removed unnecessary db.refresh - we already have the data
+                db.refresh(existing)  # Refresh to get updated data
                 # Invalidate cart cache
                 invalidate_cache(f"cart:{user_id}:*")
                 return existing, "Quantity updated"
@@ -48,7 +48,7 @@ class CartService:
         db.add(cart_item)
         try:
             db.commit()
-            # Removed unnecessary db.refresh - we have all the data we need
+            db.refresh(cart_item)  # Refresh to get database-generated fields
             # Invalidate cart cache
             invalidate_cache(f"cart:{user_id}:*")
             return cart_item, "Added to cart"
@@ -61,7 +61,7 @@ class CartService:
             if existing:
                 existing.quantity += quantity
                 db.commit()
-                # Removed unnecessary db.refresh
+                db.refresh(existing)  # Refresh to get updated data
                 invalidate_cache(f"cart:{user_id}:*")
                 return existing, "Quantity updated"
             return None, "Failed to add to cart"
@@ -87,7 +87,7 @@ class CartService:
             existing.quantity += quantity
             try:
                 db.commit()
-                # Removed unnecessary db.refresh
+                db.refresh(existing)  # Refresh to get updated data
                 # Invalidate cart cache
                 invalidate_cache(f"cart:{user_id}:*")
                 return existing, "Quantity updated"
@@ -103,7 +103,7 @@ class CartService:
         db.add(cart_item)
         try:
             db.commit()
-            # Removed unnecessary db.refresh
+            db.refresh(cart_item)  # Refresh to get database-generated fields
             # Invalidate cart cache
             invalidate_cache(f"cart:{user_id}:*")
             return cart_item, "Added to cart"
@@ -116,7 +116,7 @@ class CartService:
             if existing:
                 existing.quantity += quantity
                 db.commit()
-                # Removed unnecessary db.refresh
+                db.refresh(existing)  # Refresh to get updated data
                 invalidate_cache(f"cart:{user_id}:*")
                 return existing, "Quantity updated"
             return None, "Failed to add to cart"

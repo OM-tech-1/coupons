@@ -102,7 +102,7 @@ class OrderService:
         CartService.clear_cart(db, user_id)
         
         db.commit()
-        # Removed unnecessary db.refresh - order data is already complete
+        db.refresh(order)  # Refresh to get all relationships and database-generated fields
         return order, "Order created successfully"
 
     @staticmethod

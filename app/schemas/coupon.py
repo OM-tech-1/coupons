@@ -81,28 +81,8 @@ class CouponResponseCommon(CouponBasePublic):
     @classmethod
     def compute_stock_sold(cls, data: Any) -> Any:
         """Set stock_sold to current_uses value and extract multi-currency pricing"""
-        if hasattr(data, '__dict__'):
-            data_dict = {k: v for k, v in data.__dict__.items() if not k.startswith('_')}
-            data_dict['stock_sold'] = data_dict.get('current_uses', 0)
-            
-            # Extract multi-currency pricing from pricing JSON field
-            pricing = data_dict.get('pricing', {})
-            if pricing and isinstance(pricing, dict):
-                prices = {}
-                discounts = {}
-                for currency, values in pricing.items():
-                    if isinstance(values, dict):
-                        prices[currency] = values.get('price', 0.0)
-                        discounts[currency] = values.get('discount_amount', 0.0)
-                data_dict['prices'] = prices
-                data_dict['discounts'] = discounts
-            else:
-                # Fallback to default USD pricing if no pricing JSON
-                data_dict['prices'] = {'USD': data_dict.get('price', 0.0)}
-                data_dict['discounts'] = {'USD': data_dict.get('discount_amount', 0.0)}
-            
-            return data_dict
-        elif isinstance(data, dict):
+        if isinstance(data, dict):
+            # Already a dict, just add computed fields
             data['stock_sold'] = data.get('current_uses', 0)
             
             # Extract multi-currency pricing from pricing JSON field
@@ -120,8 +100,43 @@ class CouponResponseCommon(CouponBasePublic):
                 # Fallback to default USD pricing if no pricing JSON
                 data['prices'] = {'USD': data.get('price', 0.0)}
                 data['discounts'] = {'USD': data.get('discount_amount', 0.0)}
+            
+            return data
         
-        return data
+        # SQLAlchemy model - convert to dict with all attributes
+        # This ensures compatibility across Python/Pydantic versions
+        data_dict = {}
+        
+        # Get all column attributes from the SQLAlchemy model
+        if hasattr(data, '__table__'):
+            for column in data.__table__.columns:
+                data_dict[column.name] = getattr(data, column.name, None)
+        
+        # Get relationship attributes
+        if hasattr(data, '__mapper__'):
+            for rel in data.__mapper__.relationships:
+                data_dict[rel.key] = getattr(data, rel.key, None)
+        
+        # Add computed fields
+        data_dict['stock_sold'] = data_dict.get('current_uses', 0)
+        
+        # Extract multi-currency pricing
+        pricing = data_dict.get('pricing', {})
+        if pricing and isinstance(pricing, dict):
+            prices = {}
+            discounts = {}
+            for currency, values in pricing.items():
+                if isinstance(values, dict):
+                    prices[currency] = values.get('price', 0.0)
+                    discounts[currency] = values.get('discount_amount', 0.0)
+            data_dict['prices'] = prices
+            data_dict['discounts'] = discounts
+        else:
+            # Fallback to default USD pricing
+            data_dict['prices'] = {'USD': data_dict.get('price', 0.0)}
+            data_dict['discounts'] = {'USD': data_dict.get('discount_amount', 0.0)}
+        
+        return data_dict
 
     model_config = ConfigDict(from_attributes=True)
 
