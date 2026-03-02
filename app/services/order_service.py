@@ -102,7 +102,7 @@ class OrderService:
         CartService.clear_cart(db, user_id)
         
         db.commit()
-        db.refresh(order)
+        # Removed unnecessary db.refresh - order data is already complete
         return order, "Order created successfully"
 
     @staticmethod

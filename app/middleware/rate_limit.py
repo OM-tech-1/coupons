@@ -48,6 +48,16 @@ def rate_limit_heavy(limit: str = "20/minute"):
     return limiter.limit(limit)
 
 
+def rate_limit_admin(limit: str = "30/minute"):
+    """Rate limit for admin endpoints"""
+    return limiter.limit(limit)
+
+
+def rate_limit_webhook(limit: str = "100/minute"):
+    """Rate limit for webhook endpoints (higher limit for legitimate traffic)"""
+    return limiter.limit(limit)
+
+
 def _custom_rate_limit_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle rate limit errors gracefully, including Redis auth failures."""
     detail = getattr(exc, "detail", str(exc))

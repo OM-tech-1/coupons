@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
 from typing import Optional
 from uuid import UUID
@@ -12,6 +12,7 @@ from app.schemas.admin import (
     PaginatedUsersResponse, PaginatedOrdersResponse,
     DashboardResponse
 )
+from app.middleware.rate_limit import limiter
 
 router = APIRouter()
 
@@ -29,7 +30,9 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
 # ============== Dashboard ==============
 
 @router.get("/dashboard", response_model=DashboardResponse)
+@limiter.limit("30/minute")
 def get_dashboard(
+    request: Request,
     refresh: bool = Query(False, description="Force refresh cache"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
@@ -41,7 +44,9 @@ def get_dashboard(
 # ============== User Management ==============
 
 @router.get("/users", response_model=PaginatedUsersResponse)
+@limiter.limit("30/minute")
 def list_users(
+    request: Request,
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     active_only: bool = Query(False),
@@ -54,8 +59,10 @@ def list_users(
 
 
 @router.get("/users/{user_id}", response_model=AdminUserResponse)
+@limiter.limit("30/minute")
 def get_user(
     user_id: UUID,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
@@ -70,9 +77,11 @@ def get_user(
 
 
 @router.patch("/users/{user_id}/status")
+@limiter.limit("30/minute")
 def toggle_user_status(
     user_id: UUID,
     is_active: bool,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
@@ -88,14 +97,12 @@ def toggle_user_status(
     db.commit()
     return {"message": f"User {'activated' if is_active else 'deactivated'} successfully"}
 
-    user.is_active = is_active
-    db.commit()
-    return {"message": f"User {'activated' if is_active else 'deactivated'} successfully"}
-
 
 @router.post("/users/{user_id}/promote", status_code=status.HTTP_200_OK)
+@limiter.limit("30/minute")
 def promote_user_to_admin(
     user_id: UUID,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):

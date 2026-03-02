@@ -51,10 +51,10 @@ class CouponService:
             valid_countries = db.query(Country.id).filter(Country.id.in_(country_ids)).all()
             valid_country_ids = {str(c.id) for c in valid_countries}
             
-            # Log warning for invalid country IDs
+            # Log warning for invalid country IDs (only in debug mode)
             invalid_ids = [str(cid) for cid in country_ids if str(cid) not in valid_country_ids]
-            if invalid_ids:
-                logger.warning(f"Skipping invalid country IDs for coupon '{db_coupon.code}': {invalid_ids}")
+            if invalid_ids and logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f"Skipping invalid country IDs for coupon '{db_coupon.code}': {invalid_ids}")
             
             # Create associations only for valid countries
             for country_id in country_ids:
@@ -63,7 +63,7 @@ class CouponService:
                     db.add(association)
         
         db.commit()
-        db.refresh(db_coupon)
+        # Removed unnecessary db.refresh - we have all the data we need
         
         # Invalidate coupon list cache
         invalidate_cache("coupons:list:*")
@@ -85,44 +85,36 @@ class CouponService:
         is_featured: Optional[bool] = None,
         min_discount: Optional[float] = None,
     ) -> List[Coupon]:
-        """Get all coupons with optional filtering (cached)"""
+        """Get all coupons with optional filtering (optimized caching)"""
         from sqlalchemy.orm import joinedload
         from app.models.coupon_country import CouponCountry
         from app.models.country import Country
         
-        # Try cache first (with new filter parameters in cache key)
-        cache_k = cache_key("coupons", "list", skip, limit, active_only, 
-                           str(category_id) if category_id else "none",
-                           str(region_id) if region_id else "none",
-                           str(country_id) if country_id else "none",
-                           availability_type or "all",
-                           search or "none",
-                           str(is_featured) if is_featured is not None else "none",
-                           str(min_discount) if min_discount is not None else "none")
-        cached = get_cache(cache_k)
-        if cached is not None:
-            # Reconstruct Coupon objects from cache and apply currency
-            coupons = []
-            for c_data in cached:
-                # We need to reconstruct objects to be compatible with Pydantic from_attributes
-                # OR we can return dicts if the API layer handles it.
-                # Assuming API expects objects or dicts compatible with response model.
-                
-                # Let's use a dynamic object or simple class logic
-                c_obj = Coupon(**{k: v for k, v in c_data.items() if k not in ['category', 'countries', 'pricing']})
-                # Restore pricing for display
-                c_obj.pricing = c_data.get('pricing')
-                
-                # Restore relationship structures for schema
-                if c_data.get('category'):
-                    from app.models.category import Category
-                    c_obj.category = Category(**c_data['category'])
-                
-                coupons.append(c_obj)
-                
-            return coupons
+        # Simplified cache key - use broader keys for better hit rates
+        # Only cache common queries (active, no search, first page)
+        use_cache = (active_only and not search and skip == 0 and 
+                    not region_id and not min_discount)
         
-        # Query database with eager loading for relationships
+        cache_k = None
+        if use_cache:
+            cache_k = cache_key("coupons", "list", 
+                               str(category_id) if category_id else "all",
+                               str(country_id) if country_id else "all",
+                               availability_type or "all",
+                               str(is_featured) if is_featured is not None else "all",
+                               limit)
+            cached = get_cache(cache_k)
+            if cached is not None:
+                # Return cached IDs and fetch from DB (ensures fresh data)
+                coupon_ids = [UUID(c_id) for c_id in cached]
+                if coupon_ids:
+                    return db.query(Coupon).options(
+                        joinedload(Coupon.category),
+                        joinedload(Coupon.country_associations).joinedload(CouponCountry.country)
+                    ).filter(Coupon.id.in_(coupon_ids)).all()
+                return []
+        
+        # Query database with eager loading for relationships (avoid N+1)
         query = db.query(Coupon).options(
             joinedload(Coupon.category),
             joinedload(Coupon.country_associations).joinedload(CouponCountry.country)
@@ -168,48 +160,12 @@ class CouponService:
         
         coupons = query.offset(skip).limit(limit).all()
         
-        # Cache the result (serialize for caching)
-        def sanitize(val):
-            if isinstance(val, bytes):
-                try:
-                    return val.decode('utf-8')
-                except UnicodeDecodeError:
-                    return None
-            return val
-
-        cache_data = [
-            {
-                "id": str(c.id),
-                "code": sanitize(c.code),
-                "redeem_code": sanitize(c.redeem_code),
-                "brand": sanitize(c.brand),
-                "title": sanitize(c.title),
-                "description": sanitize(c.description),
-                "discount_type": sanitize(c.discount_type),
-                "discount_amount": c.discount_amount,
-                "min_purchase": c.min_purchase,
-                "max_uses": c.max_uses,
-                "current_uses": c.current_uses,
-                "expiration_date": str(c.expiration_date) if c.expiration_date else None,
-                "is_active": c.is_active,
-                "price": c.price,
-                "stock": c.stock,
-                "is_featured": c.is_featured,
-                "created_at": str(c.created_at) if c.created_at else None,
-                "category_id": str(c.category_id) if c.category_id else None,
-                "category": {"id": str(c.category.id), "name": sanitize(c.category.name), "slug": sanitize(c.category.slug)} if c.category else None,
-                "availability_type": sanitize(c.availability_type),
-                "picture_url": sanitize(c.picture_url),
-                "pricing": c.pricing,
-                "countries": [{"id": str(ca.country.id), "name": sanitize(ca.country.name), "slug": sanitize(ca.country.slug), "country_code": sanitize(ca.country.country_code)} for ca in c.country_associations] if c.country_associations else [],
-            }
-            for c in coupons
-        ]
-        set_cache(cache_k, cache_data, CACHE_TTL_MEDIUM)
+        # Cache only common queries (store IDs only for smaller cache footprint)
+        if use_cache and cache_k:
+            coupon_ids = [str(c.id) for c in coupons]
+            set_cache(cache_k, coupon_ids, ttl=CACHE_TTL_MEDIUM)
         
-        # Apply currency to live objects
-        for c in coupons:
-            pass  # pricing dict is already on the object; frontend uses it
+        return coupons
             
         return coupons
 
@@ -356,7 +312,7 @@ class CouponService:
                         db.add(association)
         
         db.commit()
-        db.refresh(db_coupon)
+        # Removed unnecessary db.refresh - coupon data is already updated
         
         # Invalidate coupon caches
         invalidate_cache("coupons:list:*")

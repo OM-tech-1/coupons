@@ -10,23 +10,36 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Redis connection (lazy initialization)
+# Redis connection pool (lazy initialization)
+_redis_pool = None
 _redis_client = None
 
 def get_redis_client():
-    """Get or create Redis client singleton."""
-    global _redis_client
+    """Get or create Redis client with connection pooling."""
+    global _redis_client, _redis_pool
     if _redis_client is None:
         try:
             import redis
             redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-            _redis_client = redis.from_url(redis_url, decode_responses=True)
+            
+            # Create connection pool for better performance
+            _redis_pool = redis.ConnectionPool.from_url(
+                redis_url,
+                max_connections=50,
+                decode_responses=True,
+                socket_keepalive=True,
+                socket_connect_timeout=5,
+                retry_on_timeout=True
+            )
+            _redis_client = redis.Redis(connection_pool=_redis_pool)
+            
             # Test connection
             _redis_client.ping()
-            logger.info("Redis connected successfully")
+            logger.info("Redis connected successfully with connection pooling (max_connections=50)")
         except Exception as e:
             logger.warning(f"Redis connection failed: {e}. Caching disabled.")
             _redis_client = None
+            _redis_pool = None
     return _redis_client
 
 

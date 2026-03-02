@@ -78,7 +78,8 @@ class StripePaymentService:
             automatic_payment_methods={"enabled": True},
         )
 
-        logger.info(f"Created PaymentIntent: {payment_intent.id}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Created PaymentIntent: {payment_intent.id}")
 
         # Create or update Payment record
         if existing_payment:

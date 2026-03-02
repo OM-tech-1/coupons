@@ -53,11 +53,17 @@ class PackageService:
         is_featured: Optional[bool] = None,
         filter_by: Optional[str] = None,
     ) -> List[dict]:
-        cache_k = cache_key("packages", "list", skip, limit, category_id, is_active, is_featured, filter_by)
-        cached = get_cache(cache_k)
-        if cached is not None:
-            return cached
+        # Simplified cache key for better hit rates
+        use_cache = (skip == 0 and limit <= 100)
+        cache_k = None
+        
+        if use_cache:
+            cache_k = cache_key("packages", "list", category_id, is_active, is_featured, filter_by, limit)
+            cached = get_cache(cache_k)
+            if cached is not None:
+                return cached
 
+        # Optimized query with eager loading
         coupon_count = func.count(PackageCoupon.id).label("coupon_count")
         query = (
             db.query(Package, coupon_count)
@@ -87,14 +93,33 @@ class PackageService:
         rows = query.all()
 
         result = []
+        # Batch load categories to avoid N+1
+        package_ids = [pkg.id for pkg, _ in rows]
+        category_ids = [pkg.category_id for pkg, _ in rows if pkg.category_id]
+        
+        categories_map = {}
+        if category_ids:
+            from app.models.category import Category
+            categories = db.query(Category).filter(Category.id.in_(category_ids)).all()
+            categories_map = {cat.id: cat for cat in categories}
+        
+        # Batch load package coupons
+        package_coupons = db.query(PackageCoupon).filter(
+            PackageCoupon.package_id.in_(package_ids)
+        ).all()
+        package_coupons_map = {}
+        for pc in package_coupons:
+            if pc.package_id not in package_coupons_map:
+                package_coupons_map[pc.package_id] = []
+            package_coupons_map[pc.package_id].append(pc.coupon_id)
+        
         for pkg, count in rows:
             cat = None
-            if pkg.category_id:
-                from app.models.category import Category
-                cat_obj = db.get(Category, pkg.category_id)
-                if cat_obj:
-                    cat = {"id": cat_obj.id, "name": cat_obj.name, "slug": cat_obj.slug}
-            pkg_coupon_ids = [a.coupon_id for a in db.query(PackageCoupon).filter(PackageCoupon.package_id == pkg.id).all()]
+            if pkg.category_id and pkg.category_id in categories_map:
+                cat_obj = categories_map[pkg.category_id]
+                cat = {"id": cat_obj.id, "name": cat_obj.name, "slug": cat_obj.slug}
+            
+            pkg_coupon_ids = package_coupons_map.get(pkg.id, [])
             pricing = PackageService._compute_pricing(db, pkg_coupon_ids)
             total_price = PackageService._compute_total_price(pricing)
             result.append({

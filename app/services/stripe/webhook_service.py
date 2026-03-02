@@ -85,7 +85,7 @@ class StripeWebhookService:
             return {"status": "ignored", "event_type": event_type}
 
     def _handle_payment_succeeded(self, payment_intent: dict, event_id: str) -> dict:
-        """Handle successful payment"""
+        """Handle successful payment with optimized batch operations"""
         pi_id = payment_intent.get("id")
         
         payment = self._get_payment_by_intent(pi_id)
@@ -110,44 +110,56 @@ class StripeWebhookService:
             order.status = "paid"
             order.payment_state = "payment_completed"
             
-            # Add coupons to user's wallet now that payment succeeded
+            # Collect all coupons to grant and stock to decrement
             from app.models.user_coupon import UserCoupon
             from app.models.order import OrderItem
             
+            coupons_to_grant = []
+            coupons_to_decrement = {}  # coupon_id -> quantity
+            
             # Get all order items with their coupons/packages
             for item in order.items:
-                coupons_to_grant = []
-                
                 if item.coupon_id:
                     coupons_to_grant.append(item.coupon_id)
+                    coupons_to_decrement[item.coupon_id] = coupons_to_decrement.get(item.coupon_id, 0) + item.quantity
                 elif item.package_id and item.package:
                     # Grant all coupons in the package
-                    coupons_to_grant.extend([c.coupon_id for c in item.package.coupon_associations])
-                
-                # Add each coupon to user's wallet
-                for coupon_id in coupons_to_grant:
-                    existing_claim = self.db.query(UserCoupon).filter(
-                        UserCoupon.user_id == order.user_id,
-                        UserCoupon.coupon_id == coupon_id
-                    ).first()
-                    
-                    if not existing_claim:
-                        user_coupon = UserCoupon(
-                            user_id=order.user_id,
-                            coupon_id=coupon_id
-                        )
-                        self.db.add(user_coupon)
-                        logger.info(f"Added coupon {coupon_id} to user {order.user_id} wallet")
+                    for assoc in item.package.coupon_associations:
+                        coupons_to_grant.append(assoc.coupon_id)
+                        coupons_to_decrement[assoc.coupon_id] = coupons_to_decrement.get(assoc.coupon_id, 0) + item.quantity
             
-            # Decrement Stock / Increment Usage
+            # Batch insert user coupons (avoid N+1)
+            if coupons_to_grant:
+                # Get existing claims to avoid duplicates
+                existing_claims = self.db.query(UserCoupon.coupon_id).filter(
+                    UserCoupon.user_id == order.user_id,
+                    UserCoupon.coupon_id.in_(coupons_to_grant)
+                ).all()
+                existing_coupon_ids = {claim.coupon_id for claim in existing_claims}
+                
+                # Add only new coupons
+                new_user_coupons = [
+                    UserCoupon(user_id=order.user_id, coupon_id=coupon_id)
+                    for coupon_id in set(coupons_to_grant)
+                    if coupon_id not in existing_coupon_ids
+                ]
+                if new_user_coupons:
+                    self.db.bulk_save_objects(new_user_coupons)
+                    logger.info(f"Added {len(new_user_coupons)} coupons to user {order.user_id} wallet")
+            
+            # Batch decrement stock/usage (optimized)
             from app.services.coupon_service import CouponService
-            # We need to loop through items
-            # Ensure items are loaded
-            if not order.items:
-                from sqlalchemy.orm import joinedload
-                # re-fetch or assume lazy load works if session active
-                # Safe to just use order.items if it's attached to session
-                pass
+            if coupons_to_decrement:
+                for coupon_id, quantity in coupons_to_decrement.items():
+                    # Use atomic update to avoid race conditions
+                    from app.models.coupon import Coupon
+                    self.db.query(Coupon).filter(Coupon.id == coupon_id).update(
+                        {
+                            Coupon.stock: Coupon.stock - quantity,
+                            Coupon.current_uses: Coupon.current_uses + quantity
+                        },
+                        synchronize_session=False
+                    )
                 
             for item in order.items:
                 if item.coupon_id:
@@ -159,6 +171,11 @@ class StripeWebhookService:
                          # The pre-check in /init should prevent this 99% of time.
         
         self.db.commit()
+        
+        # Invalidate relevant caches
+        from app.cache import invalidate_cache
+        invalidate_cache(f"user:{order.user_id}:*")
+        invalidate_cache("coupons:*")
         
         logger.info(f"Payment {payment.id} marked as succeeded")
         

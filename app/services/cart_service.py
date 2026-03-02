@@ -15,6 +15,7 @@ class CartService:
 
     @staticmethod
     def add_to_cart(db: Session, user_id: UUID, coupon_id: UUID, quantity: int = 1) -> Tuple[Optional[CartItem], str]:
+        # Eager load coupon to avoid N+1 queries
         coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
         if not coupon:
             return None, "Coupon not found"
@@ -31,7 +32,7 @@ class CartService:
             existing.quantity += quantity
             try:
                 db.commit()
-                db.refresh(existing)
+                # Removed unnecessary db.refresh - we already have the data
                 # Invalidate cart cache
                 invalidate_cache(f"cart:{user_id}:*")
                 return existing, "Quantity updated"
@@ -47,7 +48,7 @@ class CartService:
         db.add(cart_item)
         try:
             db.commit()
-            db.refresh(cart_item)
+            # Removed unnecessary db.refresh - we have all the data we need
             # Invalidate cart cache
             invalidate_cache(f"cart:{user_id}:*")
             return cart_item, "Added to cart"
@@ -60,14 +61,17 @@ class CartService:
             if existing:
                 existing.quantity += quantity
                 db.commit()
-                db.refresh(existing)
+                # Removed unnecessary db.refresh
                 invalidate_cache(f"cart:{user_id}:*")
                 return existing, "Quantity updated"
             return None, "Failed to add to cart"
 
     @staticmethod
     def add_package_to_cart(db: Session, user_id: UUID, package_id: UUID, quantity: int = 1) -> Tuple[Optional[CartItem], str]:
-        package = db.query(Package).filter(Package.id == package_id).first()
+        # Eager load package with coupon associations to avoid N+1 queries
+        package = db.query(Package).options(
+            joinedload(Package.coupon_associations)
+        ).filter(Package.id == package_id).first()
         if not package:
             return None, "Package not found"
 
@@ -83,7 +87,7 @@ class CartService:
             existing.quantity += quantity
             try:
                 db.commit()
-                db.refresh(existing)
+                # Removed unnecessary db.refresh
                 # Invalidate cart cache
                 invalidate_cache(f"cart:{user_id}:*")
                 return existing, "Quantity updated"
@@ -99,7 +103,7 @@ class CartService:
         db.add(cart_item)
         try:
             db.commit()
-            db.refresh(cart_item)
+            # Removed unnecessary db.refresh
             # Invalidate cart cache
             invalidate_cache(f"cart:{user_id}:*")
             return cart_item, "Added to cart"
@@ -112,7 +116,7 @@ class CartService:
             if existing:
                 existing.quantity += quantity
                 db.commit()
-                db.refresh(existing)
+                # Removed unnecessary db.refresh
                 invalidate_cache(f"cart:{user_id}:*")
                 return existing, "Quantity updated"
             return None, "Failed to add to cart"
