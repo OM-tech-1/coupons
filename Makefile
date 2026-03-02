@@ -1,6 +1,6 @@
 # Makefile for Coupon API
 
-.PHONY: help setup docker-setup docker-up docker-down docker-restart docker-logs docker-clean docker-db docker-redis docker-tools venv install migrate-up seed-db create-admin-local run dev test test-coverage clean deploy redeploy logs logs-webhook logs-errors shell stop restart status clean-db create-admin seed-data migrate setup-load-test load-test load-test-headless benchmark benchmark-simple
+.PHONY: help setup docker-setup docker-up docker-down docker-restart docker-logs docker-clean docker-db docker-redis docker-tools venv install migrate-up docker-migrate seed-db create-admin-local run dev test test-coverage clean deploy redeploy logs logs-webhook logs-errors shell stop restart status clean-db create-admin seed-data migrate setup-load-test load-test load-test-headless benchmark benchmark-simple
 
 # Colors for output
 BLUE := \033[0;34m
@@ -21,6 +21,7 @@ help:
 	@echo "$(GREEN)🐳 Docker Commands (Local Development):$(NC)"
 	@echo "  $(YELLOW)make docker-setup$(NC)       - Initial Docker setup (one-time)"
 	@echo "  $(YELLOW)make docker-up$(NC)          - Start PostgreSQL + Redis"
+	@echo "  $(YELLOW)make docker-migrate$(NC)     - Run database migrations inside Docker"
 	@echo "  $(YELLOW)make docker-down$(NC)        - Stop all Docker services"
 	@echo "  $(YELLOW)make docker-restart$(NC)     - Restart Docker services"
 	@echo "  $(YELLOW)make docker-logs$(NC)        - View Docker logs"
@@ -63,7 +64,7 @@ help:
 
 # ============== Quick Setup Commands ==============
 
-setup: venv install docker-setup docker-up migrate-up seed-db create-admin-local
+setup: venv install docker-setup docker-up docker-migrate seed-db create-admin-local
 	@echo ""
 	@echo "$(GREEN)✨ Setup complete! You're ready to develop.$(NC)"
 	@echo ""
@@ -165,6 +166,9 @@ migrate-up:
 	else \
 		echo "$(RED)❌ migrations/ directory not found$(NC)"; \
 	fi
+
+docker-migrate:
+	@bash scripts/docker_migrate.sh
 
 seed-db:
 	@echo "$(BLUE)🌱 Seeding database...$(NC)"
