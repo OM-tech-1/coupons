@@ -166,8 +166,6 @@ class CouponService:
             set_cache(cache_k, coupon_ids, ttl=CACHE_TTL_MEDIUM)
         
         return coupons
-            
-        return coupons
 
     @staticmethod
     def get_by_id(db: Session, coupon_id: UUID) -> Optional[Coupon]:
