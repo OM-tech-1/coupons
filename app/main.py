@@ -74,6 +74,7 @@ def run_migrations():
         package_columns = [
             ('avg_rating', 'FLOAT DEFAULT 0.0'),
             ('total_sold', 'INTEGER DEFAULT 0'),
+            ('country', 'VARCHAR(100)'),
         ]
         for col_name, col_type in package_columns:
             try:

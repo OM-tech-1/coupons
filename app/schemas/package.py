@@ -15,6 +15,11 @@ class PackageBase(BaseModel):
     avg_rating: float = Field(default=0.0, ge=0, le=5, description="Average rating for the bundle")
     total_sold: int = Field(default=0, ge=0, description="Total bundles sold")
     category_id: Optional[UUID] = None
+    country: Optional[str] = Field(
+        default=None,
+        max_length=100,
+        description="Country this package is available in (e.g. UAE, KSA, Kuwait, Bahrain, Oman)"
+    )
     is_active: bool = Field(default=True)
     is_featured: bool = Field(default=False)
     expiration_date: Optional[datetime] = Field(default=None, description="Package expiration date")
@@ -151,6 +156,7 @@ class PackageResponse(PackageBase):
             'total_price': obj.total_price if hasattr(obj, 'total_price') else None,
             'category': obj.category,
             'coupons': coupons,
+            'country': obj.country if hasattr(obj, 'country') else None,
         }
         
         # Compute multi-currency pricing by summing individual coupon prices
@@ -225,6 +231,7 @@ class PackageListResponse(PackageBase):
             'total_price': obj.total_price if hasattr(obj, 'total_price') else None,
             'category': obj.category,
             'coupon_count': len(obj.coupon_associations) if hasattr(obj, 'coupon_associations') else 0,
+            'country': obj.country if hasattr(obj, 'country') else None,
         }
         
         # Compute multi-currency pricing from pricing field

@@ -18,6 +18,7 @@ class Package(Base):
     discount = Column(Float, nullable=True)
     avg_rating = Column(Float, default=0.0)
     total_sold = Column(Integer, default=0)
+    country = Column(String(100), nullable=True, index=True)  # e.g. 'UAE', 'KSA', 'Kuwait', 'Bahrain', 'Oman'
     is_active = Column(Boolean, default=True, index=True)
     is_featured = Column(Boolean, default=False, index=True)
     expiration_date = Column(DateTime, nullable=True)

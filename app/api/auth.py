@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas.auth import LoginRequest, Token
+from app.schemas.auth import LoginRequest, Token, ChangePasswordRequest
 from app.schemas.user import UserCreate, UserResponse
-from app.services.auth_service import register_user, authenticate_user
+from app.services.auth_service import register_user, authenticate_user, change_password
 from app.utils.jwt import create_access_token
 from app.utils.currency import get_currency_from_phone_code
+from app.utils.security import get_current_active_user
+from app.models.user import User
 
 from app.middleware.rate_limit import limiter
 import logging
@@ -44,3 +46,30 @@ def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)
         currency=currency_code
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/change-password")
+@limiter.limit("5/minute")
+def change_password_endpoint(
+    request: Request,
+    payload: ChangePasswordRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Change the authenticated user's password.
+    
+    Requires valid Bearer token. Rate limited to 5 requests per minute.
+    Returns 403 if current_password is incorrect.
+    """
+    success = change_password(
+        db=db,
+        user=current_user,
+        current_password=payload.current_password,
+        new_password=payload.new_password,
+    )
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Current password is incorrect",
+        )
+    return {"success": True, "message": "Password updated successfully"}
