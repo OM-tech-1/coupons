@@ -27,6 +27,7 @@ class PackageService:
             is_active=data.is_active,
             is_featured=data.is_featured,
             expiration_date=data.expiration_date,
+            country=data.country,
         )
         db.add(pkg)
         db.flush()
@@ -139,6 +140,7 @@ class PackageService:
                 "is_active": pkg.is_active,
                 "is_featured": pkg.is_featured,
                 "expiration_date": pkg.expiration_date,
+                "country": pkg.country,
                 "created_at": pkg.created_at,
                 "category": cat,
                 "coupon_count": count,
@@ -395,6 +397,7 @@ class PackageService:
             "is_active": pkg.is_active,
             "is_featured": pkg.is_featured,
             "expiration_date": pkg.expiration_date,
+            "country": pkg.country,
             "created_at": pkg.created_at,
             "category": cat,
             "coupons": coupons,

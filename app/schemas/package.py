@@ -48,6 +48,7 @@ class PackageUpdate(BaseModel):
     is_active: Optional[bool] = None
     is_featured: Optional[bool] = None
     expiration_date: Optional[datetime] = Field(default=None, description="Package expiration date")
+    country: Optional[str] = Field(default=None, max_length=100)
     coupon_ids: Optional[List[UUID]] = Field(default=None, description="Replace package coupons with this list")
 
     @validator('slug')

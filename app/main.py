@@ -75,6 +75,10 @@ def run_migrations():
             ('avg_rating', 'FLOAT DEFAULT 0.0'),
             ('total_sold', 'INTEGER DEFAULT 0'),
             ('country', 'VARCHAR(100)'),
+            ('picture_url', 'VARCHAR(500)'),
+            ('brand', 'VARCHAR(100)'),
+            ('discount', 'FLOAT'),
+            ('expiration_date', 'TIMESTAMP'),
         ]
         for col_name, col_type in package_columns:
             try:

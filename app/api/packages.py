@@ -41,6 +41,7 @@ def create_package(
         existing.is_active = data.is_active
         existing.is_featured = data.is_featured
         existing.expiration_date = data.expiration_date
+        existing.country = data.country
         
         # Update coupon associations if provided
         if data.coupon_ids:
