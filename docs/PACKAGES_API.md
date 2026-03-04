@@ -109,6 +109,8 @@ All admin endpoints require `Authorization: Bearer <token>` header.
 | `category_id` | UUID | — | Filter by category |
 | `is_active` | boolean | — | Filter active/inactive |
 | `is_featured` | boolean | — | Filter featured |
+| `brands` | string[] | — | Filter by list of brand names |
+| `filter` | string | — | Sort by highest_saving, newest, avg_rating, bundle_sold |
 
 **Response:** `200 OK` — Array of packages (lightweight, no nested coupons)
 

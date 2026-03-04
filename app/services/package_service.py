@@ -53,13 +53,15 @@ class PackageService:
         is_active: Optional[bool] = None,
         is_featured: Optional[bool] = None,
         filter_by: Optional[str] = None,
+        brands: Optional[List[str]] = None,
     ) -> List[dict]:
         # Simplified cache key for better hit rates
         use_cache = (skip == 0 and limit <= 100)
+        brands_key = ",".join(sorted(brands)) if brands else None
         cache_k = None
         
         if use_cache:
-            cache_k = cache_key("packages", "list", category_id, is_active, is_featured, filter_by, limit)
+            cache_k = cache_key("packages", "list", category_id, is_active, is_featured, filter_by, brands_key, limit)
             cached = get_cache(cache_k)
             if cached is not None:
                 return cached
@@ -78,6 +80,8 @@ class PackageService:
             query = query.filter(Package.is_featured == is_featured)
         if category_id is not None:
             query = query.filter(Package.category_id == category_id)
+        if brands:
+            query = query.filter(Package.brand.in_(brands))
 
         # Apply filter-based ordering
         if filter_by == "highest_saving":

@@ -75,12 +75,13 @@ def list_packages(
     is_active: Optional[bool] = Query(True, description="Filter by active status (defaults to True)"),
     is_featured: Optional[bool] = Query(None, description="Filter by featured status"),
     filter: Optional[str] = Query(None, description="Sort filter: highest_saving, newest, avg_rating, bundle_sold"),
+    brands: Optional[List[str]] = Query(None, description="Filter by a list of brand names"),
     db: Session = Depends(get_db),
 ):
     return PackageService.get_all(
         db, skip=skip, limit=limit,
         category_id=category_id, is_active=is_active, is_featured=is_featured,
-        filter_by=filter,
+        filter_by=filter, brands=brands,
     )
 
 
