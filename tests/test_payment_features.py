@@ -70,7 +70,7 @@ def test_payment_init_explicit_pricing_aed(mock_db):
             mock_stripe.PaymentIntent.create.return_value = MagicMock(id="pi_123", client_secret="secret")
             
             # Mock Data
-            mock_coupon = Coupon(price=10.0, pricing={"AED": 50.0, "INR": 500.0}, is_active=True, code="TEST_AED")
+            mock_coupon = Coupon(pricing={"AED": 50.0, "INR": 500.0}, is_active=True, code="TEST_AED")
             mock_item = OrderItem(quantity=2, coupon=mock_coupon)
             mock_item.coupon = mock_coupon # Explicitly set relationship for logic
             mock_order = Order(id=MOCK_ORDER_ID, user_id=MOCK_USER_ID, total_amount=20.0, items=[mock_item])

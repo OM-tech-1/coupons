@@ -134,13 +134,13 @@ class TestPackageCRUD:
         c1 = client.post("/coupons/", json={
             "code": "TP1", "redeem_code": "R-TP1",
             "title": "Coupon TP1", "discount_type": "percentage",
-            "discount_amount": 5.0, "price": 10.0,
+            "discount_amount": 5.0,
             "pricing": {"INR": {"price": 100.0}, "AED": {"price": 20.0}},
         }, headers=admin_user["headers"]).json()
         c2 = client.post("/coupons/", json={
-            "code": "TP2", "redeem_code": "R-TP2",
+            "code": "TP2", "redee_code": "R-TP2",
             "title": "Coupon TP2", "discount_type": "percentage",
-            "discount_amount": 3.0, "price": 5.0,
+            "discount_amount": 3.0,
             "pricing": {"INR": {"price": 50.0}, "AED": {"price": 10.0}},
         }, headers=admin_user["headers"]).json()
         pkg = client.post("/packages/", json={
@@ -155,7 +155,7 @@ class TestPackageCRUD:
         c = client.post("/coupons/", json={
             "code": "PRC1", "redeem_code": "R-PRC1",
             "title": "Priced Coupon", "discount_type": "percentage",
-            "discount_amount": 5.0, "price": 8.0,
+            "discount_amount": 5.0,
             "pricing": {"INR": {"price": 80.0, "discount_amount": 5.0}},
         }, headers=admin_user["headers"]).json()
         pkg = client.post("/packages/", json={
@@ -165,7 +165,6 @@ class TestPackageCRUD:
         coupon_in_pkg = pkg["coupons"][0]
         assert "pricing" in coupon_in_pkg
         assert coupon_in_pkg["pricing"]["INR"] == 80.0
-        assert coupon_in_pkg["price"] == 8.0
 
     def test_list_packages_active_only_by_default(self, client, admin_user):
         """GET /packages/ should only return active packages by default."""

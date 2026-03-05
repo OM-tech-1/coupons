@@ -175,7 +175,6 @@ class UserCouponService:
             "description": coupon.description,
             "discount_type": coupon.discount_type,
             "discount_amount": coupon.discount_amount,
-            "price": coupon.price,
             "category": category_data,
             "is_active": coupon.is_active,
             "purchased_date": uc.claimed_at,

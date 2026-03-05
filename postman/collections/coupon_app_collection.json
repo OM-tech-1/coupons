@@ -243,33 +243,6 @@
                             ]
                         }
                     }
-                },
-                {
-                    "name": "Browse Coupons in Region",
-                    "request": {
-                        "method": "GET",
-                        "url": {
-                            "raw": "{{base_url}}/regions/middle-east/coupons?limit=20&active_only=true",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "regions",
-                                "middle-east",
-                                "coupons"
-                            ],
-                            "query": [
-                                {
-                                    "key": "limit",
-                                    "value": "20"
-                                },
-                                {
-                                    "key": "active_only",
-                                    "value": "true"
-                                }
-                            ]
-                        }
-                    }
                 }
             ]
         },
@@ -310,33 +283,6 @@
                             "path": [
                                 "countries",
                                 "india"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Browse Coupons in Country",
-                    "request": {
-                        "method": "GET",
-                        "url": {
-                            "raw": "{{base_url}}/countries/united-arab-emirates/coupons?limit=20&active_only=true",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "countries",
-                                "united-arab-emirates",
-                                "coupons"
-                            ],
-                            "query": [
-                                {
-                                    "key": "limit",
-                                    "value": "20"
-                                },
-                                {
-                                    "key": "active_only",
-                                    "value": "true"
-                                }
                             ]
                         }
                     }
@@ -439,72 +385,11 @@
                     }
                 },
                 {
-                    "name": "Filter Coupons by Country",
-                    "request": {
-                        "method": "GET",
-                        "url": {
-                            "raw": "{{base_url}}/coupons/?country_id={{country_id}}&active_only=true&limit=20",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "coupons",
-                                ""
-                            ],
-                            "query": [
-                                {
-                                    "key": "country_id",
-                                    "value": "{{country_id}}"
-                                },
-                                {
-                                    "key": "active_only",
-                                    "value": "true"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "20"
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Filter Coupons by Availability Type",
-                    "request": {
-                        "method": "GET",
-                        "url": {
-                            "raw": "{{base_url}}/coupons/?availability_type=local&active_only=true&limit=20",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "coupons",
-                                ""
-                            ],
-                            "query": [
-                                {
-                                    "key": "availability_type",
-                                    "value": "local",
-                                    "description": "online, local, or both"
-                                },
-                                {
-                                    "key": "active_only",
-                                    "value": "true"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "20"
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
                     "name": "Filter Coupons (Multi-Filter)",
                     "request": {
                         "method": "GET",
                         "url": {
-                            "raw": "{{base_url}}/coupons/?category_id={{category_id}}&country_id={{country_id}}&availability_type=local&active_only=true",
+                            "raw": "{{base_url}}/coupons/?category_id={{category_id}}&active_only=true",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -516,14 +401,6 @@
                                 {
                                     "key": "category_id",
                                     "value": "{{category_id}}"
-                                },
-                                {
-                                    "key": "country_id",
-                                    "value": "{{country_id}}"
-                                },
-                                {
-                                    "key": "availability_type",
-                                    "value": "local"
                                 },
                                 {
                                     "key": "active_only",
@@ -604,7 +481,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"code\": \"PETLOVE50\",\n    \"redeem_code\": \"SECRET123\",\n    \"brand\": \"PetStore\",\n    \"title\": \"50% off pet food\",\n    \"description\": \"Amazing deal on all pet food\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 50.0,\n    \"price\": 2.99,\n    \"min_purchase\": 10.0,\n    \"max_uses\": 100,\n    \"expiration_date\": \"2026-12-31T23:59:59\",\n    \"stock\": 50,\n    \"is_featured\": true,\n    \"is_active\": true,\n    \"category_id\": \"{{category_id}}\",\n    \"availability_type\": \"local\",\n    \"country_ids\": [\"{{country_id}}\"],\n    \"picture_url\": \"https://chatbot-amzs3.s3.ap-southeast-2.amazonaws.com/coupons/pet.jpg\",\n    \"pricing\": {\n        \"INR\": {\"price\": 250, \"discount_amount\": 50},\n        \"AED\": {\"price\": 10, \"discount_amount\": 2}\n    }\n}"
+                            "raw": "{\n    \"code\": \"PETLOVE50\",\n    \"redeem_code\": \"SECRET123\",\n    \"brand\": \"PetStore\",\n    \"title\": \"50% off pet food\",\n    \"description\": \"Amazing deal on all pet food\",\n    \"discount_type\": \"percentage\",\n    \"discount_amount\": 50.0,\n    \"max_uses\": 100,\n    \"expiration_date\": \"2026-12-31T23:59:59\",\n    \"stock\": 50,\n    \"is_featured\": true,\n    \"is_active\": true,\n    \"category_id\": \"{{category_id}}\",\n    \"picture_url\": \"https://chatbot-amzs3.s3.ap-southeast-2.amazonaws.com/coupons/pet.jpg\",\n    \"pricing\": {\n        \"INR\": {\"price\": 250, \"discount_amount\": 50},\n        \"AED\": {\"price\": 10, \"discount_amount\": 2}\n    }\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/coupons/",
@@ -640,7 +517,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"title\": \"Updated Title\",\n    \"price\": 14.99,\n    \"stock\": 100,\n    \"is_featured\": false,\n    \"category_id\": \"{{category_id}}\",\n    \"availability_type\": \"both\"\n}"
+                            "raw": "{\n    \"title\": \"Updated Title\",\n    \"stock\": 100,\n    \"is_featured\": false,\n    \"category_id\": \"{{category_id}}\"\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/coupons/{{coupon_id}}",
@@ -2664,16 +2541,6 @@
         },
         {
             "key": "category_id",
-            "value": "",
-            "type": "string"
-        },
-        {
-            "key": "region_id",
-            "value": "",
-            "type": "string"
-        },
-        {
-            "key": "country_id",
             "value": "",
             "type": "string"
         },

@@ -48,24 +48,22 @@ def get_cart(
 ):
     items = CartService.get_cart(db, current_user.id)
 
-    total = 0.0
+    total = CartService.get_cart_total(db, current_user.id)
+    
     for item in items:
-        if item.coupon:
-            total += (item.coupon.price or 0.0) * item.quantity
-        elif item.package:
+        if item.package:
             coupon_ids = [c.coupon_id for c in item.package.coupon_associations]
             pricing = PackageService._compute_pricing(db, coupon_ids)
             total_price_map = PackageService._compute_total_price(pricing)
             
-            base_sum = sum(c.coupon.price for c in item.package.coupon_associations if c.coupon and c.coupon.price)
+            # For backward compatibility in response
+            base_sum = sum(CouponService.get_price(c.coupon) for c in item.package.coupon_associations if c.coupon)
             discount = item.package.discount or 0.0
             pkg_price = base_sum * (1.0 - discount / 100.0)
             
             item.package.price = pkg_price
             item.package.pricing = pricing
             item.package.total_price = total_price_map
-            
-            total += pkg_price * item.quantity
 
     # Convert items using from_orm to get multi-currency pricing
     cart_items = [CartItemResponse.from_orm(item) for item in items]

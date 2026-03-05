@@ -157,14 +157,15 @@ class CartService:
         return items
 
     @staticmethod
-    def get_cart_total(db: Session, user_id: UUID) -> float:
+    def get_cart_total(db: Session, user_id: UUID, currency: str = "USD") -> float:
+        from app.services.coupon_service import CouponService
         items = CartService.get_cart(db, user_id)
         total = 0.0
         for item in items:
             if item.coupon:
-                total += (item.coupon.price or 0) * item.quantity
+                total += CouponService.get_price(item.coupon, currency) * item.quantity
             elif item.package:
-                base_sum = sum(c.coupon.price for c in item.package.coupon_associations if c.coupon and c.coupon.price)
+                base_sum = sum(CouponService.get_price(c.coupon, currency) for c in item.package.coupon_associations if c.coupon)
                 discount = item.package.discount or 0.0
                 pkg_price = base_sum * (1.0 - discount / 100.0)
                 total += pkg_price * item.quantity

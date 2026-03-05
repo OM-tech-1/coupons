@@ -19,4 +19,3 @@ class Country(Base):
     
     # Relationships
     region = relationship("Region", back_populates="countries")
-    coupon_associations = relationship("CouponCountry", back_populates="country", cascade="all, delete-orphan")

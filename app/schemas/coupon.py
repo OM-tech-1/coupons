@@ -10,8 +10,6 @@ class CouponBasePublic(BaseModel):
     description: Optional[str] = None
     discount_type: str = Field(default="percentage", pattern="^(percentage|fixed)$")
     discount_amount: float = Field(..., gt=0)
-    price: float = Field(default=0.0, ge=0, description="Price to purchase this coupon")
-    min_purchase: float = Field(default=0.0, ge=0)
     max_uses: Optional[int] = Field(default=None, ge=1)
     expiration_date: Optional[datetime] = None
     # New fields for stock and featured
@@ -21,8 +19,6 @@ class CouponBasePublic(BaseModel):
     picture_url: Optional[str] = None
     # Fields for categories and geography
     category_id: Optional[UUID] = None
-    availability_type: str = Field(default="online", pattern="^(online|local|both)$")
-    country_ids: List[UUID] = Field(default_factory=list)
     pricing: Optional[Dict[str, Dict[str, float]]] = Field(default=None, description="Multi-currency pricing e.g. {'INR': {'price': 100, 'discount_amount': 50}}")
     is_package_coupon: bool = Field(default=False, description="Whether this coupon belongs to a package")
 
@@ -44,8 +40,6 @@ class CouponUpdate(BaseModel):
     description: Optional[str] = None
     discount_type: Optional[str] = Field(default=None, pattern="^(percentage|fixed)$")
     discount_amount: Optional[float] = Field(default=None, gt=0)
-    price: Optional[float] = Field(default=None, ge=0)  # Allow price updates
-    min_purchase: Optional[float] = Field(default=None, ge=0)
     max_uses: Optional[int] = Field(default=None, ge=1)
     is_active: Optional[bool] = None
     picture_url: Optional[str] = None
@@ -55,15 +49,12 @@ class CouponUpdate(BaseModel):
     is_featured: Optional[bool] = None
     # Optional fields for categories/geography
     category_id: Optional[UUID] = None
-    availability_type: Optional[str] = Field(default=None, pattern="^(online|local|both)$")
-    country_ids: Optional[List[UUID]] = None
     pricing: Optional[Dict[str, Dict[str, float]]] = None
     is_package_coupon: Optional[bool] = None
 
 
 class CouponResponseCommon(CouponBasePublic):
     id: UUID
-    price: float = 0.0
     current_uses: int = 0
     is_active: bool = True
     created_at: datetime
@@ -72,7 +63,6 @@ class CouponResponseCommon(CouponBasePublic):
     stock_sold: int = 0
     # Nested relationships (populated from joins)
     category: Optional['CategoryInCoupon'] = None
-    countries: List['CountryInCoupon'] = Field(default_factory=list)
     # Multi-currency pricing for frontend
     prices: Dict[str, float] = Field(default_factory=dict, description="Prices in all supported currencies")
     discounts: Dict[str, float] = Field(default_factory=dict, description="Discount amounts in all supported currencies")
@@ -98,8 +88,8 @@ class CouponResponseCommon(CouponBasePublic):
                 data['discounts'] = discounts
             else:
                 # Fallback to default USD pricing if no pricing JSON
-                data['prices'] = {'USD': data.get('price', 0.0)}
-                data['discounts'] = {'USD': data.get('discount_amount', 0.0)}
+                data['prices'] = {} # No fallback to single price field
+                data['discounts'] = {}
             
             return data
         
@@ -132,9 +122,9 @@ class CouponResponseCommon(CouponBasePublic):
             data_dict['prices'] = prices
             data_dict['discounts'] = discounts
         else:
-            # Fallback to default USD pricing
-            data_dict['prices'] = {'USD': data_dict.get('price', 0.0)}
-            data_dict['discounts'] = {'USD': data_dict.get('discount_amount', 0.0)}
+            # Fallback to default pricing
+            data_dict['prices'] = {}
+            data_dict['discounts'] = {}
         
         return data_dict
 
@@ -162,13 +152,6 @@ class CategoryInCoupon(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class CountryInCoupon(BaseModel):
-    """Simplified country info for nested in coupon responses"""
-    id: UUID
-    name: str
-    slug: str
-    country_code: str
-    
     model_config = ConfigDict(from_attributes=True)
 
 

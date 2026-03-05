@@ -12,8 +12,8 @@ COUPON_DATA = {
     "description": "Test multi-currency",
     "discount_type": "percentage",
     "discount_amount": 10.0,
-    "price": 100.0,  # Default USD Base Price
     "pricing": {
+        "USD": {"price": 100.0, "discount_amount": 10.0},
         "INR": {"price": 8000.0, "discount_amount": 800.0},
         "AED": {"price": 367.0, "discount_amount": 36.7},
         "SAR": {"price": 375.0, "discount_amount": 37.5}
@@ -74,8 +74,8 @@ def test_multi_currency_flow(client, admin_token, inr_user_token, aed_user_token
     response = client.get(f"/coupons/{coupon_id}")
     assert response.status_code == 200
     data = response.json()
-    assert data["price"] == 100.0
-    assert data["discount_amount"] == 10.0
+    assert data["pricing"]["USD"]["price"] == 100.0
+    assert data["pricing"]["USD"]["discount_amount"] == 10.0
     assert "pricing" in data
     assert "INR" in data["pricing"]
     assert data["pricing"]["INR"]["price"] == 8000.0

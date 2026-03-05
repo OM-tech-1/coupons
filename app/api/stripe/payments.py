@@ -99,16 +99,7 @@ async def initialize_payment(
                      raise HTTPException(status_code=400, detail=f"Coupon '{coupon.code}' is out of stock (Requested: {item.quantity}, Available: {coupon.stock})")
 
                 # 2. Get price for this currency (Using Decimal)
-                if coupon.pricing and isinstance(coupon.pricing, dict):
-                    if currency in coupon.pricing:
-                         price_val = coupon.pricing[currency]
-                         if isinstance(price_val, dict):
-                             price_val = price_val.get("price", coupon.price)
-                         item_price = Decimal(str(price_val))
-                    else:
-                         item_price = Decimal(str(coupon.price))
-                else:
-                     item_price = Decimal(str(coupon.price))
+                item_price = Decimal(str(CouponService.get_price(coupon, currency)))
             
             elif package:
                 # Package pricing: sum up all base prices of coupons inside the package for the given Currency
@@ -117,19 +108,7 @@ async def initialize_payment(
                     c = assoc.coupon
                     if not c: continue
                     
-                    c_price = Decimal(0)
-                    if c.pricing and isinstance(c.pricing, dict):
-                        if currency in c.pricing:
-                            pval = c.pricing[currency]
-                            if isinstance(pval, dict):
-                                pval = pval.get("price", c.price)
-                            c_price = Decimal(str(pval))
-                        else:
-                            c_price = Decimal(str(c.price))
-                    else:
-                        c_price = Decimal(str(c.price))
-                        
-                    base_sum += c_price
+                    base_sum += Decimal(str(CouponService.get_price(c, currency)))
                 
                 # Apply package discount
                 discount = Decimal(str(package.discount or 0.0))

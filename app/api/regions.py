@@ -35,29 +35,6 @@ def get_region_by_slug(slug: str, db: Session = Depends(get_db)):
     return region
 
 
-@router.get("/{slug}/coupons", response_model=List[CouponResponse])
-def get_coupons_in_region(
-    slug: str,
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
-    active_only: bool = Query(True),
-    db: Session = Depends(get_db)
-):
-    """Browse coupons in a specific region (public endpoint)"""
-    region = RegionService.get_by_slug(db, slug)
-    if not region:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Region with slug '{slug}' not found"
-        )
-    
-    return CouponService.get_all(
-        db,
-        skip=skip,
-        limit=limit,
-        active_only=active_only,
-        region_id=region.id
-    )
 
 
 @router.post("/", response_model=RegionResponse, status_code=status.HTTP_201_CREATED)

@@ -30,7 +30,6 @@ def test_payment_init_out_of_stock(mock_db):
         # Mock Coupon - OUT OF STOCK
         mock_coupon = Coupon(
             code="TEST",
-            price=10.0, 
             stock=0, # No stock
             is_active=True
         )
@@ -79,7 +78,6 @@ def test_payment_init_stock_available(mock_db):
         # Mock Coupon - IN STOCK
         mock_coupon = Coupon(
             code="TEST",
-            price=10.0, 
             stock=5, 
             is_active=True
         )

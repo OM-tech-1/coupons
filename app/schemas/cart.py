@@ -24,8 +24,6 @@ class CouponInCart(BaseModel):
     id: UUID
     code: str
     title: str
-    price: float
-    discount_amount: float
     currency: str = "USD"
     currency_symbol: str = "$"
     pricing: Optional[Dict[str, Dict[str, float]]] = None
@@ -40,26 +38,22 @@ class CouponInCart(BaseModel):
             'id': obj.id,
             'code': obj.code,
             'title': obj.title,
-            'price': obj.price,
-            'discount_amount': obj.discount_amount,
             'currency': getattr(obj, 'currency', 'USD'),
             'currency_symbol': getattr(obj, 'currency_symbol', '$'),
             'pricing': obj.pricing if hasattr(obj, 'pricing') else None,
         }
         
         # Extract multi-currency pricing
+        prices = {}
+        discounts = {}
         if hasattr(obj, 'pricing') and obj.pricing and isinstance(obj.pricing, dict):
-            prices = {}
-            discounts = {}
             for currency, values in obj.pricing.items():
                 if isinstance(values, dict):
                     prices[currency] = values.get('price', 0.0)
                     discounts[currency] = values.get('discount_amount', 0.0)
-            data['prices'] = prices
-            data['discounts'] = discounts
-        else:
-            data['prices'] = {'USD': obj.price or 0.0}
-            data['discounts'] = {'USD': obj.discount_amount or 0.0}
+        
+        data['prices'] = prices
+        data['discounts'] = discounts
         
         return cls(**data)
 
@@ -72,7 +66,6 @@ class PackageInCart(BaseModel):
     slug: str
     discount: Optional[float] = None
     picture_url: Optional[str] = None
-    price: Optional[float] = None
     pricing: Optional[Dict[str, Dict[str, float]]] = None
     total_price: Optional[Dict[str, float]] = None
     # Multi-currency pricing for frontend
@@ -88,7 +81,6 @@ class PackageInCart(BaseModel):
             'slug': obj.slug,
             'discount': obj.discount,
             'picture_url': obj.picture_url,
-            'price': obj.price,
             'pricing': obj.pricing if hasattr(obj, 'pricing') else None,
             'total_price': obj.total_price if hasattr(obj, 'total_price') else None,
         }
@@ -115,10 +107,6 @@ class PackageInCart(BaseModel):
                     final_prices[currency] = price * (1.0 - obj.discount / 100.0)
                 else:
                     final_prices[currency] = price
-        else:
-            # Fallback to single price field
-            prices = {'USD': obj.price or 0.0}
-            final_prices = {'USD': obj.price or 0.0}
         
         data['prices'] = prices
         data['final_prices'] = final_prices

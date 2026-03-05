@@ -22,7 +22,6 @@ class CouponInfo(BaseModel):
     description: Optional[str] = None
     discount_type: str
     discount_amount: float
-    min_purchase: float
     expiration_date: Optional[datetime] = None
 
     class Config:
@@ -88,7 +87,6 @@ class UserCouponDetailResponse(BaseModel):
     description: Optional[str] = None
     discount_type: str
     discount_amount: float
-    price: float = 0.0
     category: Optional[CategoryInWallet] = None
     is_active: bool = True
     purchased_date: datetime

@@ -55,6 +55,7 @@ class PackageService:
         is_featured: Optional[bool] = None,
         is_trending: Optional[bool] = None,
         filter_by: Optional[str] = None,
+        country: Optional[str] = None,
         brands: Optional[List[str]] = None,
     ) -> List[dict]:
         # Simplified cache key for better hit rates
@@ -63,7 +64,7 @@ class PackageService:
         cache_k = None
         
         if use_cache:
-            cache_k = cache_key("packages", "list", category_id, is_active, is_featured, is_trending, filter_by, brands_key, limit)
+            cache_k = cache_key("packages", "list", category_id, is_active, is_featured, is_trending, filter_by, brands_key, country, limit)
             cached = get_cache(cache_k)
             if cached is not None:
                 return cached
@@ -84,6 +85,8 @@ class PackageService:
             query = query.filter(Package.is_trending == is_trending)
         if category_id is not None:
             query = query.filter(Package.category_id == category_id)
+        if country is not None:
+            query = query.filter(Package.country == country)
         if brands:
             query = query.filter(Package.brand.in_(brands))
 
@@ -371,9 +374,9 @@ class PackageService:
                     for k, v in values.items():
                         totals[currency][k] = totals[currency].get(k, 0.0) + v
             else:
-                # Coupon has no multi-currency pricing, use base price
+                # Coupon has no multi-currency pricing
                 totals.setdefault("DEFAULT", {"price": 0.0})
-                totals["DEFAULT"]["price"] += (c.price or 0.0)
+                totals["DEFAULT"]["price"] += 0.0
         return totals
 
     @staticmethod
@@ -402,7 +405,7 @@ class PackageService:
                         c_pricing[currency] = values.get('price', 0.0)
                         c_discounts[currency] = values.get('discount_amount', 0.0)
                 else:
-                    c_pricing['USD'] = c.price or 0.0
+                    c_pricing['USD'] = 0.0
                     c_discounts['USD'] = c.discount_amount or 0.0
                     
                 coupons.append({
@@ -411,7 +414,6 @@ class PackageService:
                     "brand": c.brand,
                     "discount_type": c.discount_type,
                     "discount_amount": c.discount_amount,
-                    "price": c.price or 0.0,
                     "picture_url": c.picture_url,
                     "pricing": c_pricing,
                     "discounts": c_discounts,

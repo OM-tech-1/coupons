@@ -21,7 +21,7 @@ class OrderService:
             return None, "Cart is empty"
         
         # Calculate total
-        total = CartService.get_cart_total(db, user_id)
+        total = CartService.get_cart_total(db, user_id, currency=currency)
         if total <= 0:
             # Free coupons - skip payment
             order = Order(
@@ -59,10 +59,10 @@ class OrderService:
         
         db.add(order)
         db.flush()  # Get order ID
-        
         # Create order items
         for cart_item in cart_items:
             # Figure out price and coupons to grant
+            from app.services.coupon_service import CouponService
             order_item = OrderItem(
                 order_id=order.id,
                 coupon_id=cart_item.coupon_id,
@@ -73,10 +73,10 @@ class OrderService:
             
             coupons_to_grant = []
             if cart_item.coupon:
-                order_item.price = cart_item.coupon.price or 0.0
+                order_item.price = CouponService.get_price(cart_item.coupon, currency)
                 coupons_to_grant.append(cart_item.coupon_id)
             elif cart_item.package:
-                base_sum = sum(c.coupon.price for c in cart_item.package.coupon_associations if c.coupon and c.coupon.price)
+                base_sum = sum(CouponService.get_price(c.coupon, currency) for c in cart_item.package.coupon_associations if c.coupon)
                 discount = cart_item.package.discount or 0.0
                 order_item.price = base_sum * (1.0 - discount / 100.0)
                 coupons_to_grant.extend([c.coupon_id for c in cart_item.package.coupon_associations])

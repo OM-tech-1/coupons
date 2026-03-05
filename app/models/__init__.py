@@ -9,7 +9,6 @@ from app.models.payment_token import PaymentToken
 from app.models.category import Category
 from app.models.region import Region
 from app.models.country import Country
-from app.models.coupon_country import CouponCountry
 from app.models.coupon_view import CouponView
 from app.models.package import Package
 from app.models.package_coupon import PackageCoupon
@@ -27,7 +26,6 @@ __all__ = [
     "Category",
     "Region",
     "Country",
-    "CouponCountry",
     "CouponView",
     "Package",
     "PackageCoupon",

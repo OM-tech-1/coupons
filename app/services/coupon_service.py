@@ -1,5 +1,5 @@
-from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
+from sqlalchemy.orm import Session, joinedload
 from uuid import UUID
 from typing import List, Optional
 from datetime import datetime
@@ -14,14 +14,8 @@ class CouponService:
     @staticmethod
     def create(db: Session, coupon_data: CouponCreate) -> Coupon:
         """Create a new coupon"""
-        from app.models.coupon_country import CouponCountry
-        from app.models.country import Country
+        # Extract non-model data before creating coupon
         import logging
-        
-        logger = logging.getLogger(__name__)
-        
-        # Extract country_ids before creating coupon
-        country_ids = coupon_data.country_ids
         
         db_coupon = Coupon(
             code=coupon_data.code.upper(),
@@ -31,12 +25,9 @@ class CouponService:
             description=coupon_data.description,
             discount_type=coupon_data.discount_type,
             discount_amount=coupon_data.discount_amount,
-            min_purchase=coupon_data.min_purchase,
             max_uses=coupon_data.max_uses,
             expiration_date=coupon_data.expiration_date,
             category_id=coupon_data.category_id,
-            availability_type=coupon_data.availability_type,
-            price=coupon_data.price,
             stock=coupon_data.stock,
             is_featured=coupon_data.is_featured,
             picture_url=coupon_data.picture_url,
@@ -44,23 +35,6 @@ class CouponService:
         )
         db.add(db_coupon)
         db.flush()  # Flush to get the coupon ID
-        
-        # Create country associations (validate country IDs first)
-        if country_ids:
-            # Get valid country IDs from database
-            valid_countries = db.query(Country.id).filter(Country.id.in_(country_ids)).all()
-            valid_country_ids = {str(c.id) for c in valid_countries}
-            
-            # Log warning for invalid country IDs (only in debug mode)
-            invalid_ids = [str(cid) for cid in country_ids if str(cid) not in valid_country_ids]
-            if invalid_ids and logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f"Skipping invalid country IDs for coupon '{db_coupon.code}': {invalid_ids}")
-            
-            # Create associations only for valid countries
-            for country_id in country_ids:
-                if str(country_id) in valid_country_ids:
-                    association = CouponCountry(coupon_id=db_coupon.id, country_id=country_id)
-                    db.add(association)
         
         db.commit()
         db.refresh(db_coupon)  # Refresh to get database-generated fields (created_at, etc.)
@@ -78,22 +52,14 @@ class CouponService:
         limit: int = 100,
         active_only: bool = False,
         category_id: Optional[UUID] = None,
-        region_id: Optional[UUID] = None,
-        country_id: Optional[UUID] = None,
-        availability_type: Optional[str] = None,
         search: Optional[str] = None,
         is_featured: Optional[bool] = None,
         min_discount: Optional[float] = None,
     ) -> List[Coupon]:
         """Get all coupons with optional filtering"""
-        from sqlalchemy.orm import joinedload
-        from app.models.coupon_country import CouponCountry
-        from app.models.country import Country
-        
         # Query database with eager loading for relationships (avoid N+1)
         query = db.query(Coupon).options(
-            joinedload(Coupon.category),
-            joinedload(Coupon.country_associations).joinedload(CouponCountry.country)
+            joinedload(Coupon.category)
         )
         
         # Apply filters
@@ -106,22 +72,11 @@ class CouponService:
         if category_id:
             query = query.filter(Coupon.category_id == category_id)
         
-        if availability_type:
-            query = query.filter(Coupon.availability_type == availability_type)
-        
         if is_featured is not None:
             query = query.filter(Coupon.is_featured == is_featured)
 
         if min_discount is not None:
             query = query.filter(Coupon.discount_amount >= min_discount)
-        
-        # Filter by country (requires join)
-        if country_id:
-            query = query.join(CouponCountry).filter(CouponCountry.country_id == country_id)
-        
-        # Filter by region (requires joins through country)
-        if region_id:
-            query = query.join(CouponCountry).join(Country).filter(Country.region_id == region_id)
         
         # Search by title or brand (case-insensitive)
         if search:
@@ -151,14 +106,12 @@ class CouponService:
             return val
 
         from sqlalchemy.orm import joinedload
-        from app.models.coupon_country import CouponCountry
         
         cache_k = cache_key("coupons", "id", str(coupon_id))
         cached = get_cache(cache_k)
-        cached = get_cache(cache_k)
         if cached is not None:
             # Reconstruct object
-            c_obj = Coupon(**{k: v for k, v in cached.items() if k not in ['category', 'countries', 'pricing']})
+            c_obj = Coupon(**{k: v for k, v in cached.items() if k not in ['category', 'pricing']})
             c_obj.pricing = cached.get('pricing')
             
             if cached.get('category'):
@@ -168,8 +121,7 @@ class CouponService:
             return c_obj
         
         coupon = db.query(Coupon).options(
-            joinedload(Coupon.category),
-            joinedload(Coupon.country_associations).joinedload(CouponCountry.country)
+            joinedload(Coupon.category)
         ).filter(Coupon.id == coupon_id).first()
         
         if coupon:
@@ -182,21 +134,17 @@ class CouponService:
                 "description": sanitize(coupon.description),
                 "discount_type": sanitize(coupon.discount_type), 
                 "discount_amount": coupon.discount_amount,
-                "min_purchase": coupon.min_purchase, 
                 "max_uses": coupon.max_uses,
                 "current_uses": coupon.current_uses, 
                 "is_active": coupon.is_active,
-                "price": coupon.price, 
                 "stock": coupon.stock, 
                 "is_featured": coupon.is_featured,
                 "created_at": str(coupon.created_at) if coupon.created_at else None,
                 "expiration_date": str(coupon.expiration_date) if coupon.expiration_date else None,
                 "category_id": str(coupon.category_id) if coupon.category_id else None,
                 "category": {"id": str(coupon.category.id), "name": sanitize(coupon.category.name), "slug": sanitize(coupon.category.slug)} if coupon.category else None,
-                "availability_type": sanitize(coupon.availability_type),
                 "picture_url": sanitize(coupon.picture_url),
                 "pricing": coupon.pricing,
-                "countries": [{"id": str(ca.country.id), "name": sanitize(ca.country.name), "slug": sanitize(ca.country.slug), "country_code": sanitize(ca.country.country_code)} for ca in coupon.country_associations] if coupon.country_associations else [],
             }, CACHE_TTL_MEDIUM)
             
         return coupon
@@ -229,7 +177,7 @@ class CouponService:
                 "title": sanitize(coupon.title), 
                 "picture_url": sanitize(coupon.picture_url),
                 "pricing": coupon.pricing,
-                "discount_amount": coupon.discount_amount, "price": coupon.price
+                "discount_amount": coupon.discount_amount
             }, CACHE_TTL_MEDIUM)
             
         return coupon
@@ -237,48 +185,17 @@ class CouponService:
     @staticmethod
     def update(db: Session, coupon_id: UUID, coupon_data: CouponUpdate) -> Optional[Coupon]:
         """Update a coupon"""
-        from app.models.coupon_country import CouponCountry
-        from app.models.country import Country
-        import logging
-        
-        logger = logging.getLogger(__name__)
-        
         db_coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
         if not db_coupon:
             return None
-        
+            
         update_data = coupon_data.model_dump(exclude_unset=True)
-        
-        # Handle country_ids separately
-        country_ids = update_data.pop('country_ids', None)
         
         if "code" in update_data:
             update_data["code"] = update_data["code"].upper()
         
         for field, value in update_data.items():
             setattr(db_coupon, field, value)
-        
-        # Update country associations if country_ids provided
-        if country_ids is not None:
-            # Remove existing associations
-            db.query(CouponCountry).filter(CouponCountry.coupon_id == coupon_id).delete()
-            
-            # Add new associations (validate country IDs first)
-            if country_ids:
-                # Get valid country IDs from database
-                valid_countries = db.query(Country.id).filter(Country.id.in_(country_ids)).all()
-                valid_country_ids = {str(c.id) for c in valid_countries}
-                
-                # Log warning for invalid country IDs
-                invalid_ids = [str(cid) for cid in country_ids if str(cid) not in valid_country_ids]
-                if invalid_ids:
-                    logger.warning(f"Skipping invalid country IDs for coupon '{db_coupon.code}': {invalid_ids}")
-                
-                # Create associations only for valid countries
-                for country_id in country_ids:
-                    if str(country_id) in valid_country_ids:
-                        association = CouponCountry(coupon_id=coupon_id, country_id=country_id)
-                        db.add(association)
         
         db.commit()
         db.refresh(db_coupon)  # Refresh to get updated relationships
@@ -323,6 +240,31 @@ class CouponService:
         invalidate_cache(f"coupons:id:{coupon_id}")
         
         return True
+
+    @staticmethod
+    def get_price(coupon: Coupon, currency: str = "USD") -> float:
+        """Get the price of a coupon for a specific currency from pricing JSON"""
+        if not coupon or not coupon.pricing:
+            return 0.0
+        
+        # Try to get currency-specific price
+        currency_data = coupon.pricing.get(currency.upper())
+        if currency_data is not None:
+            if isinstance(currency_data, dict) and "price" in currency_data:
+                return float(currency_data["price"])
+            elif isinstance(currency_data, (int, float)):
+                return float(currency_data)
+            
+        # Fallback to USD if requested currency not found
+        if currency.upper() != "USD":
+            usd_data = coupon.pricing.get("USD")
+            if usd_data is not None:
+                if isinstance(usd_data, dict) and "price" in usd_data:
+                    return float(usd_data["price"])
+                elif isinstance(usd_data, (int, float)):
+                    return float(usd_data)
+                
+        return 0.0
 
     @staticmethod
     def is_valid(coupon: Coupon) -> tuple[bool, str]:

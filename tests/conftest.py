@@ -167,7 +167,10 @@ def sample_coupon(client, admin_user):
         "description": "Test coupon",
         "discount_type": "percentage",
         "discount_amount": 50.0,
-        "price": 2.99,
-        "is_active": True
+        "is_active": True,
+        "pricing": {
+            "USD": {"price": 1.99, "discount_amount": 0.5},
+            "INR": {"price": 46.0, "discount_amount": 10.0}
+        }
     }, headers=admin_user["headers"])
     return resp.json()

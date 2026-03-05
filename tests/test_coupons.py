@@ -8,7 +8,6 @@ def test_create_coupon_admin(client, admin_user):
         "title": "Save 20 Percent",
         "discount_type": "percentage",
         "discount_amount": 20.0,
-        "price": 1.99,
         "is_active": True
     }, headers=admin_user["headers"])
     assert resp.status_code == 201

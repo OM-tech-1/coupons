@@ -48,7 +48,6 @@ def test_coupon(db):
         title="Test Coupon",
         discount_type="percentage",
         discount_amount=10.0,
-        price=5.0,
         is_active=True
     )
     db.add(coupon)

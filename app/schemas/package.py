@@ -66,7 +66,6 @@ class CouponInPackage(BaseModel):
     brand: Optional[str] = None
     discount_type: str
     discount_amount: float
-    price: float = 0.0
     picture_url: Optional[str] = None
     is_active: bool = True
     # Multi-currency pricing for frontend
@@ -82,7 +81,6 @@ class CouponInPackage(BaseModel):
             'brand': obj.brand,
             'discount_type': obj.discount_type,
             'discount_amount': obj.discount_amount,
-            'price': obj.price,
             'picture_url': obj.picture_url,
             'is_active': obj.is_active,
         }

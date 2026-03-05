@@ -13,7 +13,7 @@ import os
 # This is critical for SQLAlchemy to properly resolve relationships
 from app.models import (
     User, Coupon, UserCoupon, CartItem, Order, Payment, PaymentToken,
-    Category, Region, Country, CouponCountry, Package, PackageCoupon
+    Category, Region, Country, Package, PackageCoupon
 )
 from app.models.contact_message import ContactMessage
 
