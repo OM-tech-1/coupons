@@ -68,10 +68,9 @@ class CouponInPackage(BaseModel):
     discount_amount: float
     price: float = 0.0
     picture_url: Optional[str] = None
-    pricing: Optional[Dict[str, Dict[str, float]]] = None
     is_active: bool = True
     # Multi-currency pricing for frontend
-    prices: Dict[str, float] = Field(default_factory=dict, description="Prices in all supported currencies")
+    pricing: Optional[Dict[str, float]] = Field(default_factory=dict, description="Prices in all supported currencies")
     discounts: Dict[str, float] = Field(default_factory=dict, description="Discount amounts in all supported currencies")
 
     @classmethod
@@ -85,7 +84,6 @@ class CouponInPackage(BaseModel):
             'discount_amount': obj.discount_amount,
             'price': obj.price,
             'picture_url': obj.picture_url,
-            'pricing': obj.pricing,
             'is_active': obj.is_active,
         }
         
@@ -97,10 +95,10 @@ class CouponInPackage(BaseModel):
                 if isinstance(values, dict):
                     prices[currency] = values.get('price', 0.0)
                     discounts[currency] = values.get('discount_amount', 0.0)
-            data['prices'] = prices
+            data['pricing'] = prices
             data['discounts'] = discounts
         else:
-            data['prices'] = {'USD': obj.price or 0.0}
+            data['pricing'] = {'USD': obj.price or 0.0}
             data['discounts'] = {'USD': obj.discount_amount or 0.0}
         
         return cls(**data)
@@ -120,14 +118,7 @@ class PackageResponse(PackageBase):
     id: UUID
     created_at: datetime
     max_saving: float = Field(default=0.0, description="Maximum saving (discount percentage)")
-    pricing: Optional[Dict[str, Dict[str, float]]] = Field(
-        default=None, description="Auto-computed sum of coupon prices per currency"
-    )
-    total_price: Optional[Dict[str, float]] = Field(
-        default=None, description="Total price per currency (sum of all coupon prices)"
-    )
-    # Flattened multi-currency fields for easier frontend access
-    prices: Dict[str, float] = Field(default_factory=dict, description="Package prices in all supported currencies")
+    pricing: Dict[str, float] = Field(default_factory=dict, description="Package prices in all supported currencies")
     final_prices: Dict[str, float] = Field(default_factory=dict, description="Final prices after discount in all currencies")
     
     category: Optional[CategoryInPackage] = None
@@ -155,8 +146,6 @@ class PackageResponse(PackageBase):
             'expiration_date': obj.expiration_date,
             'created_at': obj.created_at,
             'max_saving': obj.discount or 0.0,
-            'pricing': obj.pricing if hasattr(obj, 'pricing') else None,
-            'total_price': obj.total_price if hasattr(obj, 'total_price') else None,
             'category': obj.category,
             'coupons': coupons,
             'country': obj.country if hasattr(obj, 'country') else None,
@@ -184,7 +173,7 @@ class PackageResponse(PackageBase):
         else:
             final_prices = prices.copy()
         
-        data['prices'] = prices
+        data['pricing'] = prices
         data['discounts'] = discounts
         data['final_prices'] = final_prices
         
@@ -198,14 +187,8 @@ class PackageListResponse(PackageBase):
     id: UUID
     created_at: datetime
     max_saving: float = Field(default=0.0, description="Maximum saving (discount percentage)")
-    pricing: Optional[Dict[str, Dict[str, float]]] = Field(
-        default=None, description="Auto-computed sum of coupon prices per currency"
-    )
-    total_price: Optional[Dict[str, float]] = Field(
-        default=None, description="Total price per currency (sum of all coupon prices)"
-    )
     # Flattened multi-currency fields for easier frontend access
-    prices: Dict[str, float] = Field(default_factory=dict, description="Package prices in all supported currencies")
+    pricing: Dict[str, float] = Field(default_factory=dict, description="Package prices in all supported currencies")
     final_prices: Dict[str, float] = Field(default_factory=dict, description="Final prices after discount in all currencies")
     
     category: Optional[CategoryInPackage] = None
@@ -231,8 +214,6 @@ class PackageListResponse(PackageBase):
             'expiration_date': obj.expiration_date,
             'created_at': obj.created_at,
             'max_saving': obj.discount or 0.0,
-            'pricing': obj.pricing if hasattr(obj, 'pricing') else None,
-            'total_price': obj.total_price if hasattr(obj, 'total_price') else None,
             'category': obj.category,
             'coupon_count': len(obj.coupon_associations) if hasattr(obj, 'coupon_associations') else 0,
             'country': obj.country if hasattr(obj, 'country') else None,
@@ -261,7 +242,7 @@ class PackageListResponse(PackageBase):
                 else:
                     final_prices[currency] = price
         
-        data['prices'] = prices
+        data['pricing'] = prices
         data['final_prices'] = final_prices
         
         return cls(**data)

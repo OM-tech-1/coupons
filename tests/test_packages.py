@@ -147,8 +147,8 @@ class TestPackageCRUD:
             "name": "Total Price Pack", "slug": "total-price-pack",
             "coupon_ids": [c1["id"], c2["id"]],
         }, headers=admin_user["headers"]).json()
-        assert pkg["total_price"]["INR"] == 150.0
-        assert pkg["total_price"]["AED"] == 30.0
+        assert pkg["pricing"]["INR"] == 150.0
+        assert pkg["pricing"]["AED"] == 30.0
 
     def test_package_coupons_include_pricing(self, client, admin_user):
         """Coupons in the package response should include pricing info."""
@@ -164,7 +164,7 @@ class TestPackageCRUD:
         }, headers=admin_user["headers"]).json()
         coupon_in_pkg = pkg["coupons"][0]
         assert "pricing" in coupon_in_pkg
-        assert coupon_in_pkg["pricing"]["INR"]["price"] == 80.0
+        assert coupon_in_pkg["pricing"]["INR"] == 80.0
         assert coupon_in_pkg["price"] == 8.0
 
     def test_list_packages_active_only_by_default(self, client, admin_user):

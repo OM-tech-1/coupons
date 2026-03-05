@@ -174,7 +174,7 @@ class PackageService:
                 "country": pkg.country,
                 "created_at": pkg.created_at,
                 "coupon_count": count,
-                "prices": prices,
+                "pricing": prices,
                 "final_prices": final_prices,
             })
 
@@ -394,8 +394,18 @@ class PackageService:
         coupons = []
         if coupon_ids:
             coupon_objs = db.query(Coupon).filter(Coupon.id.in_(coupon_ids)).all()
-            coupons = [
-                {
+            for c in coupon_objs:
+                c_pricing = {}
+                c_discounts = {}
+                if c.pricing and isinstance(c.pricing, dict):
+                    for currency, values in c.pricing.items():
+                        c_pricing[currency] = values.get('price', 0.0)
+                        c_discounts[currency] = values.get('discount_amount', 0.0)
+                else:
+                    c_pricing['USD'] = c.price or 0.0
+                    c_discounts['USD'] = c.discount_amount or 0.0
+                    
+                coupons.append({
                     "id": c.id,
                     "title": c.title,
                     "brand": c.brand,
@@ -403,14 +413,22 @@ class PackageService:
                     "discount_amount": c.discount_amount,
                     "price": c.price or 0.0,
                     "picture_url": c.picture_url,
-                    "pricing": c.pricing,
+                    "pricing": c_pricing,
+                    "discounts": c_discounts,
                     "is_active": c.is_active,
-                }
-                for c in coupon_objs
-            ]
+                })
 
-        pricing = PackageService._compute_pricing(db, coupon_ids)
-        total_price = PackageService._compute_total_price(pricing)
+        pricing_raw = PackageService._compute_pricing(db, coupon_ids)
+        
+        prices = {}
+        final_prices = {}
+        for currency, values in pricing_raw.items():
+            base_price = values.get("price", 0.0)
+            prices[currency] = base_price
+            if pkg.discount:
+                final_prices[currency] = base_price * (1.0 - pkg.discount / 100.0)
+            else:
+                final_prices[currency] = base_price
 
         return {
             "id": pkg.id,
@@ -423,8 +441,8 @@ class PackageService:
             "avg_rating": pkg.avg_rating or 0.0,
             "total_sold": pkg.total_sold or 0,
             "max_saving": pkg.discount or 0.0,
-            "pricing": pricing,
-            "total_price": total_price,
+            "pricing": prices,
+            "final_prices": final_prices,
             "category_id": pkg.category_id,
             "is_active": pkg.is_active,
             "is_featured": pkg.is_featured,
