@@ -26,6 +26,7 @@ class PackageService:
             category_id=data.category_id,
             is_active=data.is_active,
             is_featured=data.is_featured,
+            is_trending=data.is_trending,
             expiration_date=data.expiration_date,
             country=data.country,
         )
@@ -52,6 +53,7 @@ class PackageService:
         category_id: Optional[UUID] = None,
         is_active: Optional[bool] = None,
         is_featured: Optional[bool] = None,
+        is_trending: Optional[bool] = None,
         filter_by: Optional[str] = None,
         brands: Optional[List[str]] = None,
     ) -> List[dict]:
@@ -61,7 +63,7 @@ class PackageService:
         cache_k = None
         
         if use_cache:
-            cache_k = cache_key("packages", "list", category_id, is_active, is_featured, filter_by, brands_key, limit)
+            cache_k = cache_key("packages", "list", category_id, is_active, is_featured, is_trending, filter_by, brands_key, limit)
             cached = get_cache(cache_k)
             if cached is not None:
                 return cached
@@ -78,6 +80,8 @@ class PackageService:
             query = query.filter(Package.is_active == is_active)
         if is_featured is not None:
             query = query.filter(Package.is_featured == is_featured)
+        if is_trending is not None:
+            query = query.filter(Package.is_trending == is_trending)
         if category_id is not None:
             query = query.filter(Package.category_id == category_id)
         if brands:
@@ -113,20 +117,45 @@ class PackageService:
             PackageCoupon.package_id.in_(package_ids)
         ).all()
         package_coupons_map = {}
+        all_coupon_ids = set()
         for pc in package_coupons:
             if pc.package_id not in package_coupons_map:
                 package_coupons_map[pc.package_id] = []
             package_coupons_map[pc.package_id].append(pc.coupon_id)
+            all_coupon_ids.add(pc.coupon_id)
+            
+        coupons_map = {}
+        if all_coupon_ids:
+            all_coupons = db.query(Coupon.id, Coupon.pricing, Coupon.price).filter(Coupon.id.in_(all_coupon_ids)).all()
+            coupons_map = {c.id: c for c in all_coupons}
         
         for pkg, count in rows:
-            cat = None
-            if pkg.category_id and pkg.category_id in categories_map:
-                cat_obj = categories_map[pkg.category_id]
-                cat = {"id": cat_obj.id, "name": cat_obj.name, "slug": cat_obj.slug}
-            
             pkg_coupon_ids = package_coupons_map.get(pkg.id, [])
-            pricing = PackageService._compute_pricing(db, pkg_coupon_ids)
-            total_price = PackageService._compute_total_price(pricing)
+            
+            pricing = {}
+            for cid in pkg_coupon_ids:
+                if cid in coupons_map:
+                    c = coupons_map[cid]
+                    if c.pricing:
+                        for currency, values in c.pricing.items():
+                            if currency not in pricing:
+                                pricing[currency] = {"price": 0.0}
+                            for k, v in values.items():
+                                pricing[currency][k] = pricing[currency].get(k, 0.0) + v
+                    else:
+                        pricing.setdefault("DEFAULT", {"price": 0.0})
+                        pricing["DEFAULT"]["price"] += (c.price or 0.0)
+            
+            prices = {}
+            final_prices = {}
+            for currency, values in pricing.items():
+                base_price = values.get("price", 0.0)
+                prices[currency] = base_price
+                if pkg.discount:
+                    final_prices[currency] = base_price * (1.0 - pkg.discount / 100.0)
+                else:
+                    final_prices[currency] = base_price
+
             result.append({
                 "id": pkg.id,
                 "name": pkg.name,
@@ -137,17 +166,16 @@ class PackageService:
                 "discount": pkg.discount,
                 "avg_rating": pkg.avg_rating or 0.0,
                 "total_sold": pkg.total_sold or 0,
-                "max_saving": pkg.discount or 0.0,
-                "pricing": pricing,
-                "total_price": total_price,
                 "category_id": pkg.category_id,
                 "is_active": pkg.is_active,
                 "is_featured": pkg.is_featured,
+                "is_trending": getattr(pkg, 'is_trending', False),
                 "expiration_date": pkg.expiration_date,
                 "country": pkg.country,
                 "created_at": pkg.created_at,
-                "category": cat,
                 "coupon_count": count,
+                "prices": prices,
+                "final_prices": final_prices,
             })
 
         set_cache(cache_k, result, CACHE_TTL_MEDIUM)
@@ -400,6 +428,7 @@ class PackageService:
             "category_id": pkg.category_id,
             "is_active": pkg.is_active,
             "is_featured": pkg.is_featured,
+            "is_trending": getattr(pkg, 'is_trending', False),
             "expiration_date": pkg.expiration_date,
             "country": pkg.country,
             "created_at": pkg.created_at,

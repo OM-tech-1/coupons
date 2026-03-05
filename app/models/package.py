@@ -21,6 +21,7 @@ class Package(Base):
     country = Column(String(100), nullable=True, index=True)  # e.g. 'UAE', 'KSA', 'Kuwait', 'Bahrain', 'Oman'
     is_active = Column(Boolean, default=True, index=True)
     is_featured = Column(Boolean, default=False, index=True)
+    is_trending = Column(Boolean, default=False, index=True)
     expiration_date = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

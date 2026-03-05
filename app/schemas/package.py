@@ -22,6 +22,7 @@ class PackageBase(BaseModel):
     )
     is_active: bool = Field(default=True)
     is_featured: bool = Field(default=False)
+    is_trending: bool = Field(default=False)
     expiration_date: Optional[datetime] = Field(default=None, description="Package expiration date")
 
     @validator('slug')
@@ -47,6 +48,7 @@ class PackageUpdate(BaseModel):
     category_id: Optional[UUID] = None
     is_active: Optional[bool] = None
     is_featured: Optional[bool] = None
+    is_trending: Optional[bool] = None
     expiration_date: Optional[datetime] = Field(default=None, description="Package expiration date")
     country: Optional[str] = Field(default=None, max_length=100)
     coupon_ids: Optional[List[UUID]] = Field(default=None, description="Replace package coupons with this list")
@@ -225,6 +227,7 @@ class PackageListResponse(PackageBase):
             'category_id': obj.category_id,
             'is_active': obj.is_active,
             'is_featured': obj.is_featured,
+            'is_trending': getattr(obj, 'is_trending', False),
             'expiration_date': obj.expiration_date,
             'created_at': obj.created_at,
             'max_saving': obj.discount or 0.0,
