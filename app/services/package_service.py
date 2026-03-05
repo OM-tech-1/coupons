@@ -129,7 +129,7 @@ class PackageService:
             
         coupons_map = {}
         if all_coupon_ids:
-            all_coupons = db.query(Coupon.id, Coupon.pricing, Coupon.price).filter(Coupon.id.in_(all_coupon_ids)).all()
+            all_coupons = db.query(Coupon.id, Coupon.pricing).filter(Coupon.id.in_(all_coupon_ids)).all()
             coupons_map = {c.id: c for c in all_coupons}
         
         for pkg, count in rows:
@@ -147,7 +147,7 @@ class PackageService:
                                 pricing[currency][k] = pricing[currency].get(k, 0.0) + v
                     else:
                         pricing.setdefault("DEFAULT", {"price": 0.0})
-                        pricing["DEFAULT"]["price"] += (c.price or 0.0)
+                        pricing["DEFAULT"]["price"] += 0.0
             
             prices = {}
             final_prices = {}
