@@ -122,11 +122,13 @@ class TestPackageCRUD:
             "name": "Branded Bundle",
             "slug": "branded-bundle",
             "brand": "Noon",
+            "brand_url": "https://noon.com/store",
             "discount": 15.0,
         }, headers=admin_user["headers"])
         assert resp.status_code == 201
         data = resp.json()
         assert data["brand"] == "Noon"
+        assert data["brand_url"] == "https://noon.com/store"
         assert data["discount"] == 15.0
 
     def test_package_total_price(self, client, admin_user):

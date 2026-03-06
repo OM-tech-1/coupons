@@ -11,6 +11,7 @@ class PackageBase(BaseModel):
     description: Optional[str] = None
     picture_url: Optional[str] = None
     brand: Optional[str] = Field(default=None, max_length=100, description="Brand name for the package")
+    brand_url: Optional[str] = Field(default=None, max_length=500, description="Brand URL for the package")
     discount: Optional[float] = Field(default=None, ge=0, description="Discount percentage on the package")
     avg_rating: float = Field(default=0.0, ge=0, le=5, description="Average rating for the bundle")
     total_sold: int = Field(default=0, ge=0, description="Total bundles sold")
@@ -42,6 +43,7 @@ class PackageUpdate(BaseModel):
     description: Optional[str] = None
     picture_url: Optional[str] = None
     brand: Optional[str] = Field(default=None, max_length=100)
+    brand_url: Optional[str] = Field(default=None, max_length=500)
     discount: Optional[float] = Field(default=None, ge=0)
     avg_rating: Optional[float] = Field(default=None, ge=0, le=5)
     total_sold: Optional[int] = Field(default=None, ge=0)
@@ -135,6 +137,7 @@ class PackageResponse(PackageBase):
             'description': obj.description,
             'picture_url': obj.picture_url,
             'brand': obj.brand,
+            'brand_url': getattr(obj, 'brand_url', None),
             'discount': obj.discount,
             'avg_rating': obj.avg_rating,
             'total_sold': obj.total_sold,
@@ -202,6 +205,7 @@ class PackageListResponse(PackageBase):
             'description': obj.description,
             'picture_url': obj.picture_url,
             'brand': obj.brand,
+            'brand_url': getattr(obj, 'brand_url', None),
             'discount': obj.discount,
             'avg_rating': obj.avg_rating,
             'total_sold': obj.total_sold,

@@ -1,0 +1,1 @@
+ALTER TABLE packages ADD COLUMN brand_url VARCHAR(500);

@@ -36,6 +36,7 @@ def create_package(
         existing.description = data.description
         existing.picture_url = data.picture_url
         existing.brand = data.brand
+        existing.brand_url = data.brand_url
         existing.discount = data.discount
         existing.category_id = data.category_id
         existing.is_active = data.is_active

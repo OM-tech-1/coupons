@@ -15,6 +15,7 @@ class Package(Base):
     description = Column(Text, nullable=True)
     picture_url = Column(String(500), nullable=True)
     brand = Column(String(100), nullable=True)
+    brand_url = Column(String(500), nullable=True)
     discount = Column(Float, nullable=True)
     avg_rating = Column(Float, default=0.0)
     total_sold = Column(Integer, default=0)
