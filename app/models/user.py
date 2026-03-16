@@ -17,6 +17,11 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
+    # OTP fields for password reset
+    otp = Column(String, nullable=True)
+    otp_expiry = Column(DateTime, nullable=True)
+
+
     # Extended profile fields
     email = Column(String, unique=True, nullable=True, index=True)
     date_of_birth = Column(Date, nullable=True)

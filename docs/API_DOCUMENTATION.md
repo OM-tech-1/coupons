@@ -7,19 +7,49 @@
 
 ## Authentication
 
-### Register
+### Register (Unified)
 ```bash
 curl -X POST https://api.vouchergalaxy.com/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"country_code":"+91","number":"9876543210","password":"pass123","full_name":"Test User"}'
+  -d '{
+    "email": "user@example.com",
+    "country_code": "+91",
+    "number": "9876543210",
+    "password": "pass123",
+    "full_name": "Test User"
+  }'
 ```
 
-### Login
+### Login (Unified)
 ```bash
 curl -X POST https://api.vouchergalaxy.com/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"country_code":"+91","number":"7907975711","password":"afsal@123"}'
+  -d '{
+    "email": "user@example.com",
+    "country_code": "+91",
+    "number": "9876543210",
+    "password": "pass123"
+  }'
 ```
+
+### Forgot Password (Request Magic Link)
+```bash
+curl -X POST https://api.vouchergalaxy.com/auth/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com"}'
+```
+**Behavior:** Sends an email to the user with a magic link containing a JWT token.
+
+### Reset Password (Confirm with Token)
+```bash
+curl -X POST https://api.vouchergalaxy.com/auth/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "JWT_TOKEN_FROM_EMAIL",
+    "new_password": "NewSecurePassword123!"
+  }'
+```
+**Note:** The token is single-use and expires in 15 minutes.
 **JWT Optimization:** The access token payload now includes a `currency` claim (e.g., `"currency": "INR"`), which is derived from the user's phone number during login.
 
 ---

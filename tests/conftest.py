@@ -61,6 +61,14 @@ from app.database import Base, get_db
 from app.main import app
 from app.middleware.rate_limit import limiter
 
+# Import all models to ensure they're registered with Base.metadata
+# This must happen BEFORE Base.metadata.create_all() is called
+from app.models import (
+    User, Coupon, UserCoupon, CartItem, Order, Payment, PaymentToken,
+    Category, Region, Country, CouponView, Package, PackageCoupon
+)
+from app.models.contact_message import ContactMessage
+
 # Disable rate limiting in tests
 limiter.enabled = False
 
@@ -110,8 +118,8 @@ def client(db):
 
 
 # Valid US phone numbers
-ADMIN_PHONE = {"country_code": "+1", "number": "2025551234"}
-REGULAR_PHONE = {"country_code": "+1", "number": "2025559876"}
+ADMIN_PHONE = {"country_code": "+1", "number": "2025551234", "email": "admin@example.com"}
+REGULAR_PHONE = {"country_code": "+1", "number": "2025559876", "email": "user@example.com"}
 
 
 @pytest.fixture

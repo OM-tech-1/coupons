@@ -32,7 +32,9 @@ def run_migrations():
         ('town', 'VARCHAR(100)'),
         ('state_province', 'VARCHAR(100)'),
         ('postal_code', 'VARCHAR(20)'),
-        ('address_country', 'VARCHAR(100)')
+        ('address_country', 'VARCHAR(100)'),
+        ('otp', 'VARCHAR(10)'),
+        ('otp_expiry', 'TIMESTAMP')
     ]
     
     # Coupon columns

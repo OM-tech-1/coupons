@@ -19,6 +19,7 @@ def test_jwt_contains_currency(client):
     
     # Register payload must match UserCreate schema (country_code + number required)
     register_payload = {
+        "email": f"jwt_{suffix}@example.com",
         "country_code": "+91",
         "number": number,
         "full_name": "JWT Test User",
@@ -31,6 +32,7 @@ def test_jwt_contains_currency(client):
     
     # Login - Schema expects country_code and number separately
     login_payload = {
+        "email": f"jwt_{suffix}@example.com",
         "country_code": "+91",
         "number": number,
         "password": "password123"
@@ -60,6 +62,7 @@ def test_jwt_currency_default(client):
     
     # Register payload must match UserCreate schema
     register_payload = {
+        "email": f"generic_{suffix}@example.com",
         "country_code": "+1",
         "number": number,
         "full_name": "JWT Test User Generic",
@@ -71,6 +74,7 @@ def test_jwt_currency_default(client):
     assert reg_response.status_code == 200, f"Register failed: {reg_response.json()}"
     
     login_payload = {
+        "email": f"generic_{suffix}@example.com",
         "country_code": "+1",
         "number": number,
         "password": "password123"

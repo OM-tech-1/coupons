@@ -49,6 +49,7 @@ class UserResponse(UserBase):
     id: UUID
     role: str
     is_active: bool
+    email: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

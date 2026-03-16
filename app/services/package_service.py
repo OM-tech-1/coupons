@@ -273,29 +273,12 @@ class PackageService:
         if not pkg:
             return False
         
-        # Check if package is referenced in orders
-        from app.models.order import OrderItem
-        has_orders = db.query(OrderItem).filter(OrderItem.package_id == package_id).first()
-        
-        if has_orders:
-            # Soft delete: mark as inactive instead of hard delete
-            pkg.is_active = False
-            pkg.is_featured = False
-            db.commit()
-            invalidate_cache("packages:*")
-            invalidate_cache(f"packages:id:{package_id}")
-            invalidate_cache(f"packages:slug:*")
-            return True
-        
-        # No orders, safe to hard delete
-        # Get coupon IDs before deleting
-        coupon_ids = [a.coupon_id for a in db.query(PackageCoupon).filter(PackageCoupon.package_id == package_id).all()]
-        db.delete(pkg)
-        db.flush()
-        # Reset flag on coupons no longer in any package
-        if coupon_ids:
-            PackageService._reset_orphaned_flags(db, coupon_ids)
+        # We never hard delete packages because they might be referenced in 
+        # cart items, orders, or user wallets. We only soft-delete them.
+        pkg.is_active = False
+        pkg.is_featured = False
         db.commit()
+        
         invalidate_cache("packages:*")
         invalidate_cache(f"packages:id:{package_id}")
         invalidate_cache(f"packages:slug:*")

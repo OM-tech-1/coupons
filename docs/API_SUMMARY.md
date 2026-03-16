@@ -9,8 +9,10 @@ This document provides a high-level overview of all available API endpoints curr
 
 | Endpoint | Method | Description |
 | :--- | :--- | :--- |
-| `/register` | `POST` | Create a new user account. |
-| `/login` | `POST` | Authenticate and receive a JWT access token. |
+| `/register` | `POST` | Unified Registration (Email & Phone). |
+| `/login` | `POST` | Unified Login (Email & Phone). |
+| `/forgot-password` | `POST` | Request Magic Link for password reset. |
+| `/reset-password` | `POST` | Confirm password reset with JWT token. |
 
 ---
 

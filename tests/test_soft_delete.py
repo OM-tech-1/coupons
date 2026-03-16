@@ -130,7 +130,7 @@ class TestCouponSoftDelete:
         assert coupon.is_active is False
     
     def test_delete_unused_coupon_hard_deletes(self, db, test_coupon):
-        """Coupon with no references should be hard deleted"""
+        """Coupon with no references should be soft deleted under new policy"""
         coupon_id = test_coupon.id
         
         # Delete the coupon (no orders, no cart items)
@@ -139,9 +139,10 @@ class TestCouponSoftDelete:
         # Should succeed
         assert result is True
         
-        # Coupon should be completely removed
+        # Coupon should be marked inactive instead of fully removed
         coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
-        assert coupon is None
+        assert coupon is not None
+        assert coupon.is_active is False
     
     def test_soft_deleted_coupon_not_in_public_list(self, db, test_coupon):
         """Soft deleted coupons should not appear in public listing"""
@@ -233,7 +234,7 @@ class TestPackageSoftDelete:
         assert package.is_featured is False
     
     def test_delete_unused_package_hard_deletes(self, db, test_package):
-        """Package with no orders should be hard deleted"""
+        """Package with no orders should be soft deleted under new policy"""
         package_id = test_package.id
         
         # Delete the package (no orders)
@@ -242,9 +243,10 @@ class TestPackageSoftDelete:
         # Should succeed
         assert result is True
         
-        # Package should be completely removed
+        # Package should be marked inactive instead of fully removed
         package = db.query(Package).filter(Package.id == package_id).first()
-        assert package is None
+        assert package is not None
+        assert package.is_active is False
     
     def test_soft_deleted_package_not_in_public_list(self, db, test_package):
         """Soft deleted packages should not appear in public listing"""

@@ -2,8 +2,8 @@
 
 
 # Valid US phone numbers for testing
-PHONE_A = {"country_code": "+1", "number": "2025551234"}
-PHONE_B = {"country_code": "+1", "number": "2025559999"}
+PHONE_A = {"country_code": "+1", "number": "2025551234", "email": "a@example.com"}
+PHONE_B = {"country_code": "+1", "number": "2025559999", "email": "b@example.com"}
 
 
 def test_register_user(client):
@@ -26,7 +26,7 @@ def test_register_duplicate_phone(client):
     client.post("/auth/register", json=payload)
     resp = client.post("/auth/register", json=payload)
     assert resp.status_code == 400
-    assert "already registered" in resp.json()["detail"]
+    assert "already exists" in resp.json()["detail"]
 
 
 def test_login_success(client):
@@ -141,3 +141,106 @@ def test_change_password_missing_token(client):
         "confirm_password": STRONG_PASS,
     })
     assert resp.status_code == 401
+
+# ---------------------------------------------------------------------------
+# Email Authentication & OTP tests
+# ---------------------------------------------------------------------------
+
+def test_register_with_email(client):
+    """POST /auth/register creates a new user."""
+    resp = client.post("/auth/register", json={
+        "email": "test@example.com",
+        "country_code": "+1",
+        "number": "2025551111",
+        "password": "StrongPassword123!",
+        "full_name": "Email User"
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["email"] == "test@example.com"
+    assert data["role"] == "USER"
+
+def test_login_with_email(client):
+    """POST /auth/login returns access token."""
+    # First sign up
+    client.post("/auth/register", json={
+        "email": "login@example.com",
+        "country_code": "+1",
+        "number": "2025552222",
+        "password": "StrongPassword123!",
+        "full_name": "Login User"
+    })
+    
+    # Then login
+    resp = client.post("/auth/login", json={
+        "email": "login@example.com",
+        "country_code": "+1",
+        "number": "2025552222",
+        "password": "StrongPassword123!"
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+def test_forgot_password_success(client):
+    """POST /auth/forgot-password should return success for existing user."""
+    # Register user
+    client.post("/auth/register", json={
+        "email": "forgot@example.com",
+        "country_code": "+1",
+        "number": "2025553333",
+        "password": "StrongPassword123!",
+        "full_name": "Forgot User"
+    })
+    
+    # Request reset
+    resp = client.post("/auth/forgot-password", json={
+        "email": "forgot@example.com"
+    })
+    assert resp.status_code == 200
+    assert "password reset link has been sent" in resp.json()["message"]
+
+def test_reset_password_with_valid_token(client, db):
+    """POST /auth/reset-password should work with valid token."""
+    # Register user
+    from app.models.user import User
+    from app.services.auth_service import generate_reset_token
+    
+    client.post("/auth/register", json={
+        "email": "reset@example.com",
+        "country_code": "+1",
+        "number": "2025554444",
+        "password": "StrongPassword123!",
+        "full_name": "Reset User"
+    })
+    
+    user = db.query(User).filter(User.email == "reset@example.com").first()
+    # Manually generate token (simulating what would be in the email link)
+    token = generate_reset_token(db, user)
+    
+    # Reset password
+    resp = client.post("/auth/reset-password", json={
+        "token": token,
+        "new_password": "NewStrongPassword123!"
+    })
+    assert resp.status_code == 200
+    assert "successfully reset" in resp.json()["message"]
+    
+    # Verify can login with new password
+    login_resp = client.post("/auth/login", json={
+        "email": "reset@example.com",
+        "country_code": "+1",
+        "number": "2025554444",
+        "password": "NewStrongPassword123!"
+    })
+    assert login_resp.status_code == 200
+
+def test_reset_password_fails_with_invalid_token(client):
+    """POST /auth/reset-password should fail with bogus token."""
+    resp = client.post("/auth/reset-password", json={
+        "token": "invalid-token-here",
+        "new_password": "NewStrongPassword123!"
+    })
+    assert resp.status_code == 400
+    assert "Invalid or expired" in resp.json()["detail"]

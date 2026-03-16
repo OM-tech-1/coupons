@@ -208,32 +208,16 @@ class CouponService:
 
     @staticmethod
     def delete(db: Session, coupon_id: UUID) -> bool:
-        """Delete a coupon. Soft-deletes if it has order history, hard-deletes otherwise."""
-        from app.models.order import OrderItem
-        from app.models.user_coupon import UserCoupon
-        from app.models.coupon_view import CouponView
-        
+        """Soft-delete a coupon to preserve order history and cart references."""
         db_coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
         if not db_coupon:
             return False
-        
-        # Check if coupon is referenced in orders or carts
-        has_orders = db.query(OrderItem).filter(OrderItem.coupon_id == coupon_id).first()
-        
-        from app.models.cart import CartItem
-        in_cart = db.query(CartItem).filter(CartItem.coupon_id == coupon_id).first()
-        
-        if has_orders or in_cart:
-            # Soft-delete: deactivate instead of removing (preserves order history and cart references)
-            db_coupon.is_active = False
-            db_coupon.is_featured = False
-            db.commit()
-        else:
-            # Hard-delete: no orders or carts reference this coupon
-            db.query(UserCoupon).filter(UserCoupon.coupon_id == coupon_id).delete()
-            db.query(CouponView).filter(CouponView.coupon_id == coupon_id).delete()
-            db.delete(db_coupon)
-            db.commit()
+            
+        # We never hard delete coupons because they might be referenced in 
+        # cart items, orders, or user wallets. We only soft-delete them.
+        db_coupon.is_active = False
+        db_coupon.is_featured = False
+        db.commit()
         
         # Invalidate coupon caches
         invalidate_cache("coupons:list:*")

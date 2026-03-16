@@ -124,12 +124,18 @@ PAYMENT_UI_DOMAIN=https://payment.yourdomain.com
 ```
 
 ### 4. Run Database Migrations
+
+The application automatically creates the base schema on startup via `Base.metadata.create_all()`. However, you must run the following SQL scripts to seed the initial data and add specialized triggers/indexes:
+
 ```bash
-# Apply the categories and geography migration
+# 1. Seed Categories, Regions, and Countries (CRITICAL)
 psql $DATABASE_URL -f migrations/002_add_categories_and_geography.sql
 
-# Optional: Add indexes for performance
+# 2. Add specialized performance indexes
 psql $DATABASE_URL -f migrations/add_indexes.sql
+
+# 3. Create contact messages support (includes triggers)
+psql $DATABASE_URL -f migrations/016_create_contact_messages.sql
 ```
 
 ### 5. Create Admin User
@@ -166,8 +172,10 @@ gunicorn app.main:app -c gunicorn.conf.py
 | | `GET /countries/{slug}/coupons` | Browse coupons by country |
 | **Coupons** | `GET /coupons/` | List/filter coupons |
 | | `POST /coupons/` | Create coupon (admin) |
-| **Auth** | `POST /auth/register` | Register new user |
-| | `POST /auth/login` | Login and get JWT token |
+| **Auth** | `POST /auth/register` | Register (Unified Email & Phone) |
+| | `POST /auth/login` | Login (Unified Email & Phone) |
+| | `POST /auth/forgot-password` | Request Magic Link |
+| | `POST /auth/reset-password` | Reset password with Magic Link |
 | **Cart** | `POST /cart/add` | Add coupon to cart |
 | | `GET /cart/` | View cart |
 | **Orders** | `POST /orders/checkout` | Purchase cart items |
@@ -200,7 +208,12 @@ curl "http://localhost:8000/coupons/?category_id=$CATEGORY_ID&country_id=$COUNTR
 # Login as admin
 TOKEN=$(curl -s -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"country_code":"+91","number":"7907975711","password":"afsal@123"}' | jq -r '.access_token')
+  -d '{
+    "email": "admin@example.com",
+    "country_code": "+91",
+    "number": "7907975711",
+    "password": "afsal@123"
+  }' | jq -r '.access_token')
 
 # Get category and country
 FOOD_CAT=$(curl -s http://localhost:8000/categories/ | jq -r '.[] | select(.slug=="food-grocery") | .id')
@@ -243,6 +256,7 @@ curl -X POST http://localhost:8000/coupons/ \
 
 ## 🔒 Admin Credentials
 
+**Email**: admin@example.com  
 **Phone**: +917907975711  
 **Password**: afsal@123  
 *(Change after first login)*

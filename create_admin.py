@@ -25,23 +25,26 @@ def create_admin():
     # Check for environment variables (Non-interactive mode)
     # Skip env check if --manual is passed
     env_phone = os.getenv("ADMIN_PHONE")
+    env_email = os.getenv("ADMIN_EMAIL")
     env_password = os.getenv("ADMIN_PASSWORD")
     env_name = os.getenv("ADMIN_NAME", "Admin User")
     
-    if env_phone and env_password and not args.manual:
+    if env_phone and env_email and env_password and not args.manual:
         phone_number = env_phone.strip()
+        email = env_email.strip()
         password = env_password.strip()
         full_name = env_name.strip()
-        print(f"🔧 Running in non-interactive mode for {phone_number}...")
+        print(f"🔧 Running in non-interactive mode for {phone_number} / {email}...")
     else:
         # Check if running interactively (TTY)
         if not sys.stdin.isatty():
-            print("⚠️  Skipping admin creation: No environment variables (ADMIN_PHONE, ADMIN_PASSWORD) and no interactive TTY.")
+            print("⚠️  Skipping admin creation: No environment variables (ADMIN_PHONE, ADMIN_EMAIL, ADMIN_PASSWORD) and no interactive TTY.")
             return
 
         # Interactive mode
         print("🔧 Running in interactive mode (env vars not set)...")
         phone_number = input("Enter phone number (e.g. +971501234567): ").strip()
+        email = input("Enter email (e.g. admin@example.com): ").strip()
         password = None  # Will ask if needed
         full_name = None
 
@@ -52,6 +55,8 @@ def create_admin():
         if user.role != "ADMIN":
             # Promote existing user
             user.role = "ADMIN"
+            if email and not user.email:
+                user.email = email
             db.commit()
             print(f"✅ User {phone_number} promoted to ADMIN")
         else:
@@ -65,6 +70,7 @@ def create_admin():
         
         new_user = User(
             phone_number=phone_number,
+            email=email,
             full_name=full_name,
             second_name="",
             hashed_password=get_password_hash(password),
