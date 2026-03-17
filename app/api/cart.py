@@ -8,6 +8,7 @@ from app.utils.security import get_current_user
 from app.models.user import User
 from app.schemas.cart import CartItemCreate, CartItemResponse, CartResponse
 from app.services.cart_service import CartService
+from app.services.coupon_service import CouponService
 from app.services.package_service import PackageService
 
 router = APIRouter()
