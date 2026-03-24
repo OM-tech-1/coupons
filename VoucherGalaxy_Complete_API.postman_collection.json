@@ -5,9 +5,21 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "https://api.vouchergalaxy.com", "type": "string" },
-    { "key": "access_token", "value": "", "type": "string" },
-    { "key": "admin_token", "value": "", "type": "string" }
+    {
+      "key": "base_url",
+      "value": "https://api.vouchergalaxy.com",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    }
   ],
   "item": [
     {
@@ -17,46 +29,166 @@
           "name": "Register (Unified)",
           "request": {
             "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"]},
-            "body": {"mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"country_code\": \"+971\",\n  \"number\": \"501234567\",\n  \"password\": \"SecurePass123!\",\n  \"full_name\": \"John Doe\"\n}"}
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"country_code\": \"+91\",\n  \"number\": \"9876543210\",\n  \"password\": \"pass123\",\n  \"full_name\": \"Test User\"\n}"
+            }
           }
         },
         {
-          "name": "Login (Unified)",
+          "name": "Login (Unified) - Email",
           "request": {
             "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"]},
-            "body": {"mode": "raw", "raw": "{\n  \"country_code\": \"+971\",\n  \"number\": \"501234567\",\n  \"password\": \"SecurePass123!\"\n}"}
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"pass123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login (Unified) - Phone",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"country_code\": \"+91\",\n  \"number\": \"9876543210\",\n  \"password\": \"pass123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/auth/change-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"OldPassword123\",\n  \"new_password\": \"NewSecurePassword456!\"\n}"
+            }
           }
         },
         {
           "name": "Forgot Password",
           "request": {
             "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/auth/forgot-password", "host": ["{{base_url}}"], "path": ["auth", "forgot-password"]},
-            "body": {"mode": "raw", "raw": "{\n  \"email\": \"user@example.com\"\n}"}
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            }
           }
         },
         {
           "name": "Reset Password",
           "request": {
             "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/auth/reset-password", "host": ["{{base_url}}"], "path": ["auth", "reset-password"]},
-            "body": {"mode": "raw", "raw": "{\n  \"token\": \"JWT_TOKEN\",\n  \"new_password\": \"NewSecurePass123!\"\n}"}
-          }
-        },
-        {
-          "name": "Change Password",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/auth/change-password", "host": ["{{base_url}}"], "path": ["auth", "change-password"]},
-            "body": {"mode": "raw", "raw": "{\n  \"current_password\": \"OldPassword123!\",\n  \"new_password\": \"NewSecurePass456!\"\n}"}
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"JWT_TOKEN\",\n  \"new_password\": \"NewSecurePassword123!\"\n}"
+            }
           }
         }
       ]
@@ -65,59 +197,810 @@
       "name": "2. User & Wallet",
       "item": [
         {
-          "name": "Get Profile",
+          "name": "Get My Profile",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "GET",
-            "url": {"raw": "{{base_url}}/user/me", "host": ["{{base_url}}"], "path": ["user", "me"]}
+            "url": {
+              "raw": "{{base_url}}/user/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "Update Profile",
+          "name": "Update My Profile",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "PUT",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/user/me", "host": ["{{base_url}}"], "path": ["user", "me"]},
-            "body": {"mode": "raw", "raw": "{\n  \"full_name\": \"John Updated\",\n  \"town\": \"Dubai\"\n}"}
+            "url": {
+              "raw": "{{base_url}}/user/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"New Name\",\n  \"town\": \"Bangalore\"\n}"
+            }
           }
         },
         {
-          "name": "Get Wallet Summary",
+          "name": "Get My Claimed Coupons",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "GET",
-            "url": {"raw": "{{base_url}}/user/wallet", "host": ["{{base_url}}"], "path": ["user", "wallet"]}
-          }
-        },
-        {
-          "name": "Get Wallet Coupons",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
-            "method": "GET",
-            "url": {"raw": "{{base_url}}/user/wallet/coupons", "host": ["{{base_url}}"], "path": ["user", "wallet", "coupons"]}
+            "url": {
+              "raw": "{{base_url}}/user/coupons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "coupons"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Get Claimed Coupon Detail",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "GET",
-            "url": {"raw": "{{base_url}}/user/coupons/:coupon_id", "host": ["{{base_url}}"], "path": ["user", "coupons", ":coupon_id"], "variable": [{"key": "coupon_id", "value": "UUID"}]}
+            "url": {
+              "raw": "{{base_url}}/user/coupons/:coupon_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "coupons",
+                ":coupon_id"
+              ],
+              "variable": [
+                {
+                  "key": "coupon_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Mark Coupon Used",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "POST",
-            "url": {"raw": "{{base_url}}/user/coupons/:coupon_id/mark-used", "host": ["{{base_url}}"], "path": ["user", "coupons", ":coupon_id", "mark-used"], "variable": [{"key": "coupon_id", "value": "UUID"}]}
+            "url": {
+              "raw": "{{base_url}}/user/coupons/:coupon_id/mark-used",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "coupons",
+                ":coupon_id",
+                "mark-used"
+              ],
+              "variable": [
+                {
+                  "key": "coupon_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Wallet Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/user/wallet",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "wallet"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Wallet Coupons",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/user/wallet/coupons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "wallet",
+                "coupons"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
     },
     {
-      "name": "3. Coupons (Public & Redis)",
+      "name": "3. Categories",
+      "item": [
+        {
+          "name": "List All Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/categories/?active_only=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories"
+              ],
+              "query": [
+                {
+                  "key": "active_only",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Categories w/ Counts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/categories/with-counts?active_only=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories",
+                "with-counts"
+              ],
+              "query": [
+                {
+                  "key": "active_only",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/categories/:slug",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories",
+                ":slug"
+              ],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "food-grocery"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Browse Coupons in Category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/categories/:slug/coupons?limit=20&skip=0&active_only=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories",
+                ":slug",
+                "coupons"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "active_only",
+                  "value": "true"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "food-grocery"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Category (Admin)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/categories/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sports & Fitness\",\n  \"slug\": \"sports-fitness\",\n  \"description\": \"...\",\n  \"icon\": \"\",\n  \"display_order\": 11,\n  \"is_active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Category (Admin)",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/categories/:category_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories",
+                ":category_id"
+              ],
+              "variable": [
+                {
+                  "key": "category_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"is_active\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Category (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/categories/:category_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories",
+                ":category_id"
+              ],
+              "variable": [
+                {
+                  "key": "category_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Regions",
+      "item": [
+        {
+          "name": "List All Regions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/regions/?active_only=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "regions"
+              ],
+              "query": [
+                {
+                  "key": "active_only",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Region",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/regions/:slug",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "regions",
+                ":slug"
+              ],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "middle-east"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Browse Coupons in Region",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/regions/:slug/coupons?limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "regions",
+                ":slug",
+                "coupons"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "middle-east"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Region (Admin)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/regions/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "regions"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"South Asia\",\n  \"slug\": \"south-asia\",\n  \"is_active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Region (Admin)",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/regions/:region_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "regions",
+                ":region_id"
+              ],
+              "variable": [
+                {
+                  "key": "region_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Region (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/regions/:region_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "regions",
+                ":region_id"
+              ],
+              "variable": [
+                {
+                  "key": "region_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Countries",
+      "item": [
+        {
+          "name": "List All Countries",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/countries/?active_only=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "countries"
+              ],
+              "query": [
+                {
+                  "key": "region_id",
+                  "value": "REGION_UUID",
+                  "disabled": true
+                },
+                {
+                  "key": "active_only",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Country",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/countries/:slug",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "countries",
+                ":slug"
+              ],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "united-arab-emirates"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Browse Coupons in Country",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/countries/:slug/coupons?limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "countries",
+                ":slug",
+                "coupons"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "united-arab-emirates"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Country (Admin)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/countries/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "countries"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Saudi Arabia\",\n  \"slug\": \"saudi-arabia\",\n  \"country_code\": \"SA\",\n  \"region_id\": \"REGION_UUID\",\n  \"is_active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Country (Admin)",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/countries/:country_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "countries",
+                ":country_id"
+              ],
+              "variable": [
+                {
+                  "key": "country_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"KSA\",\n  \"is_active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Country (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/countries/:country_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "countries",
+                ":country_id"
+              ],
+              "variable": [
+                {
+                  "key": "country_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Coupons",
       "item": [
         {
           "name": "List Coupons",
@@ -125,86 +1008,392 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/coupons/?skip=0&limit=20&active_only=true",
-              "host": ["{{base_url}}"],
-              "path": ["coupons", ""],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "coupons"
+              ],
               "query": [
-                {"key": "skip", "value": "0"},
-                {"key": "limit", "value": "20"},
-                {"key": "active_only", "value": "true"},
-                {"key": "category_id", "value": "UUID", "disabled": true},
-                {"key": "search", "value": "burger", "disabled": true}
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "active_only",
+                  "value": "true"
+                },
+                {
+                  "key": "category_id",
+                  "value": "UUID",
+                  "disabled": true
+                },
+                {
+                  "key": "is_featured",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "pizza",
+                  "disabled": true
+                },
+                {
+                  "key": "min_discount",
+                  "value": "10",
+                  "disabled": true
+                }
               ]
             }
           }
         },
         {
-          "name": "Get Single Coupon",
+          "name": "Get Coupon by ID",
           "request": {
             "method": "GET",
-            "url": {"raw": "{{base_url}}/coupons/:coupon_id", "host": ["{{base_url}}"], "path": ["coupons", ":coupon_id"], "variable": [{"key": "coupon_id", "value": "UUID"}]}
+            "url": {
+              "raw": "{{base_url}}/coupons/:coupon_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "coupons",
+                ":coupon_id"
+              ],
+              "variable": [
+                {
+                  "key": "coupon_id",
+                  "value": "UUID"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "Track View",
+          "name": "Create Coupon (Admin)",
           "request": {
             "method": "POST",
-            "url": {"raw": "{{base_url}}/coupons/:coupon_id/view?session_id=123", "host": ["{{base_url}}"], "path": ["coupons", ":coupon_id", "view"], "query": [{"key": "session_id", "value": "123"}], "variable": [{"key": "coupon_id", "value": "UUID"}]}
+            "url": {
+              "raw": "{{base_url}}/coupons/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "coupons"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PETLOVE50\",\n  \"redeem_code\": \"ABC123XYZ\",\n  \"brand\": \"PetStore\",\n  \"title\": \"50% off pet food\",\n  \"discount_type\": \"percentage\",\n  \"discount_amount\": 50.0,\n  \"price\": 2.99,\n  \"category_id\": \"CATEGORY_UUID\",\n  \"availability_type\": \"local\",\n  \"country_ids\": [\n    \"COUNTRY_UUID\"\n  ],\n  \"is_active\": true\n}"
+            }
           }
         },
         {
-          "name": "Claim Free Coupon",
+          "name": "Update Coupon (Admin)",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/coupons/:coupon_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "coupons",
+                ":coupon_id"
+              ],
+              "variable": [
+                {
+                  "key": "coupon_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"redeem_code\": \"NEWCODE456\",\n  \"price\": 5.99\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Coupon (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/coupons/:coupon_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "coupons",
+                ":coupon_id"
+              ],
+              "variable": [
+                {
+                  "key": "coupon_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Claim Coupon",
+          "request": {
             "method": "POST",
-            "url": {"raw": "{{base_url}}/coupons/:coupon_id/claim", "host": ["{{base_url}}"], "path": ["coupons", ":coupon_id", "claim"], "variable": [{"key": "coupon_id", "value": "UUID"}]}
+            "url": {
+              "raw": "{{base_url}}/coupons/:coupon_id/claim",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "coupons",
+                ":coupon_id",
+                "claim"
+              ],
+              "variable": [
+                {
+                  "key": "coupon_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "Get Stock",
+          "name": "Track Coupon View (Public)",
           "request": {
-            "method": "GET",
-            "url": {"raw": "{{base_url}}/coupons/:coupon_id/stock", "host": ["{{base_url}}"], "path": ["coupons", ":coupon_id", "stock"], "variable": [{"key": "coupon_id", "value": "UUID"}]}
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/coupons/:coupon_id/view?session_id=SESSION_123",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "coupons",
+                ":coupon_id",
+                "view"
+              ],
+              "query": [
+                {
+                  "key": "session_id",
+                  "value": "SESSION_123"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "coupon_id",
+                  "value": "UUID"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "Trending",
+          "name": "Get Real-Time Stock",
           "request": {
             "method": "GET",
-            "url": {"raw": "{{base_url}}/coupons/trending?limit=10", "host": ["{{base_url}}"], "path": ["coupons", "trending"], "query": [{"key": "limit", "value": "10"}]}
+            "url": {
+              "raw": "{{base_url}}/coupons/:coupon_id/stock",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "coupons",
+                ":coupon_id",
+                "stock"
+              ],
+              "variable": [
+                {
+                  "key": "coupon_id",
+                  "value": "UUID"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "Featured",
+          "name": "Get Trending Coupons",
           "request": {
             "method": "GET",
-            "url": {"raw": "{{base_url}}/coupons/featured?limit=10", "host": ["{{base_url}}"], "path": ["coupons", "featured"], "query": [{"key": "limit", "value": "10"}]}
+            "url": {
+              "raw": "{{base_url}}/coupons/trending?limit=10&period=24h",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "coupons",
+                "trending"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "period",
+                  "value": "24h"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "Recently Viewed",
+          "name": "Get Featured Coupons",
           "request": {
             "method": "GET",
-            "url": {"raw": "{{base_url}}/coupons/recently-viewed?session_id=123", "host": ["{{base_url}}"], "path": ["coupons", "recently-viewed"], "query": [{"key": "session_id", "value": "123"}]}
+            "url": {
+              "raw": "{{base_url}}/coupons/featured?limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "coupons",
+                "featured"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Recently Viewed",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/coupons/recently-viewed?session_id=SESSION_123&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "coupons",
+                "recently-viewed"
+              ],
+              "query": [
+                {
+                  "key": "session_id",
+                  "value": "SESSION_123"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload Coupon Image (Admin)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/upload/image",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "upload",
+                "image"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
     },
     {
-      "name": "4. Packages",
+      "name": "7. Packages (Bundles)",
       "item": [
         {
           "name": "List Packages",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/packages/?skip=0&limit=20&country=UAE",
-              "host": ["{{base_url}}"],
-              "path": ["packages", ""],
+              "raw": "{{base_url}}/packages/?country=UAE",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "packages"
+              ],
               "query": [
-                {"key": "skip", "value": "0"},
-                {"key": "limit", "value": "20"},
-                {"key": "country", "value": "UAE"},
-                {"key": "filter", "value": "highest_saving", "disabled": true}
+                {
+                  "key": "country",
+                  "value": "UAE"
+                },
+                {
+                  "key": "filter",
+                  "value": "highest_saving",
+                  "disabled": true
+                }
               ]
             }
           }
@@ -213,314 +1402,894 @@
           "name": "Get Package by ID",
           "request": {
             "method": "GET",
-            "url": {"raw": "{{base_url}}/packages/:package_id", "host": ["{{base_url}}"], "path": ["packages", ":package_id"], "variable": [{"key": "package_id", "value": "UUID"}]}
+            "url": {
+              "raw": "{{base_url}}/packages/:package_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "packages",
+                ":package_id"
+              ],
+              "variable": [
+                {
+                  "key": "package_id",
+                  "value": "UUID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Package (Admin)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/packages/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "packages"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Summer Bundle\",\n  \"slug\": \"summer-bundle\",\n  \"discount\": 15.0\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Package (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/packages/:package_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "packages",
+                ":package_id"
+              ],
+              "variable": [
+                {
+                  "key": "package_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
     },
     {
-      "name": "5. Cart",
+      "name": "8. Cart",
       "item": [
         {
           "name": "View Cart",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "GET",
-            "url": {"raw": "{{base_url}}/cart/", "host": ["{{base_url}}"], "path": ["cart", ""]}
+            "url": {
+              "raw": "{{base_url}}/cart/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cart"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Add Item",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/cart/add", "host": ["{{base_url}}"], "path": ["cart", "add"]},
-            "body": {"mode": "raw", "raw": "{\n  \"package_id\": \"UUID\",\n  \"quantity\": 1\n}"}
+            "url": {
+              "raw": "{{base_url}}/cart/add",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cart",
+                "add"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"package_id\": \"UUID\",\n  \"quantity\": 1\n}"
+            }
           }
         },
         {
           "name": "Remove Item",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "DELETE",
-            "url": {"raw": "{{base_url}}/cart/:item_id", "host": ["{{base_url}}"], "path": ["cart", ":item_id"], "variable": [{"key": "item_id", "value": "UUID"}]}
+            "url": {
+              "raw": "{{base_url}}/cart/:item_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cart",
+                ":item_id"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Clear Cart",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "DELETE",
-            "url": {"raw": "{{base_url}}/cart/", "host": ["{{base_url}}"], "path": ["cart", ""]}
+            "url": {
+              "raw": "{{base_url}}/cart/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cart"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
     },
     {
-      "name": "6. Orders & Checkout",
+      "name": "9. Orders",
       "item": [
         {
           "name": "Checkout",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/orders/checkout", "host": ["{{base_url}}"], "path": ["orders", "checkout"]},
-            "body": {"mode": "raw", "raw": "{\n  \"payment_method\": \"stripe\"\n}"}
+            "url": {
+              "raw": "{{base_url}}/orders/checkout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "checkout"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"stripe\"\n}"
+            }
           }
         },
         {
           "name": "Get My Orders",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "GET",
-            "url": {"raw": "{{base_url}}/orders/", "host": ["{{base_url}}"], "path": ["orders", ""]}
+            "url": {
+              "raw": "{{base_url}}/orders/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Get Order by ID",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "GET",
-            "url": {"raw": "{{base_url}}/orders/:order_id", "host": ["{{base_url}}"], "path": ["orders", ":order_id"], "variable": [{"key": "order_id", "value": "UUID"}]}
+            "url": {
+              "raw": "{{base_url}}/orders/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "Download Invoice PDF",
+          "name": "Download Invoice",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
             "method": "GET",
-            "url": {"raw": "{{base_url}}/orders/:order_id/invoice", "host": ["{{base_url}}"], "path": ["orders", ":order_id", "invoice"], "variable": [{"key": "order_id", "value": "UUID"}]}
+            "url": {
+              "raw": "{{base_url}}/orders/:order_id/invoice",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                ":order_id",
+                "invoice"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Orders (Admin)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "orders"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
     },
     {
-      "name": "7. Stripe Payments",
+      "name": "10. Contact / Support",
       "item": [
         {
-          "name": "Init Payment",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/payments/init", "host": ["{{base_url}}"], "path": ["payments", "init"]},
-            "body": {"mode": "raw", "raw": "{\n  \"order_id\": \"UUID\",\n  \"currency\": \"AED\"\n}"}
-          }
-        },
-        {
-          "name": "Validate Token (UI)",
+          "name": "Submit Message",
           "request": {
             "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/payments/validate-token", "host": ["{{base_url}}"], "path": ["payments", "validate-token"]},
-            "body": {"mode": "raw", "raw": "{\n  \"token\": \"ey...\"\n}"}
-          }
-        },
-        {
-          "name": "Get Payment Status",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
-            "method": "GET",
-            "url": {"raw": "{{base_url}}/payments/status/:order_id", "host": ["{{base_url}}"], "path": ["payments", "status", ":order_id"], "variable": [{"key": "order_id", "value": "UUID"}]}
-          }
-        }
-      ]
-    },
-    {
-      "name": "8. External Payment API",
-      "item": [
-        {
-          "name": "Create Payment Link (HMAC)",
-          "request": {
-            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/contact/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "contact"
+              ]
+            },
             "header": [
-              {"key": "Content-Type", "value": "application/json"},
-              {"key": "X-Signature", "value": "HMAC_SHA256_HEX"}
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "url": {"raw": "{{base_url}}/api/v1/external/payment-link", "host": ["{{base_url}}"], "path": ["api", "v1", "external", "payment-link"]},
-            "body": {"mode": "raw", "raw": "{\n  \"phone_number\": \"+971501234567\",\n  \"amount\": 100.50,\n  \"currency\": \"AED\",\n  \"reference_id\": \"EXT-001\"\n}"}
-          }
-        },
-        {
-          "name": "Check Payment Status (HMAC)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {"key": "Content-Type", "value": "application/json"},
-              {"key": "X-Signature", "value": "HMAC_SHA256_HEX"}
-            ],
-            "url": {"raw": "{{base_url}}/api/v1/external/payment-status", "host": ["{{base_url}}"], "path": ["api", "v1", "external", "payment-status"]},
-            "body": {"mode": "raw", "raw": "{\n  \"reference_id\": \"EXT-001\"\n}"}
-          }
-        }
-      ]
-    },
-    {
-      "name": "9. Admin",
-      "item": [
-        {
-          "name": "Dashboard Stats",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "GET",
-            "url": {"raw": "{{base_url}}/admin/dashboard?refresh=false", "host": ["{{base_url}}"], "path": ["admin", "dashboard"], "query": [{"key": "refresh", "value": "false"}]}
-          }
-        },
-        {
-          "name": "Analytics - Coupons",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "GET",
-            "url": {"raw": "{{base_url}}/admin/analytics/coupons", "host": ["{{base_url}}"], "path": ["admin", "analytics", "coupons"]}
-          }
-        },
-        {
-          "name": "Analytics - Monthly",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "GET",
-            "url": {"raw": "{{base_url}}/admin/analytics/monthly?months=12", "host": ["{{base_url}}"], "path": ["admin", "analytics", "monthly"], "query": [{"key": "months", "value": "12"}]}
-          }
-        },
-        {
-          "name": "Analytics - Quick Stats",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "GET",
-            "url": {"raw": "{{base_url}}/admin/analytics/quick-stats", "host": ["{{base_url}}"], "path": ["admin", "analytics", "quick-stats"]}
-          }
-        },
-        {
-          "name": "List Orders",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "GET",
-            "url": {"raw": "{{base_url}}/admin/orders", "host": ["{{base_url}}"], "path": ["admin", "orders"]}
-          }
-        },
-        {
-          "name": "List Users",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "GET",
-            "url": {"raw": "{{base_url}}/admin/users", "host": ["{{base_url}}"], "path": ["admin", "users"]}
-          }
-        },
-        {
-          "name": "Toggle User Status",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "PATCH",
-            "url": {"raw": "{{base_url}}/admin/users/:user_id/status?is_active=false", "host": ["{{base_url}}"], "path": ["admin", "users", ":user_id", "status"], "query": [{"key": "is_active", "value": "false"}], "variable": [{"key": "user_id", "value": "UUID"}]}
-          }
-        },
-        {
-          "name": "Promote to Admin",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "POST",
-            "url": {"raw": "{{base_url}}/admin/users/:user_id/promote", "host": ["{{base_url}}"], "path": ["admin", "users", ":user_id", "promote"], "variable": [{"key": "user_id", "value": "UUID"}]}
-          }
-        },
-        {
-          "name": "Create Package",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/packages/", "host": ["{{base_url}}"], "path": ["packages", ""]},
-            "body": {"mode": "raw", "raw": "{\n  \"name\": \"Summer Bundle\",\n  \"slug\": \"summer-bundle\",\n  \"discount\": 15.0\n}"}
-          }
-        },
-        {
-          "name": "Delete Package",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "DELETE",
-            "url": {"raw": "{{base_url}}/packages/:package_id", "host": ["{{base_url}}"], "path": ["packages", ":package_id"], "variable": [{"key": "package_id", "value": "UUID"}]}
-          }
-        },
-        {
-          "name": "Create Category",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/categories/", "host": ["{{base_url}}"], "path": ["categories", ""]},
-            "body": {"mode": "raw", "raw": "{\n  \"name\": \"Sports\",\n  \"slug\": \"sports\"\n}"}
-          }
-        },
-        {
-          "name": "Create Region",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/regions/", "host": ["{{base_url}}"], "path": ["regions", ""]},
-            "body": {"mode": "raw", "raw": "{\n  \"name\": \"South Asia\",\n  \"slug\": \"south-asia\"\n}"}
-          }
-        },
-        {
-          "name": "Create Country",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/countries/", "host": ["{{base_url}}"], "path": ["countries", ""]},
-            "body": {"mode": "raw", "raw": "{\n  \"name\": \"Saudi Arabia\",\n  \"slug\": \"saudi-arabia\",\n  \"country_code\": \"SA\"\n}"}
-          }
-        }
-      ]
-    },
-    {
-      "name": "10. Contact",
-      "item": [
-        {
-          "name": "Submit Message (Public)",
-          "request": {
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/contact/", "host": ["{{base_url}}"], "path": ["contact", ""]},
-            "body": {"mode": "raw", "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"subject\": \"Help\",\n  \"message\": \"I need help.\"\n}"}
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"subject\": \"Help\",\n  \"message\": \"I need help.\"\n}"
+            }
           }
         },
         {
           "name": "List Messages (Admin)",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
             "method": "GET",
-            "url": {"raw": "{{base_url}}/contact/admin", "host": ["{{base_url}}"], "path": ["contact", "admin"]}
+            "url": {
+              "raw": "{{base_url}}/contact/admin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "contact",
+                "admin"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Update Message Status (Admin)",
           "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{admin_token}}", "type": "string"}]},
             "method": "PATCH",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": {"raw": "{{base_url}}/contact/admin/:message_id", "host": ["{{base_url}}"], "path": ["contact", "admin", ":message_id"], "variable": [{"key": "message_id", "value": "UUID"}]},
-            "body": {"mode": "raw", "raw": "{\n  \"status\": \"resolved\"\n}"}
+            "url": {
+              "raw": "{{base_url}}/contact/admin/:message_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "contact",
+                "admin",
+                ":message_id"
+              ],
+              "variable": [
+                {
+                  "key": "message_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\"\n}"
+            }
           }
         }
       ]
     },
     {
-      "name": "11. Health",
+      "name": "11. Stripe Payments",
+      "item": [
+        {
+          "name": "Init Payment",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/payments/init",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "init"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": \"UUID\",\n  \"currency\": \"AED\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Validate Token",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/payments/validate-token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "validate-token"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"ey...\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Payment Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/payments/status/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "status",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "12. External Payment API",
+      "item": [
+        {
+          "name": "Create Payment Link",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/external/payment-link",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "external",
+                "payment-link"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Signature",
+                "value": "HMAC_SHA256_HEX"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+971501234567\",\n  \"amount\": 100.5,\n  \"currency\": \"AED\",\n  \"reference_id\": \"EXT-001\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Check Payment Status",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/external/payment-status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "external",
+                "payment-status"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Signature",
+                "value": "HMAC_SHA256_HEX"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference_id\": \"EXT-001\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "13. Admin (Dashboard & Users)",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/dashboard?refresh=false",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "refresh",
+                  "value": "false"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Analytics - Coupons",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/analytics/coupons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "analytics",
+                "coupons"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Analytics - Monthly",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/analytics/monthly?months=12",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "analytics",
+                "monthly"
+              ],
+              "query": [
+                {
+                  "key": "months",
+                  "value": "12"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Analytics - Quick Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/analytics/quick-stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "analytics",
+                "quick-stats"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Toggle User Status",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/admin/users/:user_id/status?is_active=false",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":user_id",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "is_active",
+                  "value": "false"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "user_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Promote to Admin",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/admin/users/:user_id/promote",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":user_id",
+                "promote"
+              ],
+              "variable": [
+                {
+                  "key": "user_id",
+                  "value": "UUID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "14. Health",
       "item": [
         {
           "name": "Simple Check",
           "request": {
             "method": "GET",
-            "url": {"raw": "{{base_url}}/", "host": ["{{base_url}}"], "path": [""]}
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": []
+            }
           }
         },
         {
           "name": "Detailed Health",
           "request": {
             "method": "GET",
-            "url": {"raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"]}
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
           }
         }
       ]
