@@ -16,6 +16,10 @@ COPY ./gunicorn.conf.py /app/gunicorn.conf.py
 COPY ./create_admin.py /app/create_admin.py
 COPY ./scripts /app/scripts
 
+# Alembic migration files
+COPY ./alembic.ini /app/alembic.ini
+COPY ./migrations /app/migrations
+
 # Expose port 8000
 EXPOSE 8000
 
