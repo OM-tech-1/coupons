@@ -29,7 +29,7 @@ if not database_url:
         "DATABASE_URL environment variable is not set. "
         "Cannot run Alembic migrations."
     )
-config.set_main_option("sqlalchemy.url", database_url)
+config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
 
 # Interpret the config file for Python logging
 if config.config_file_name is not None:
