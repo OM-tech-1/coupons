@@ -76,6 +76,17 @@ jobs:
             echo "Pulling latest image..."
             docker pull ghcr.io/om-tech-1/coupons:latest
             
+            echo "Running database migrations..."
+            docker run --rm \
+              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              -e JWT_ALGORITHM="${{ secrets.JWT_ALGORITHM }}" \
+              -e REDIS_URL="${{ secrets.REDIS_URL }}" \
+              -e ENVIRONMENT="${{ secrets.ENVIRONMENT }}" \
+              ghcr.io/om-tech-1/coupons:latest \
+              alembic upgrade head
+            echo "Migrations applied successfully!"
+
             echo "Stopping old container..."
             docker stop coupon-api-container || true
             docker rm coupon-api-container || true
