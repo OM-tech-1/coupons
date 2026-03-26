@@ -4,10 +4,11 @@ from fastapi.middleware.gzip import GZipMiddleware
 from app.api import auth, coupons, users, cart, orders, categories, regions, countries, admin, packages, contact
 from app.api.stripe import payments_router, webhooks_router
 from app.api.external.payment import router as external_payment_router
-from app.database import Base, engine, SessionLocal
+from app.database import SessionLocal
 from app.middleware.rate_limit import setup_rate_limiting
 from sqlalchemy import text
 import os
+
 
 # Import all models to ensure they're registered BEFORE Base.metadata.create_all()
 # This is critical for SQLAlchemy to properly resolve relationships
@@ -16,92 +17,6 @@ from app.models import (
     Category, Region, Country, Package, PackageCoupon
 )
 from app.models.contact_message import ContactMessage
-
-# Create tables
-Base.metadata.create_all(bind=engine)
-
-# Add new columns if they don't exist (for existing tables)
-def run_migrations():
-    # User profile columns
-    user_columns = [
-        ('email', 'VARCHAR(255)'),
-        ('date_of_birth', 'DATE'),
-        ('gender', 'VARCHAR(20)'),
-        ('country_of_residence', 'VARCHAR(100)'),
-        ('home_address', 'VARCHAR(255)'),
-        ('town', 'VARCHAR(100)'),
-        ('state_province', 'VARCHAR(100)'),
-        ('postal_code', 'VARCHAR(20)'),
-        ('address_country', 'VARCHAR(100)'),
-        ('otp', 'VARCHAR(10)'),
-        ('otp_expiry', 'TIMESTAMP')
-    ]
-    
-    # Coupon columns
-    coupon_columns = [
-        ('price', 'FLOAT DEFAULT 0.0'),
-        ('redeem_code', 'VARCHAR(100)'),
-        ('brand', 'VARCHAR(100)'),
-        ('category_id', 'UUID'),
-        ('availability_type', "VARCHAR(20) DEFAULT 'online'"),
-        ('picture_url', 'VARCHAR(500)'),
-        ('is_package_coupon', 'BOOLEAN DEFAULT FALSE')
-    ]
-
-    # Order columns
-    order_columns = [
-        ('webhook_url', 'VARCHAR(500)')
-    ]
-    
-    with engine.connect() as conn:
-        for col_name, col_type in user_columns:
-            try:
-                conn.execute(text(f'ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
-            except Exception:
-                pass
-        
-        for col_name, col_type in coupon_columns:
-            try:
-                conn.execute(text(f'ALTER TABLE coupons ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
-            except Exception:
-                pass
-
-        for col_name, col_type in order_columns:
-            try:
-                conn.execute(text(f'ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
-            except Exception:
-                pass
-
-        # Package columns
-        package_columns = [
-            ('avg_rating', 'FLOAT DEFAULT 0.0'),
-            ('total_sold', 'INTEGER DEFAULT 0'),
-            ('country', 'VARCHAR(100)'),
-            ('picture_url', 'VARCHAR(500)'),
-            ('brand', 'VARCHAR(100)'),
-            ('discount', 'FLOAT'),
-            ('expiration_date', 'TIMESTAMP'),
-        ]
-        for col_name, col_type in package_columns:
-            try:
-                conn.execute(text(f'ALTER TABLE packages ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
-            except Exception:
-                pass
-
-        # Cart columns
-        try:
-            conn.execute(text('ALTER TABLE cart_items ADD COLUMN IF NOT EXISTS package_id UUID REFERENCES packages(id)'))
-        except Exception:
-            pass
-            
-        # Order Items columns
-        try:
-            conn.execute(text('ALTER TABLE order_items ALTER COLUMN coupon_id DROP NOT NULL'))
-            conn.execute(text('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS package_id UUID REFERENCES packages(id)'))
-        except Exception:
-            pass
-
-        conn.commit()
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 SHOW_DOCS = ENVIRONMENT != "production"

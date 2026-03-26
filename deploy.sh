@@ -23,7 +23,14 @@ fi
 echo "🐳 Rebuilding Docker container..."
 docker build -t coupon-api .
 
-# 4. Restart Container
+# 4. Run database migrations BEFORE starting the app
+echo "🗄️  Running Alembic migrations..."
+# Run in a throwaway container so the app never starts with a stale schema.
+# If any migration fails, the script exits here (set -e) and the app is NOT restarted.
+docker run --rm --env-file .env coupon-api alembic upgrade head
+echo "✅ Migrations applied successfully!"
+
+# 5. Restart Container
 echo "🔄 Restarting container..."
 docker stop coupon-api-container 2>/dev/null || true
 docker rm coupon-api-container 2>/dev/null || true
@@ -37,18 +44,6 @@ docker run -d \
   --network host \
   --env-file .env \
   coupon-api
-
-# 5. Run Database Indexes
-echo "🗄️ Applying database indexes..."
-# Assuming postgres container or external DB. If external (Supabase), we need psql installed.
-# Using the app container to run psql might be tricky if psql isn't installed in the slim image.
-# We'll try to run it using the DATABASE_URL from .env if psql is available on host.
-
-# Run Python script inside container to apply indexes
-# This avoids needing psql on the host machine
-echo "🚀 Running add_indexes.py inside container..."
-docker exec coupon-api-container python scripts/add_indexes.py || echo "⚠️ Index application failed (check logs)"
-echo "✅ Index check complete!"
 
 # 6. Verify Health
 echo "🏥 Verifying deployment..."
