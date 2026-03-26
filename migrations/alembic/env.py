@@ -1,10 +1,10 @@
-"""Alembic environment configuration.
-
-Reads DATABASE_URL from the environment (same variable FastAPI uses),
-so no credentials live in alembic.ini.
-"""
-
 import os
+import sys
+
+# Ensure the project root (/app inside Docker) is on sys.path so
+# `from app.models import ...` works regardless of where alembic is invoked from.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 from logging.config import fileConfig
 
 from dotenv import load_dotenv
